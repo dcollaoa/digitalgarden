@@ -84,592 +84,633 @@ nav:
   - Knowledge Base:
     - 'Start Here':
         - 'Start Here': index.md
-    - 'CPTS Learning Path':
-      - 'Reconnaissance, Enumeration and Attack Planning':
-        - 'Network Enumeration with NMAP':
-          - 'Introduction': CPTS/A/1/1/1.md
-          - 'Host Enumeration': 
-            - 'Host Discovery': CPTS/A/1/2/1.md
-            - 'Host and Port Scanning': CPTS/A/1/2/2.md
-            - 'Saving the Results': CPTS/A/1/2/3.md
-            - 'Service Enumeration': CPTS/A/1/2/4.md
-            - 'Nmap Scripting Engine': CPTS/A/1/2/5.md
-            - 'Performance': CPTS/A/1/2/6.md
-          - 'Bypass Security Measures':
-            - 'Firewall and IDS/IPS Evasion': CPTS/A/1/3/1.md
-        - 'Footprinting':
-          - 'Introduction':
-            - 'Enumeration Principles': CPTS/A/2/1/1.md
-            - 'Enumeration Methodology': CPTS/A/2/1/2.md
-          - 'Host Based Enumeration':
-            - 'FTP': CPTS/A/2/2/1.md
-            - 'SMB': CPTS/A/2/2/2.md
-            - 'NFS': CPTS/A/2/2/3.md
-            - 'DNS': CPTS/A/2/2/4.md
-            - 'SMTP': CPTS/A/2/2/5.md
-            - 'IMAP - POP3': CPTS/A/2/2/6.md
-            - 'SNMP': CPTS/A/2/2/7.md
-            - 'MySQL': CPTS/A/2/2/8.md
-            - 'MSSQL': CPTS/A/2/2/9.md
-            - 'Oracle TNS': CPTS/A/2/2/10.md
-            - 'IPMI': CPTS/A/2/2/11.md
-          - 'Remote Management Protocols':
-            - 'Linux RMP': CPTS/A/2/3/1.md
-            - 'Windows RMP': CPTS/A/2/3/2.md
-        - 'Information Gathering':
-          - 'Introduction':
-            - 'Introduction': CPTS/A/3/1/1.md
-          - 'WHOIS':
-              - 'WHOIS': CPTS/A/3/2/1.md
-              - 'Utilising WHOIS': CPTS/A/3/2/2.md
-          - 'DNS and Subdomains':
-            - 'DNS': CPTS/A/3/3/1.md
-            - 'Digging DNS': CPTS/A/3/3/2.md
-            - 'Subdomains': CPTS/A/3/3/3.md
-            - 'Subdomain Bruteforcing': CPTS/A/3/3/4.md
-            - 'DNS Zone Transfers': CPTS/A/3/3/5.md
-            - 'Virtual Hosts': CPTS/A/3/3/6.md
-            - 'Certificate Transparency Logs': CPTS/A/3/3/7.md
-          - 'Fingerprinting':
-            - 'Fingerprinting': CPTS/A/3/4/1.md
-          - 'Crawling':
-            - 'Crawling': CPTS/A/3/5/1.md
-            - 'robots.txt': CPTS/A/3/5/2.md
-            - 'Well-Known URIs': CPTS/A/3/5/3.md
-            - 'Creepy Crawlies': CPTS/A/3/5/4.md
-          - 'Search Engine Discovery':
-            - 'Search Engine Discovery': CPTS/A/3/6/1.md
-          - 'Web Archives':
-            - ' Web Archives': CPTS/A/3/7/1.md
-          - 'Automating Recon':
-            - 'Automating Recon': CPTS/A/3/8/1.md
-        - 'Vulnerability Assessment':
-          - 'Security Assessments':
-            - 'Security Assessments': CPTS/A/4/1/1.md
-            - 'Vulnerability Assessment': CPTS/A/4/1/2.md
-            - 'Assessment Standards': CPTS/A/4/1/3.md
-          - 'Vulnerability Scoring and Reporting':
-            - 'CVSS': CPTS/A/4/2/1.md
-            - 'CVE': CPTS/A/4/2/2.md
-          - 'Nessus':
-            - 'Vulnerability Scanning Overview': CPTS/A/4/3/1.md
-            - 'Getting Started with Nessus': CPTS/A/4/3/2.md
-            - 'Nessus Scan': CPTS/A/4/3/3.md
-            - 'Advanced Settings': CPTS/A/4/3/4.md
-            - 'Working with Nessus Scan Output': CPTS/A/4/3/5.md
-            - 'Scanning Issues': CPTS/A/4/3/6.md
-          - 'OpenVAS':
-            - 'Getting Started with OpenVAS': CPTS/A/4/4/1.md
-            - 'OpenVAS Scan': CPTS/A/4/4/2.md
-            - 'Exporting The Results': CPTS/A/4/4/3.md
-          - 'Reporting':
-            - 'Reporting': CPTS/A/4/5/1.md
-        - 'File Transfers':
-          - 'Introduction':
-            - 'File Transfers': CPTS/A/5/1/1.md
-          - 'File Transfer Methods':
-            - 'Windows File Transfer Methods': CPTS/A/5/2/1.md
-            - 'Linux File Transfer Methods': CPTS/A/5/2/2.md
-            - 'Transferring File with Code': CPTS/A/5/2/3.md
-            - 'Miscellaneous File Transfer Methods': CPTS/A/5/2/4.md
-            - 'Protected File Transfers': CPTS/A/5/2/5.md
-            - 'Catching Files over HTTP-S': CPTS/A/5/2/6.md
-            - 'Living off The Land': CPTS/A/5/2/7.md
-          - 'Detect or Be Detected':
-            - 'Detection': CPTS/A/5/3/1.md
-            - 'Evading Detection': CPTS/A/5/3/2.md
-        - 'Shells and Payloads':
-          - 'Introduction':
-            - 'Shells Jack Us In, Payloads Deliver Us Shells': CPTS/A/6/1/1.md
-            - 'CAT5 Securitys Engagement Preparation': CPTS/A/6/1/2.md
-          - 'Shell Basics':
-            - 'Anatomy of a Shell': CPTS/A/6/2/1.md
-            - 'Bind Shells': CPTS/A/6/2/2.md
-            - 'Reverse Shells': CPTS/A/6/2/3.md
-          - 'Payloads':
-            - 'Introduction to Payloads': CPTS/A/6/3/1.md
-            - 'Automating Payloads and Delivery with Metasploit': CPTS/A/6/3/2.md
-            - 'Crafting payloads with MSFvenom': CPTS/A/6/3/3.md
-          - 'Windows Shells':
-            - 'Infiltrating Windows': CPTS/A/6/4/1.md
-          - 'UNIX Shells':
-            - 'Infiltrating Unix-Linux': CPTS/A/6/5/1.md
-            - 'Spawning Interactive Shells': CPTS/A/6/5/2.md
-          - 'Web Shells':
-            - 'Introduction to Web Shells': CPTS/A/6/6/1.md
-            - 'Laudanum, One Webshell to Rule Them All': CPTS/A/6/6/2.md
-            - 'Antak Webshell': CPTS/A/6/6/3.md
-            - 'PHP Web Shells': CPTS/A/6/6/4.md
-          - 'Additional considerations':
-            - 'Detection and Prevention': CPTS/A/6/7/1.md
-        - 'Metasploit Framwork':
-          - 'Introduction':
-            - 'Preface': CPTS/A/7/1/1.md
-            - 'Introduction to Metasploit': CPTS/A/7/1/2.md
-            - 'Introduction to MSFconsole': CPTS/A/7/1/3.md
-          - 'MSF Components':
-            - 'Modules': CPTS/A/7/2/1.md
-            - 'Targets': CPTS/A/7/2/2.md
-            - 'Payloads': CPTS/A/7/2/3.md
-            - 'Encoders': CPTS/A/7/2/4.md
-            - 'Databases': CPTS/A/7/2/5.md
-            - 'Plugins and Mixins': CPTS/A/7/2/6.md
-          - 'MSF Sessions':
-            - 'Sessions and Jobs': CPTS/A/7/3/1.md
-            - 'Meterpreter': CPTS/A/7/3/2.md
-          - 'Additional Features':
-            - 'Writing and Importing Modules': CPTS/A/7/4/1.md
-            - 'Introduction to MSFVenom': CPTS/A/7/4/2.md
-            - 'Firewall and IDS-IPS evasion': CPTS/A/7/4/3.md
-      - 'Exploitation and Lateral Movement':
-        - 'Password Attacks':
-          - 'Introduction':
-            - 'Theory of Protection': CPTS/B/1/1/1.md
-            - 'Credential Storage': CPTS/B/1/1/2.md
-            - 'John The Ripper': CPTS/B/1/1/3.md
-          - 'Remote Password Attacks':
-            - 'Network Services': CPTS/B/1/2/1.md
-            - 'Password Mutations': CPTS/B/1/2/2.md
-            - 'Password Reuse and Default Passwords': CPTS/B/1/2/3.md
-          - 'Windows Local Password Attacks':
-            - 'Attacking SAM': CPTS/B/1/3/1.md
-            - 'Attacking LSASS': CPTS/B/1/3/2.md
-            - 'Attacking AD and NTDS.dit': CPTS/B/1/3/3.md
-            - 'Credential Hunting in Windows': CPTS/B/1/3/4.md
-          - 'Linux Local Password Attacks':
-            - 'Credential Hunting in Linux': CPTS/B/1/4/1.md
-            - 'Passwd, Shadow and Opasswd': CPTS/B/1/4/2.md
-          - 'Windows Lateral Movement':
-            - 'Pass the Hash (PtH)': CPTS/B/1/5/1.md
-            - 'Pass the Ticket (PtT) from Windows': CPTS/B/1/5/2.md
-            - 'Pass the Ticket (PtT) from Linux': CPTS/B/1/5/3.md
-          - 'Cracking Files':
-            - 'Protected Files': CPTS/B/1/6/1.md
-            - 'Protected Archives': CPTS/B/1/6/2.md
-          - 'Password Management':
-            - 'Password Policies': CPTS/B/1/7/1.md
-            - 'Password Managers': CPTS/B/1/7/2.md
-        - 'Attacking Common Services':
-          - 'Introduction':
-            - 'Interacting with Common Services': CPTS/B/2/1/1.md
-          - 'Protocol Specific Attacks':
-            - 'The Concept of Attacks': CPTS/B/2/2/1.md
-            - 'Service Misconfigurations': CPTS/B/2/2/2.md
-            - 'Finding Sensitive Information': CPTS/B/2/2/3.md
-          - 'FTP':
-            - 'Attacking FTP': CPTS/B/2/3/1.md
-            - 'Latest FTP Vulnerabilities': CPTS/B/2/3/2.md
-          - 'SMB':
-            - 'Attacking SMB': CPTS/B/2/4/1.md
-            - 'Latest SMB Vulnerabilities': CPTS/B/2/4/2.md
-          - 'SQL Databases':
-            - 'Attacking SQL Databases': CPTS/B/2/5/1.md
-            - 'Latest SQL Vulnerabilities': CPTS/B/2/5/2.md
-          - 'RDP':
-            - 'Attacking RDP': CPTS/B/2/6/1.md
-            - 'Latest RDP Vulnerabilities': CPTS/B/2/6/2.md
-          - 'DNS':
-            - 'Attacking DNS': CPTS/B/2/7/1.md
-            - 'Latest DNS Vulnerabilities': CPTS/B/2/7/2.md
-          - 'SMTP':
-            - 'Attacking Email Services': CPTS/B/2/8/1.md
-            - 'Latest Email Service Vulnerabilities': CPTS/B/2/8/2.md
-        - 'Pivoting, Tunneling, and Port Forwarding':
-          - 'Introduction':
-            - 'Introduction to Pivoting, Tunneling and Port Forwarding': CPTS/B/3/1/1.md
-            - 'The Networking Behind Pivoting': CPTS/B/3/1/2.md
-          - 'Choosing The Dig Site and Starting Our Tunnels':
-            - 'Dynamic PF with SSH and SOCKS Tunneling': CPTS/B/3/2/1.md
-            - 'Remote-Reverse PF with SSH': CPTS/B/3/2/2.md
-            - 'Meterpreter Tunneling and PF': CPTS/B/3/2/3.md
-          - 'Playing Pong with Socat':
-            - 'Socat Redirection with a Reverse Shell': CPTS/B/3/3/1.md
-            - 'Socat Redirection with a Bind Shell': CPTS/B/3/3/2.md
-          - 'Pivoting Around Obstacles':
-            - 'SSH for Windows plink.exe': CPTS/B/3/4/1.md
-            - 'SSH Pivoting with sshuttle': CPTS/B/3/4/2.md
-            - 'Web Server Pivoting with Rpivot': CPTS/B/3/4/3.md
-            - 'PF with Windows Netsh': CPTS/B/3/4/4.md
-          - 'Branching Out Our Tunnels':
-            - 'DNS Tunneling with Dnscat2': CPTS/B/3/5/1.md
-            - 'SOCKS5 Tunneling with Chisel': CPTS/B/3/5/2.md
-            - 'ICMP Tunneling with SOCKS': CPTS/B/3/5/3.md
-          - 'Double Pivots':
-            - 'RDP and SOCKS Tunneling with SocksOverRDP': CPTS/B/3/6/1.md
-          - 'Additional Considerations':
-            - 'Detection and Prevention': CPTS/B/3/7/1.md
-            - 'Beyond this Module': CPTS/B/3/7/2.md
-        - 'Active Directory Enumeration and Attacks':
-          - 'Setting The Stage':
-            - 'Introduction to AD Enumeration and Attacks': CPTS/B/4/1/1.md
-            - 'Tools Of The Trade': CPTS/B/4/1/2.md
-            - 'Scenario': CPTS/B/4/1/3.md
-          - 'Initial Enumeration':
-            - 'External Recon and Enumeration Principles': CPTS/B/4/2/1.md
-            - 'Initial Enumeration of the Domain': CPTS/B/4/2/2.md
-          - 'Sniffing out a Foothold':
-            - 'LLMNR NBT-NS Poisoning - from Linux': CPTS/B/4/3/1.md
-            - 'LLMNR NBT-NS Poisoning - from Windows': CPTS/B/4/3/2.md
-          - 'Sighting In, Hunting For A User':
-            - 'Password Spraying Overview': CPTS/B/4/4/1.md
-            - 'Enumerating and Retrieving Password Policies': CPTS/B/4/4/2.md
-            - 'Password Spraying - Making a Target User List': CPTS/B/4/4/3.md
-          - 'Spray Responsibly':
-            - 'Internal Password Spraying - from Linux': CPTS/B/4/5/1.md
-            - 'Internal Password Spraying - from Windows': CPTS/B/4/5/2.md
-          - 'Deeper Down the Rabbit Hole':
-            - 'Enumerating Security Controls': CPTS/B/4/6/1.md
-            - 'Credentialed Enumeration - from Linux': CPTS/B/4/6/2.md
-            - 'Credentialed Enumeration - from Windows': CPTS/B/4/6/3.md
-            - 'Living Off the Land': CPTS/B/4/6/4.md
-          - 'Cooking with Fire':
-            - 'Kerberoasting - from Linux': CPTS/B/4/7/1.md
-            - 'Kerberoasting - from Windows': CPTS/B/4/7/2.md
-          - 'An ACE in the Hole':
-            - 'Access Control List (ACL) Abuse Primer': CPTS/B/4/8/1.md
-            - 'ACL Enumeration': CPTS/B/4/8/2.md
-            - 'ACL Abuse Tactics': CPTS/B/4/8/3.md
-            - 'DCSync': CPTS/B/4/8/4.md
-          - 'Stacking The Deck':
-            - 'Privileged Access': CPTS/B/4/9/1.md
-            - 'Kerberos Double Hop Problem': CPTS/B/4/9/2.md
-            - 'Bleeding Edge Vulnerabilities': CPTS/B/4/9/3.md
-            - 'Miscellaneous Misconfigurations': CPTS/B/4/9/4.md
-          - 'Why So Trusting':
-            - 'Domain Trusts Primer': CPTS/B/4/10/1.md
-            - 'Attacking Domain Trusts - Child - Parent Trusts from Windows': CPTS/B/4/10/2.md
-            - 'Attacking Domain Trusts - Child - Parent Trusts - from Linux': CPTS/B/4/10/3.md
-          - 'Breaking Down Boundaries':
-            - 'Attacking Domain Trusts - Cross-Forest Trust Abuse - from Windows': CPTS/B/4/11/1.md
-            - 'Attacking Domain Trusts - Cross-Forest Trust Abuse - from Linux': CPTS/B/4/11/2.md
-          - 'Defensive Considerations':
-            - 'Hardening Active Directory': CPTS/B/4/12/1.md
-            - 'Additional AD Auditing Techniques': CPTS/B/4/12/2.md
-          - 'Final Showdown':
-            - 'Beyond this Module': CPTS/B/4/13/1.md
-      - 'Web Exploitation':
-        - 'Using Web Proxies':
-          - 'Getting Started':
-            - 'Intro to Web Proxies': CPTS/C/1/1/1.md
-            - 'Setting Up': CPTS/C/1/1/2.md
-          - 'Web Proxy':
-            - 'Proxy Setup': CPTS/C/1/2/1.md
-            - 'Intercepting Web Requests': CPTS/C/1/2/2.md
-            - 'Intercepting Responses': CPTS/C/1/2/3.md
-            - 'Automatic Modification': CPTS/C/1/2/4.md
-            - 'Repeating Requests': CPTS/C/1/2/5.md
-            - 'Encoding and Decoding': CPTS/C/1/2/6.md
-            - 'Proxying Tools': CPTS/C/1/2/7.md
-          - 'Web Fuzzer':
-            - 'Burp Intruder': CPTS/C/1/3/1.md
-            - 'ZAP Fuzzer': CPTS/C/1/3/2.md
-          - 'Web Scanner':
-            - 'Burp Scanner': CPTS/C/1/4/1.md
-            - 'ZAP Scanner': CPTS/C/1/4/2.md
-            - 'Extensions': CPTS/C/1/4/3.md
-        - 'Attacking Web Applications with Ffuf':
-          - 'Introduction':
-            - 'Introduction': CPTS/C/2/1/1.md
-            - 'Web Fuzzing': CPTS/C/2/1/2.md
-          - 'Basic Fuzzing':
-            - 'Directory Fuzzing': CPTS/C/2/2/1.md
-            - 'Page Fuzzing': CPTS/C/2/2/2.md
-            - 'Recursive Fuzzing': CPTS/C/2/2/3.md
-          - 'Domain Fuzzing':
-            - 'DNS Records': CPTS/C/2/3/1.md
-            - 'Sub-domain Fuzzing': CPTS/C/2/3/2.md
-            - 'Vhost Fuzzing': CPTS/C/2/3/3.md
-            - 'Filtering Results': CPTS/C/2/3/4.md
-          - 'Parameter Fuzzing':
-            - 'Parameter Fuzzing - GET': CPTS/C/2/4/1.md
-            - 'Parameter Fuzzing - POST': CPTS/C/2/4/2.md
-            - 'Value Fuzzing': CPTS/C/2/4/3.md
-        - 'Login Brute Forcing':
-          - 'Introduction':
-            - 'Introduction to Brute Forcing': CPTS/C/3/1/1.md
-          - 'Basic HTTP Auth Brute Forcing':
-            - 'Password Attacks': CPTS/C/3/2/1.md
-            - 'Default Passwords': CPTS/C/3/2/2.md
-            - 'Username Brute Force': CPTS/C/3/2/3.md
-          - 'Web Forms Brute Forcing':
-            - 'Hydra Modules': CPTS/C/3/3/1.md
-            - 'Determine Login Parameters': CPTS/C/3/3/2.md
-            - 'Login Form Attacks': CPTS/C/3/3/3.md
-          - 'Service Authentication Attacks':
-            - 'Personalized Wordlists': CPTS/C/3/4/1.md
-            - 'Service Authentication Brute Forcing': CPTS/C/3/4/2.md
-        - 'SQLi Fundamentals':
-          - 'Introduction':
-            - 'Introduction': CPTS/C/4/1/1.md
-          - 'Databases':
-            - 'Intro to Databases': CPTS/C/4/2/1.md
-            - 'Types of Databases': CPTS/C/4/2/2.md
-          - 'MySQL':
-            - 'Intro to MySQL': CPTS/C/4/3/1.md
-            - 'SQL Statements': CPTS/C/4/3/2.md
-            - 'Query Results': CPTS/C/4/3/3.md
-            - 'SQL Operators': CPTS/C/4/3/4.md
-          - 'SQL Injections':
-            - 'Intro to SQL Injections': CPTS/C/4/4/1.md
-            - 'Subverting Query Logic': CPTS/C/4/4/2.md
-            - 'Using Comments': CPTS/C/4/4/3.md
-            - 'Union Clause': CPTS/C/4/4/4.md
-            - 'Union Injection': CPTS/C/4/4/5.md
-          - 'Exploitation':
-            - 'Database Enumeration': CPTS/C/4/5/1.md
-            - 'Reading Files': CPTS/C/4/5/2.md
-            - 'Writing Files': CPTS/C/4/5/3.md
-          - 'Mitigations':
-            - 'Mitigating SQL Injection': CPTS/C/4/6/1.md
-        - 'Command Injections':
-          - 'Introduction':
-            - 'Intro to Command Injections': CPTS/C/9/1/1.md
-          - 'Exploitation':
-            - 'Detection': CPTS/C/9/2/1.md
-            - 'Injecting Commands': CPTS/C/9/2/2.md
-            - 'Other Injection Operators': CPTS/C/9/2/3.md
-          - 'Filter Evasion':
-            - 'Identifying Filters': CPTS/C/9/3/1.md
-            - 'Bypassing Space Filters': CPTS/C/9/3/2.md
-            - 'Bypassing Other Blacklisted Characters': CPTS/C/9/3/3.md
-            - 'Bypassing Blacklisted Commands': CPTS/C/9/3/4.md
-            - 'Advanced Command Obfuscation': CPTS/C/9/3/5.md
-            - 'Evasion Tools': CPTS/C/9/3/6.md
-          - 'Prevention':
-            - 'Command Injection Prevention': CPTS/C/9/4/1.md
-        - 'SQLMap Essentials':
-          - 'Getting Started':
-            - 'SQLMap Overview': CPTS/C/5/1/1.md
-            - 'Getting Started with SQLMap': CPTS/C/5/1/2.md
-            - 'SQLMap Output Description': CPTS/C/5/1/3.md
-          - 'Building Attacks':
-            - 'Running SQLMap on an HTTP Request': CPTS/C/5/2/1.md
-            - 'Handling SQLMap Errors': CPTS/C/5/2/2.md
-            - 'Attack Tuning': CPTS/C/5/2/3.md
-          - 'Database Enumeration':
-            - 'Database Enumeration': CPTS/C/5/3/1.md
-            - 'Advanced Database Enumeration': CPTS/C/5/3/2.md
-          - 'Advanced SQLMap Usage':
-            - 'Bypassing Web Application Protections': CPTS/C/5/4/1.md
-            - 'OS Exploitation': CPTS/C/5/4/2.md
-        - 'Cross-Site Scripting (XSS)':
-          - 'XSS Basics':
-            - 'Intro to XSS': CPTS/C/6/1/1.md
-            - 'Stored XSS': CPTS/C/6/1/2.md
-            - 'Reflected XSS': CPTS/C/6/1/3.md
-            - 'DOM XSS': CPTS/C/6/1/4.md
-            - 'XSS Discovery': CPTS/C/6/1/5.md
-          - 'XSS Attacks':
-            - 'Defacing': CPTS/C/6/2/1.md
-            - 'Phishing': CPTS/C/6/2/2.md
-            - 'Session Hijacking': CPTS/C/6/2/3.md
-          - 'XSS Prevention':
-            - 'XSS Prevention': CPTS/C/6/3/1.md
-        - 'File Inclusion':
-          - 'Introduction':
-            - 'Intro to File Inclusions': CPTS/C/7/1/1.md
-          - 'File Disclosure':
-            - 'Local File Inclusion (LFI)': CPTS/C/7/2/1.md
-            - 'Basic Bypasses': CPTS/C/7/2/2.md
-            - 'PHP Filters': CPTS/C/7/2/3.md
-          - 'Remote Code Execution':
-            - 'PHP Wrappers': CPTS/C/7/3/1.md
-            - 'Remote File Inclusion (RFI)': CPTS/C/7/3/2.md
-            - 'LFI and File Uploads': CPTS/C/7/3/3.md
-            - 'Log Poisoning': CPTS/C/7/3/4.md
-          - 'Automation and Prevention':
-            - 'Automated Scanning': CPTS/C/7/4/1.md
-            - 'File Inclusion Prevention': CPTS/C/7/4/2.md
-        - 'File Upload Attacks':
-          - 'Introduction':
-            - 'Intro to File Upload Attacks': CPTS/C/8/1/1.md
-          - 'Basic Exploitation':
-            - 'Absent Validation': CPTS/C/8/2/1.md
-            - 'Upload Exploitation': CPTS/C/8/2/2.md
-          - 'Bypassing Filters':
-            - 'Client-Side Validation': CPTS/C/8/3/1.md
-            - 'Blacklist Filters': CPTS/C/8/3/2.md
-            - 'Whitelist Filters': CPTS/C/8/3/3.md
-            - 'Type Filters': CPTS/C/8/3/4.md
-          - 'Other Upload Attacks':
-            - 'Limited File Uploads': CPTS/C/8/4/1.md
-            - 'Other Upload Attacks': CPTS/C/8/4/2.md
-          - 'Prevention':
-            - 'Preventing File Upload Vulnerabilities': CPTS/C/8/5/1.md
-        - 'Web Attacks':
-          - 'Introduction':
-            - 'Introduction to Web Attacks': CPTS/C/10/1/1.md
-          - 'HTTP Verb Tampering':
-            - 'Intro to HTTP Verb Tampering': CPTS/C/10/2/1.md
-            - 'Bypassing Basic Authentication': CPTS/C/10/2/2.md
-            - 'Bypassing Security Filters': CPTS/C/10/2/3.md
-            - 'Verb Tampering Prevention': CPTS/C/10/2/4.md
-          - 'Insecure Direct Object References (IDOR)':
-            - 'Intro to IDOR': CPTS/C/10/3/1.md
-            - 'Identifying IDORs': CPTS/C/10/3/2.md
-            - 'Mass IDOR Enumeration': CPTS/C/10/3/3.md
-            - 'Bypassing Encoded References': CPTS/C/10/3/4.md
-            - 'IDOR in Insecure APIs': CPTS/C/10/3/5.md
-            - 'Chaining IDOR Vulnerabilities': CPTS/C/10/3/6.md
-            - 'IDOR Prevention': CPTS/C/10/3/7.md
-          - 'XXE Injection':
-            - 'Intro to XXE': CPTS/C/10/4/1.md
-            - 'Local File Disclosure': CPTS/C/10/4/2.md
-            - 'Advanced File Disclosure': CPTS/C/10/4/3.md
-            - 'Blind Data Exfiltration': CPTS/C/10/4/4.md
-            - 'XXE Prevention': CPTS/C/10/4/5.md
-        - 'Attacking Common Applications':
-          - 'Setting the Stage':
-            - 'Introduction to Attacking Common Applications': CPTS/C/11/1/1.md
-            - 'Application Discovery and Enumeration': CPTS/C/11/1/2.md
-          - 'Content Management Systems (CMS)':
-            - 'WordPress - Discovery and Enumeration': CPTS/C/11/2/1.md
-            - 'Attacking WordPress': CPTS/C/11/2/2.md
-            - 'Joomla - Discovery and Enumeration': CPTS/C/11/2/3.md
-            - 'Attacking Joomla': CPTS/C/11/2/4.md
-            - 'Drupal - Discovery and Enumeration': CPTS/C/11/2/5.md
-            - 'Attacking Drupal': CPTS/C/11/2/6.md
-          - 'Servlet Containers and Software Development':
-            - 'Tomcat - Discovery and Enumeration': CPTS/C/11/3/1.md
-            - 'Attacking Tomcat': CPTS/C/11/3/2.md
-            - 'Jenkins - Discovery and Enumeration': CPTS/C/11/3/3.md
-            - 'Attacking Jenkins': CPTS/C/11/3/4.md
-          - 'Infrastructure and Network Monitoring Tools':
-            - 'Splunk - Discovery and Enumeration': CPTS/C/11/4/1.md
-            - 'Attacking Splunk': CPTS/C/11/4/2.md
-            - 'PRTG Network Monitor': CPTS/C/11/4/3.md
-          - 'Customer Service Mgmt and Configuration Management':
-            - 'osTicket': CPTS/C/11/5/1.md
-            - 'Gitlab - Discovery and Enumeration': CPTS/C/11/5/2.md
-            - 'Attacking GitLab': CPTS/C/11/5/3.md
-          - 'Common Gateway Interfaces':
-            - 'Attacking Tomcat CGI': CPTS/C/11/6/1.md
-            - 'Attacking CGI Applications - Shellshock': CPTS/C/11/6/2.md
-          - 'Thick Client Applications':
-            - 'Attacking Thick Client Applications': CPTS/C/11/7/1.md
-            - 'Exploiting Web Vulnerabilities in Thick-Client Applications': CPTS/C/11/7/2.md
-          - 'Miscellaneous Applications':
-            - 'ColdFusion - Discovery and Enumeration': CPTS/C/11/8/1.md
-            - 'Attacking ColdFusion': CPTS/C/11/8/2.md
-            - 'IIS Tilde Enumeration': CPTS/C/11/8/3.md
-            - 'Attacking LDAP': CPTS/C/11/8/4.md
-            - 'Web Mass Assignment Vulnerabilities': CPTS/C/11/8/5.md
-            - 'Attacking Applications Connecting to Services': CPTS/C/11/8/6.md
-            - 'Other Notable Applications': CPTS/C/11/8/7.md
-          - 'Closing Out':
-            - 'Application Hardening': CPTS/C/11/9/1.md
-      - 'Post-Exploitation':
-        - 'Linux Privilege Escalation':
-          - 'Introduction':
-            - 'Introduction to Linux Privilege Escalation': CPTS/D/1/1/1.md
+    - 'Learning Paths':
+      - 'CPTS ':
+        - 'Reconnaissance, Enumeration and Attack Planning':
+          - 'Network Enumeration with NMAP':
+            - 'Introduction': CPTS/A/1/1/1.md
+            - 'Host Enumeration': 
+              - 'Host Discovery': CPTS/A/1/2/1.md
+              - 'Host and Port Scanning': CPTS/A/1/2/2.md
+              - 'Saving the Results': CPTS/A/1/2/3.md
+              - 'Service Enumeration': CPTS/A/1/2/4.md
+              - 'Nmap Scripting Engine': CPTS/A/1/2/5.md
+              - 'Performance': CPTS/A/1/2/6.md
+            - 'Bypass Security Measures':
+              - 'Firewall and IDS/IPS Evasion': CPTS/A/1/3/1.md
+          - 'Footprinting':
+            - 'Introduction':
+              - 'Enumeration Principles': CPTS/A/2/1/1.md
+              - 'Enumeration Methodology': CPTS/A/2/1/2.md
+            - 'Host Based Enumeration':
+              - 'FTP': CPTS/A/2/2/1.md
+              - 'SMB': CPTS/A/2/2/2.md
+              - 'NFS': CPTS/A/2/2/3.md
+              - 'DNS': CPTS/A/2/2/4.md
+              - 'SMTP': CPTS/A/2/2/5.md
+              - 'IMAP - POP3': CPTS/A/2/2/6.md
+              - 'SNMP': CPTS/A/2/2/7.md
+              - 'MySQL': CPTS/A/2/2/8.md
+              - 'MSSQL': CPTS/A/2/2/9.md
+              - 'Oracle TNS': CPTS/A/2/2/10.md
+              - 'IPMI': CPTS/A/2/2/11.md
+            - 'Remote Management Protocols':
+              - 'Linux RMP': CPTS/A/2/3/1.md
+              - 'Windows RMP': CPTS/A/2/3/2.md
           - 'Information Gathering':
-            - 'Environment Enumeration': CPTS/D/1/2/1.md
-            - 'Linux Services and Internals Enumeration': CPTS/D/1/2/2.md
-            - 'Credential Hunting': CPTS/D/1/2/3.md
-          - 'Environment-based Privilege Escalation':
-            - 'Path Abuse': CPTS/D/1/3/1.md
-            - 'Wildcard Abuse': CPTS/D/1/3/2.md
-            - 'Escaping Restricted Shells': CPTS/D/1/3/3.md
-          - 'Permissions-based Privilege Escalation':
-            - 'Special Permissions': CPTS/D/1/4/1.md
-            - 'Sudo Rights Abuse': CPTS/D/1/4/2.md
-            - 'Privileged Groups': CPTS/D/1/4/3.md
-            - 'Capabilities': CPTS/D/1/4/4.md
-          - 'Service-based Privilege Escalation':
-            - 'Vulnerable Services': CPTS/D/1/5/1.md
-            - 'Cron Job Abuse': CPTS/D/1/5/2.md
-            - 'LXD': CPTS/D/1/5/3.md
-            - 'Docker': CPTS/D/1/5/4.md
-            - 'Kubernetes': CPTS/D/1/5/5.md
-            - 'Logrotate': CPTS/D/1/5/6.md
-            - 'Miscellaneous Techniques': CPTS/D/1/5/7.md
-          - 'Linux Internals-based Privilege Escalation':
-            - 'Kernel Exploits': CPTS/D/1/6/1.md
-            - 'Shared Libraries': CPTS/D/1/6/2.md
-            - 'Shared Object Hijacking': CPTS/D/1/6/3.md
-            - 'Python Library Hijacking': CPTS/D/1/6/4.md
-          - 'Recent 0-Days':
-            - 'Sudo': CPTS/D/1/7/1.md
-            - 'Polkit': CPTS/D/1/7/2.md
-            - 'Dirty Pipe': CPTS/D/1/7/3.md
-            - 'Netfilter': CPTS/D/1/7/4.md
-          - 'Hardening Considerations':
-            - 'Linux Hardening': CPTS/D/1/8/1.md
-        - 'Windows Privilege Escalation':
-          - 'Introduction':
-            - 'Introduction to Windows Privilege Escalation': CPTS/D/2/1/1.md
-            - 'Useful Tools': CPTS/D/2/1/2.md
-          - 'Getting the Lay of the Land':
-            - 'Situational Awareness': CPTS/D/2/2/1.md
-            - 'Initial Enumeration': CPTS/D/2/2/2.md
-            - 'Communication with Processes': CPTS/D/2/2/3.md
-          - 'Windows Users Privileges':
-            - 'Windows Privileges Overview': CPTS/D/2/3/1.md
-            - 'Selmpersonate and SeAssignPrimaryToken': CPTS/D/2/3/2.md
-            - 'SeDebugPrivilege': CPTS/D/2/3/3.md
-            - 'SeTakeOwnershipPrivilege': CPTS/D/2/3/4.md
-          - 'Windows Group Privileges':
-            - 'Windows Built-in Groups': CPTS/D/2/4/1.md
-            - 'Event Log Readers': CPTS/D/2/4/2.md
-            - 'DnsAdmins': CPTS/D/2/4/3.md
-            - 'Hyper-V Administrators': CPTS/D/2/4/4.md
-            - 'Print Operators': CPTS/D/2/4/5.md
-            - 'Server Operators': CPTS/D/2/4/6.md
-          - 'Attacking the OS':
-            - 'User Account Control': CPTS/D/2/5/1.md
-            - 'Weak Permissions': CPTS/D/2/5/2.md
-            - 'Kernel Exploits': CPTS/D/2/5/3.md
-            - 'Vulnerable Services': CPTS/D/2/5/4.md
-            - 'DLL Injection': CPTS/D/2/5/5.md
-          - 'Credential Theft':
-            - 'Credential Hunting': CPTS/D/2/6/1.md
-            - 'Other Files': CPTS/D/2/6/2.md
-            - 'Further Credential Theft': CPTS/D/2/6/3.md
-          - 'Restricted Environments':
-            - 'Citrix Breakout': CPTS/D/2/7/1.md
-          - 'Additional Techniques':
-            - 'Interacting with Users': CPTS/D/2/8/1.md
-            - 'Pillaging': CPTS/D/2/8/2.md
-            - 'Miscellaneous Techniques': CPTS/D/2/8/3.md
-          - 'Dealing with End of Life Systems':
-            - 'Legacy Operating Systems': CPTS/D/2/9/1.md
-            - 'Windows Server': CPTS/D/2/9/2.md
-            - 'Windows Desktop Versions': CPTS/D/2/9/3.md
-          - 'Closing Thoughts':
-            - 'Windows Hardening': CPTS/D/2/10/1.md
-      - 'Reporting and Capstone':
-        - 'Documentation and Reporting':
-          - 'Introduction':
-            - 'Introduction to Documentation and Reporting': CPTS/E/1/1/1.md
-          - 'Preparation':
-            - 'Notetaking and Organization': CPTS/E/1/2/1.md
-            - 'Types of Reports': CPTS/E/1/2/2.md
-            - 'Components of a Report': CPTS/E/1/2/3.md
-          - 'Reporting':
-            - 'How to Write Up a Finding': CPTS/E/1/3/1.md
-            - 'Reporting Tips and Tricks': CPTS/E/1/3/2.md
-          - 'Next Steps':
-            - 'Beyond this Module': CPTS/E/1/4/1.md
-        - 'Attacking Enterprise Networks':
-          - 'Pre-Engagement':
-            - 'Intro to Attacking Enterprise Networks': CPTS/E/2/1/1.md
-            - 'Scenario and Kickoff': CPTS/E/2/1/2.md
-          - 'External Testing':
-            - 'External Information Gathering': CPTS/E/2/2/1.md
-            - 'Service Enumeration and Exploitation': CPTS/E/2/2/2.md
-            - 'Web Enumeration and Exploitation': CPTS/E/2/2/3.md
-            - 'Initial Access': CPTS/E/2/2/4.md
-          - 'Internal Testing':
-            - 'Post-Exploitation Persistence': CPTS/E/2/3/1.md
-            - 'Internal Information Gathering': CPTS/E/2/3/2.md
-            - 'Exploitation and Privilege Escalation': CPTS/E/2/3/3.md
-          - 'Lateral Movement and Privilege Escalation':
-            - 'Lateral Movement': CPTS/E/2/4/1.md
-            - 'Active Directory Compromise': CPTS/E/2/4/2.md
-            - 'Post-Exploitation': CPTS/E/2/4/3.md
-          - 'Wrapping Up':
-            - 'Engagement Closeout': CPTS/E/2/5/1.md
-            - 'Beyond this Module': CPTS/E/2/5/2.md
+            - 'Introduction':
+              - 'Introduction': CPTS/A/3/1/1.md
+            - 'WHOIS':
+                - 'WHOIS': CPTS/A/3/2/1.md
+                - 'Utilising WHOIS': CPTS/A/3/2/2.md
+            - 'DNS and Subdomains':
+              - 'DNS': CPTS/A/3/3/1.md
+              - 'Digging DNS': CPTS/A/3/3/2.md
+              - 'Subdomains': CPTS/A/3/3/3.md
+              - 'Subdomain Bruteforcing': CPTS/A/3/3/4.md
+              - 'DNS Zone Transfers': CPTS/A/3/3/5.md
+              - 'Virtual Hosts': CPTS/A/3/3/6.md
+              - 'Certificate Transparency Logs': CPTS/A/3/3/7.md
+            - 'Fingerprinting':
+              - 'Fingerprinting': CPTS/A/3/4/1.md
+            - 'Crawling':
+              - 'Crawling': CPTS/A/3/5/1.md
+              - 'robots.txt': CPTS/A/3/5/2.md
+              - 'Well-Known URIs': CPTS/A/3/5/3.md
+              - 'Creepy Crawlies': CPTS/A/3/5/4.md
+            - 'Search Engine Discovery':
+              - 'Search Engine Discovery': CPTS/A/3/6/1.md
+            - 'Web Archives':
+              - ' Web Archives': CPTS/A/3/7/1.md
+            - 'Automating Recon':
+              - 'Automating Recon': CPTS/A/3/8/1.md
+          - 'Vulnerability Assessment':
+            - 'Security Assessments':
+              - 'Security Assessments': CPTS/A/4/1/1.md
+              - 'Vulnerability Assessment': CPTS/A/4/1/2.md
+              - 'Assessment Standards': CPTS/A/4/1/3.md
+            - 'Vulnerability Scoring and Reporting':
+              - 'CVSS': CPTS/A/4/2/1.md
+              - 'CVE': CPTS/A/4/2/2.md
+            - 'Nessus':
+              - 'Vulnerability Scanning Overview': CPTS/A/4/3/1.md
+              - 'Getting Started with Nessus': CPTS/A/4/3/2.md
+              - 'Nessus Scan': CPTS/A/4/3/3.md
+              - 'Advanced Settings': CPTS/A/4/3/4.md
+              - 'Working with Nessus Scan Output': CPTS/A/4/3/5.md
+              - 'Scanning Issues': CPTS/A/4/3/6.md
+            - 'OpenVAS':
+              - 'Getting Started with OpenVAS': CPTS/A/4/4/1.md
+              - 'OpenVAS Scan': CPTS/A/4/4/2.md
+              - 'Exporting The Results': CPTS/A/4/4/3.md
+            - 'Reporting':
+              - 'Reporting': CPTS/A/4/5/1.md
+          - 'File Transfers':
+            - 'Introduction':
+              - 'File Transfers': CPTS/A/5/1/1.md
+            - 'File Transfer Methods':
+              - 'Windows File Transfer Methods': CPTS/A/5/2/1.md
+              - 'Linux File Transfer Methods': CPTS/A/5/2/2.md
+              - 'Transferring File with Code': CPTS/A/5/2/3.md
+              - 'Miscellaneous File Transfer Methods': CPTS/A/5/2/4.md
+              - 'Protected File Transfers': CPTS/A/5/2/5.md
+              - 'Catching Files over HTTP-S': CPTS/A/5/2/6.md
+              - 'Living off The Land': CPTS/A/5/2/7.md
+            - 'Detect or Be Detected':
+              - 'Detection': CPTS/A/5/3/1.md
+              - 'Evading Detection': CPTS/A/5/3/2.md
+          - 'Shells and Payloads':
+            - 'Introduction':
+              - 'Shells Jack Us In, Payloads Deliver Us Shells': CPTS/A/6/1/1.md
+              - 'CAT5 Securitys Engagement Preparation': CPTS/A/6/1/2.md
+            - 'Shell Basics':
+              - 'Anatomy of a Shell': CPTS/A/6/2/1.md
+              - 'Bind Shells': CPTS/A/6/2/2.md
+              - 'Reverse Shells': CPTS/A/6/2/3.md
+            - 'Payloads':
+              - 'Introduction to Payloads': CPTS/A/6/3/1.md
+              - 'Automating Payloads and Delivery with Metasploit': CPTS/A/6/3/2.md
+              - 'Crafting payloads with MSFvenom': CPTS/A/6/3/3.md
+            - 'Windows Shells':
+              - 'Infiltrating Windows': CPTS/A/6/4/1.md
+            - 'UNIX Shells':
+              - 'Infiltrating Unix-Linux': CPTS/A/6/5/1.md
+              - 'Spawning Interactive Shells': CPTS/A/6/5/2.md
+            - 'Web Shells':
+              - 'Introduction to Web Shells': CPTS/A/6/6/1.md
+              - 'Laudanum, One Webshell to Rule Them All': CPTS/A/6/6/2.md
+              - 'Antak Webshell': CPTS/A/6/6/3.md
+              - 'PHP Web Shells': CPTS/A/6/6/4.md
+            - 'Additional considerations':
+              - 'Detection and Prevention': CPTS/A/6/7/1.md
+          - 'Metasploit Framwork':
+            - 'Introduction':
+              - 'Preface': CPTS/A/7/1/1.md
+              - 'Introduction to Metasploit': CPTS/A/7/1/2.md
+              - 'Introduction to MSFconsole': CPTS/A/7/1/3.md
+            - 'MSF Components':
+              - 'Modules': CPTS/A/7/2/1.md
+              - 'Targets': CPTS/A/7/2/2.md
+              - 'Payloads': CPTS/A/7/2/3.md
+              - 'Encoders': CPTS/A/7/2/4.md
+              - 'Databases': CPTS/A/7/2/5.md
+              - 'Plugins and Mixins': CPTS/A/7/2/6.md
+            - 'MSF Sessions':
+              - 'Sessions and Jobs': CPTS/A/7/3/1.md
+              - 'Meterpreter': CPTS/A/7/3/2.md
+            - 'Additional Features':
+              - 'Writing and Importing Modules': CPTS/A/7/4/1.md
+              - 'Introduction to MSFVenom': CPTS/A/7/4/2.md
+              - 'Firewall and IDS-IPS evasion': CPTS/A/7/4/3.md
+        - 'Exploitation and Lateral Movement':
+          - 'Password Attacks':
+            - 'Introduction':
+              - 'Theory of Protection': CPTS/B/1/1/1.md
+              - 'Credential Storage': CPTS/B/1/1/2.md
+              - 'John The Ripper': CPTS/B/1/1/3.md
+            - 'Remote Password Attacks':
+              - 'Network Services': CPTS/B/1/2/1.md
+              - 'Password Mutations': CPTS/B/1/2/2.md
+              - 'Password Reuse and Default Passwords': CPTS/B/1/2/3.md
+            - 'Windows Local Password Attacks':
+              - 'Attacking SAM': CPTS/B/1/3/1.md
+              - 'Attacking LSASS': CPTS/B/1/3/2.md
+              - 'Attacking AD and NTDS.dit': CPTS/B/1/3/3.md
+              - 'Credential Hunting in Windows': CPTS/B/1/3/4.md
+            - 'Linux Local Password Attacks':
+              - 'Credential Hunting in Linux': CPTS/B/1/4/1.md
+              - 'Passwd, Shadow and Opasswd': CPTS/B/1/4/2.md
+            - 'Windows Lateral Movement':
+              - 'Pass the Hash (PtH)': CPTS/B/1/5/1.md
+              - 'Pass the Ticket (PtT) from Windows': CPTS/B/1/5/2.md
+              - 'Pass the Ticket (PtT) from Linux': CPTS/B/1/5/3.md
+            - 'Cracking Files':
+              - 'Protected Files': CPTS/B/1/6/1.md
+              - 'Protected Archives': CPTS/B/1/6/2.md
+            - 'Password Management':
+              - 'Password Policies': CPTS/B/1/7/1.md
+              - 'Password Managers': CPTS/B/1/7/2.md
+          - 'Attacking Common Services':
+            - 'Introduction':
+              - 'Interacting with Common Services': CPTS/B/2/1/1.md
+            - 'Protocol Specific Attacks':
+              - 'The Concept of Attacks': CPTS/B/2/2/1.md
+              - 'Service Misconfigurations': CPTS/B/2/2/2.md
+              - 'Finding Sensitive Information': CPTS/B/2/2/3.md
+            - 'FTP':
+              - 'Attacking FTP': CPTS/B/2/3/1.md
+              - 'Latest FTP Vulnerabilities': CPTS/B/2/3/2.md
+            - 'SMB':
+              - 'Attacking SMB': CPTS/B/2/4/1.md
+              - 'Latest SMB Vulnerabilities': CPTS/B/2/4/2.md
+            - 'SQL Databases':
+              - 'Attacking SQL Databases': CPTS/B/2/5/1.md
+              - 'Latest SQL Vulnerabilities': CPTS/B/2/5/2.md
+            - 'RDP':
+              - 'Attacking RDP': CPTS/B/2/6/1.md
+              - 'Latest RDP Vulnerabilities': CPTS/B/2/6/2.md
+            - 'DNS':
+              - 'Attacking DNS': CPTS/B/2/7/1.md
+              - 'Latest DNS Vulnerabilities': CPTS/B/2/7/2.md
+            - 'SMTP':
+              - 'Attacking Email Services': CPTS/B/2/8/1.md
+              - 'Latest Email Service Vulnerabilities': CPTS/B/2/8/2.md
+          - 'Pivoting, Tunneling, and Port Forwarding':
+            - 'Introduction':
+              - 'Introduction to Pivoting, Tunneling and Port Forwarding': CPTS/B/3/1/1.md
+              - 'The Networking Behind Pivoting': CPTS/B/3/1/2.md
+            - 'Choosing The Dig Site and Starting Our Tunnels':
+              - 'Dynamic PF with SSH and SOCKS Tunneling': CPTS/B/3/2/1.md
+              - 'Remote-Reverse PF with SSH': CPTS/B/3/2/2.md
+              - 'Meterpreter Tunneling and PF': CPTS/B/3/2/3.md
+            - 'Playing Pong with Socat':
+              - 'Socat Redirection with a Reverse Shell': CPTS/B/3/3/1.md
+              - 'Socat Redirection with a Bind Shell': CPTS/B/3/3/2.md
+            - 'Pivoting Around Obstacles':
+              - 'SSH for Windows plink.exe': CPTS/B/3/4/1.md
+              - 'SSH Pivoting with sshuttle': CPTS/B/3/4/2.md
+              - 'Web Server Pivoting with Rpivot': CPTS/B/3/4/3.md
+              - 'PF with Windows Netsh': CPTS/B/3/4/4.md
+            - 'Branching Out Our Tunnels':
+              - 'DNS Tunneling with Dnscat2': CPTS/B/3/5/1.md
+              - 'SOCKS5 Tunneling with Chisel': CPTS/B/3/5/2.md
+              - 'ICMP Tunneling with SOCKS': CPTS/B/3/5/3.md
+            - 'Double Pivots':
+              - 'RDP and SOCKS Tunneling with SocksOverRDP': CPTS/B/3/6/1.md
+            - 'Additional Considerations':
+              - 'Detection and Prevention': CPTS/B/3/7/1.md
+              - 'Beyond this Module': CPTS/B/3/7/2.md
+          - 'Active Directory Enumeration and Attacks':
+            - 'Setting The Stage':
+              - 'Introduction to AD Enumeration and Attacks': CPTS/B/4/1/1.md
+              - 'Tools Of The Trade': CPTS/B/4/1/2.md
+              - 'Scenario': CPTS/B/4/1/3.md
+            - 'Initial Enumeration':
+              - 'External Recon and Enumeration Principles': CPTS/B/4/2/1.md
+              - 'Initial Enumeration of the Domain': CPTS/B/4/2/2.md
+            - 'Sniffing out a Foothold':
+              - 'LLMNR NBT-NS Poisoning - from Linux': CPTS/B/4/3/1.md
+              - 'LLMNR NBT-NS Poisoning - from Windows': CPTS/B/4/3/2.md
+            - 'Sighting In, Hunting For A User':
+              - 'Password Spraying Overview': CPTS/B/4/4/1.md
+              - 'Enumerating and Retrieving Password Policies': CPTS/B/4/4/2.md
+              - 'Password Spraying - Making a Target User List': CPTS/B/4/4/3.md
+            - 'Spray Responsibly':
+              - 'Internal Password Spraying - from Linux': CPTS/B/4/5/1.md
+              - 'Internal Password Spraying - from Windows': CPTS/B/4/5/2.md
+            - 'Deeper Down the Rabbit Hole':
+              - 'Enumerating Security Controls': CPTS/B/4/6/1.md
+              - 'Credentialed Enumeration - from Linux': CPTS/B/4/6/2.md
+              - 'Credentialed Enumeration - from Windows': CPTS/B/4/6/3.md
+              - 'Living Off the Land': CPTS/B/4/6/4.md
+            - 'Cooking with Fire':
+              - 'Kerberoasting - from Linux': CPTS/B/4/7/1.md
+              - 'Kerberoasting - from Windows': CPTS/B/4/7/2.md
+            - 'An ACE in the Hole':
+              - 'Access Control List (ACL) Abuse Primer': CPTS/B/4/8/1.md
+              - 'ACL Enumeration': CPTS/B/4/8/2.md
+              - 'ACL Abuse Tactics': CPTS/B/4/8/3.md
+              - 'DCSync': CPTS/B/4/8/4.md
+            - 'Stacking The Deck':
+              - 'Privileged Access': CPTS/B/4/9/1.md
+              - 'Kerberos Double Hop Problem': CPTS/B/4/9/2.md
+              - 'Bleeding Edge Vulnerabilities': CPTS/B/4/9/3.md
+              - 'Miscellaneous Misconfigurations': CPTS/B/4/9/4.md
+            - 'Why So Trusting':
+              - 'Domain Trusts Primer': CPTS/B/4/10/1.md
+              - 'Attacking Domain Trusts - Child - Parent Trusts from Windows': CPTS/B/4/10/2.md
+              - 'Attacking Domain Trusts - Child - Parent Trusts - from Linux': CPTS/B/4/10/3.md
+            - 'Breaking Down Boundaries':
+              - 'Attacking Domain Trusts - Cross-Forest Trust Abuse - from Windows': CPTS/B/4/11/1.md
+              - 'Attacking Domain Trusts - Cross-Forest Trust Abuse - from Linux': CPTS/B/4/11/2.md
+            - 'Defensive Considerations':
+              - 'Hardening Active Directory': CPTS/B/4/12/1.md
+              - 'Additional AD Auditing Techniques': CPTS/B/4/12/2.md
+            - 'Final Showdown':
+              - 'Beyond this Module': CPTS/B/4/13/1.md
+        - 'Web Exploitation':
+          - 'Using Web Proxies':
+            - 'Getting Started':
+              - 'Intro to Web Proxies': CPTS/C/1/1/1.md
+              - 'Setting Up': CPTS/C/1/1/2.md
+            - 'Web Proxy':
+              - 'Proxy Setup': CPTS/C/1/2/1.md
+              - 'Intercepting Web Requests': CPTS/C/1/2/2.md
+              - 'Intercepting Responses': CPTS/C/1/2/3.md
+              - 'Automatic Modification': CPTS/C/1/2/4.md
+              - 'Repeating Requests': CPTS/C/1/2/5.md
+              - 'Encoding and Decoding': CPTS/C/1/2/6.md
+              - 'Proxying Tools': CPTS/C/1/2/7.md
+            - 'Web Fuzzer':
+              - 'Burp Intruder': CPTS/C/1/3/1.md
+              - 'ZAP Fuzzer': CPTS/C/1/3/2.md
+            - 'Web Scanner':
+              - 'Burp Scanner': CPTS/C/1/4/1.md
+              - 'ZAP Scanner': CPTS/C/1/4/2.md
+              - 'Extensions': CPTS/C/1/4/3.md
+          - 'Attacking Web Applications with Ffuf':
+            - 'Introduction':
+              - 'Introduction': CPTS/C/2/1/1.md
+              - 'Web Fuzzing': CPTS/C/2/1/2.md
+            - 'Basic Fuzzing':
+              - 'Directory Fuzzing': CPTS/C/2/2/1.md
+              - 'Page Fuzzing': CPTS/C/2/2/2.md
+              - 'Recursive Fuzzing': CPTS/C/2/2/3.md
+            - 'Domain Fuzzing':
+              - 'DNS Records': CPTS/C/2/3/1.md
+              - 'Sub-domain Fuzzing': CPTS/C/2/3/2.md
+              - 'Vhost Fuzzing': CPTS/C/2/3/3.md
+              - 'Filtering Results': CPTS/C/2/3/4.md
+            - 'Parameter Fuzzing':
+              - 'Parameter Fuzzing - GET': CPTS/C/2/4/1.md
+              - 'Parameter Fuzzing - POST': CPTS/C/2/4/2.md
+              - 'Value Fuzzing': CPTS/C/2/4/3.md
+          - 'Login Brute Forcing':
+            - 'Introduction':
+              - 'Introduction to Brute Forcing': CPTS/C/3/1/1.md
+            - 'Basic HTTP Auth Brute Forcing':
+              - 'Password Attacks': CPTS/C/3/2/1.md
+              - 'Default Passwords': CPTS/C/3/2/2.md
+              - 'Username Brute Force': CPTS/C/3/2/3.md
+            - 'Web Forms Brute Forcing':
+              - 'Hydra Modules': CPTS/C/3/3/1.md
+              - 'Determine Login Parameters': CPTS/C/3/3/2.md
+              - 'Login Form Attacks': CPTS/C/3/3/3.md
+            - 'Service Authentication Attacks':
+              - 'Personalized Wordlists': CPTS/C/3/4/1.md
+              - 'Service Authentication Brute Forcing': CPTS/C/3/4/2.md
+          - 'SQLi Fundamentals':
+            - 'Introduction':
+              - 'Introduction': CPTS/C/4/1/1.md
+            - 'Databases':
+              - 'Intro to Databases': CPTS/C/4/2/1.md
+              - 'Types of Databases': CPTS/C/4/2/2.md
+            - 'MySQL':
+              - 'Intro to MySQL': CPTS/C/4/3/1.md
+              - 'SQL Statements': CPTS/C/4/3/2.md
+              - 'Query Results': CPTS/C/4/3/3.md
+              - 'SQL Operators': CPTS/C/4/3/4.md
+            - 'SQL Injections':
+              - 'Intro to SQL Injections': CPTS/C/4/4/1.md
+              - 'Subverting Query Logic': CPTS/C/4/4/2.md
+              - 'Using Comments': CPTS/C/4/4/3.md
+              - 'Union Clause': CPTS/C/4/4/4.md
+              - 'Union Injection': CPTS/C/4/4/5.md
+            - 'Exploitation':
+              - 'Database Enumeration': CPTS/C/4/5/1.md
+              - 'Reading Files': CPTS/C/4/5/2.md
+              - 'Writing Files': CPTS/C/4/5/3.md
+            - 'Mitigations':
+              - 'Mitigating SQL Injection': CPTS/C/4/6/1.md
+          - 'Command Injections':
+            - 'Introduction':
+              - 'Intro to Command Injections': CPTS/C/9/1/1.md
+            - 'Exploitation':
+              - 'Detection': CPTS/C/9/2/1.md
+              - 'Injecting Commands': CPTS/C/9/2/2.md
+              - 'Other Injection Operators': CPTS/C/9/2/3.md
+            - 'Filter Evasion':
+              - 'Identifying Filters': CPTS/C/9/3/1.md
+              - 'Bypassing Space Filters': CPTS/C/9/3/2.md
+              - 'Bypassing Other Blacklisted Characters': CPTS/C/9/3/3.md
+              - 'Bypassing Blacklisted Commands': CPTS/C/9/3/4.md
+              - 'Advanced Command Obfuscation': CPTS/C/9/3/5.md
+              - 'Evasion Tools': CPTS/C/9/3/6.md
+            - 'Prevention':
+              - 'Command Injection Prevention': CPTS/C/9/4/1.md
+          - 'SQLMap Essentials':
+            - 'Getting Started':
+              - 'SQLMap Overview': CPTS/C/5/1/1.md
+              - 'Getting Started with SQLMap': CPTS/C/5/1/2.md
+              - 'SQLMap Output Description': CPTS/C/5/1/3.md
+            - 'Building Attacks':
+              - 'Running SQLMap on an HTTP Request': CPTS/C/5/2/1.md
+              - 'Handling SQLMap Errors': CPTS/C/5/2/2.md
+              - 'Attack Tuning': CPTS/C/5/2/3.md
+            - 'Database Enumeration':
+              - 'Database Enumeration': CPTS/C/5/3/1.md
+              - 'Advanced Database Enumeration': CPTS/C/5/3/2.md
+            - 'Advanced SQLMap Usage':
+              - 'Bypassing Web Application Protections': CPTS/C/5/4/1.md
+              - 'OS Exploitation': CPTS/C/5/4/2.md
+          - 'Cross-Site Scripting (XSS)':
+            - 'XSS Basics':
+              - 'Intro to XSS': CPTS/C/6/1/1.md
+              - 'Stored XSS': CPTS/C/6/1/2.md
+              - 'Reflected XSS': CPTS/C/6/1/3.md
+              - 'DOM XSS': CPTS/C/6/1/4.md
+              - 'XSS Discovery': CPTS/C/6/1/5.md
+            - 'XSS Attacks':
+              - 'Defacing': CPTS/C/6/2/1.md
+              - 'Phishing': CPTS/C/6/2/2.md
+              - 'Session Hijacking': CPTS/C/6/2/3.md
+            - 'XSS Prevention':
+              - 'XSS Prevention': CPTS/C/6/3/1.md
+          - 'File Inclusion':
+            - 'Introduction':
+              - 'Intro to File Inclusions': CPTS/C/7/1/1.md
+            - 'File Disclosure':
+              - 'Local File Inclusion (LFI)': CPTS/C/7/2/1.md
+              - 'Basic Bypasses': CPTS/C/7/2/2.md
+              - 'PHP Filters': CPTS/C/7/2/3.md
+            - 'Remote Code Execution':
+              - 'PHP Wrappers': CPTS/C/7/3/1.md
+              - 'Remote File Inclusion (RFI)': CPTS/C/7/3/2.md
+              - 'LFI and File Uploads': CPTS/C/7/3/3.md
+              - 'Log Poisoning': CPTS/C/7/3/4.md
+            - 'Automation and Prevention':
+              - 'Automated Scanning': CPTS/C/7/4/1.md
+              - 'File Inclusion Prevention': CPTS/C/7/4/2.md
+          - 'File Upload Attacks':
+            - 'Introduction':
+              - 'Intro to File Upload Attacks': CPTS/C/8/1/1.md
+            - 'Basic Exploitation':
+              - 'Absent Validation': CPTS/C/8/2/1.md
+              - 'Upload Exploitation': CPTS/C/8/2/2.md
+            - 'Bypassing Filters':
+              - 'Client-Side Validation': CPTS/C/8/3/1.md
+              - 'Blacklist Filters': CPTS/C/8/3/2.md
+              - 'Whitelist Filters': CPTS/C/8/3/3.md
+              - 'Type Filters': CPTS/C/8/3/4.md
+            - 'Other Upload Attacks':
+              - 'Limited File Uploads': CPTS/C/8/4/1.md
+              - 'Other Upload Attacks': CPTS/C/8/4/2.md
+            - 'Prevention':
+              - 'Preventing File Upload Vulnerabilities': CPTS/C/8/5/1.md
+          - 'Web Attacks':
+            - 'Introduction':
+              - 'Introduction to Web Attacks': CPTS/C/10/1/1.md
+            - 'HTTP Verb Tampering':
+              - 'Intro to HTTP Verb Tampering': CPTS/C/10/2/1.md
+              - 'Bypassing Basic Authentication': CPTS/C/10/2/2.md
+              - 'Bypassing Security Filters': CPTS/C/10/2/3.md
+              - 'Verb Tampering Prevention': CPTS/C/10/2/4.md
+            - 'Insecure Direct Object References (IDOR)':
+              - 'Intro to IDOR': CPTS/C/10/3/1.md
+              - 'Identifying IDORs': CPTS/C/10/3/2.md
+              - 'Mass IDOR Enumeration': CPTS/C/10/3/3.md
+              - 'Bypassing Encoded References': CPTS/C/10/3/4.md
+              - 'IDOR in Insecure APIs': CPTS/C/10/3/5.md
+              - 'Chaining IDOR Vulnerabilities': CPTS/C/10/3/6.md
+              - 'IDOR Prevention': CPTS/C/10/3/7.md
+            - 'XXE Injection':
+              - 'Intro to XXE': CPTS/C/10/4/1.md
+              - 'Local File Disclosure': CPTS/C/10/4/2.md
+              - 'Advanced File Disclosure': CPTS/C/10/4/3.md
+              - 'Blind Data Exfiltration': CPTS/C/10/4/4.md
+              - 'XXE Prevention': CPTS/C/10/4/5.md
+          - 'Attacking Common Applications':
+            - 'Setting the Stage':
+              - 'Introduction to Attacking Common Applications': CPTS/C/11/1/1.md
+              - 'Application Discovery and Enumeration': CPTS/C/11/1/2.md
+            - 'Content Management Systems (CMS)':
+              - 'WordPress - Discovery and Enumeration': CPTS/C/11/2/1.md
+              - 'Attacking WordPress': CPTS/C/11/2/2.md
+              - 'Joomla - Discovery and Enumeration': CPTS/C/11/2/3.md
+              - 'Attacking Joomla': CPTS/C/11/2/4.md
+              - 'Drupal - Discovery and Enumeration': CPTS/C/11/2/5.md
+              - 'Attacking Drupal': CPTS/C/11/2/6.md
+            - 'Servlet Containers and Software Development':
+              - 'Tomcat - Discovery and Enumeration': CPTS/C/11/3/1.md
+              - 'Attacking Tomcat': CPTS/C/11/3/2.md
+              - 'Jenkins - Discovery and Enumeration': CPTS/C/11/3/3.md
+              - 'Attacking Jenkins': CPTS/C/11/3/4.md
+            - 'Infrastructure and Network Monitoring Tools':
+              - 'Splunk - Discovery and Enumeration': CPTS/C/11/4/1.md
+              - 'Attacking Splunk': CPTS/C/11/4/2.md
+              - 'PRTG Network Monitor': CPTS/C/11/4/3.md
+            - 'Customer Service Mgmt and Configuration Management':
+              - 'osTicket': CPTS/C/11/5/1.md
+              - 'Gitlab - Discovery and Enumeration': CPTS/C/11/5/2.md
+              - 'Attacking GitLab': CPTS/C/11/5/3.md
+            - 'Common Gateway Interfaces':
+              - 'Attacking Tomcat CGI': CPTS/C/11/6/1.md
+              - 'Attacking CGI Applications - Shellshock': CPTS/C/11/6/2.md
+            - 'Thick Client Applications':
+              - 'Attacking Thick Client Applications': CPTS/C/11/7/1.md
+              - 'Exploiting Web Vulnerabilities in Thick-Client Applications': CPTS/C/11/7/2.md
+            - 'Miscellaneous Applications':
+              - 'ColdFusion - Discovery and Enumeration': CPTS/C/11/8/1.md
+              - 'Attacking ColdFusion': CPTS/C/11/8/2.md
+              - 'IIS Tilde Enumeration': CPTS/C/11/8/3.md
+              - 'Attacking LDAP': CPTS/C/11/8/4.md
+              - 'Web Mass Assignment Vulnerabilities': CPTS/C/11/8/5.md
+              - 'Attacking Applications Connecting to Services': CPTS/C/11/8/6.md
+              - 'Other Notable Applications': CPTS/C/11/8/7.md
+            - 'Closing Out':
+              - 'Application Hardening': CPTS/C/11/9/1.md
+        - 'Post-Exploitation':
+          - 'Linux Privilege Escalation':
+            - 'Introduction':
+              - 'Introduction to Linux Privilege Escalation': CPTS/D/1/1/1.md
+            - 'Information Gathering':
+              - 'Environment Enumeration': CPTS/D/1/2/1.md
+              - 'Linux Services and Internals Enumeration': CPTS/D/1/2/2.md
+              - 'Credential Hunting': CPTS/D/1/2/3.md
+            - 'Environment-based Privilege Escalation':
+              - 'Path Abuse': CPTS/D/1/3/1.md
+              - 'Wildcard Abuse': CPTS/D/1/3/2.md
+              - 'Escaping Restricted Shells': CPTS/D/1/3/3.md
+            - 'Permissions-based Privilege Escalation':
+              - 'Special Permissions': CPTS/D/1/4/1.md
+              - 'Sudo Rights Abuse': CPTS/D/1/4/2.md
+              - 'Privileged Groups': CPTS/D/1/4/3.md
+              - 'Capabilities': CPTS/D/1/4/4.md
+            - 'Service-based Privilege Escalation':
+              - 'Vulnerable Services': CPTS/D/1/5/1.md
+              - 'Cron Job Abuse': CPTS/D/1/5/2.md
+              - 'LXD': CPTS/D/1/5/3.md
+              - 'Docker': CPTS/D/1/5/4.md
+              - 'Kubernetes': CPTS/D/1/5/5.md
+              - 'Logrotate': CPTS/D/1/5/6.md
+              - 'Miscellaneous Techniques': CPTS/D/1/5/7.md
+            - 'Linux Internals-based Privilege Escalation':
+              - 'Kernel Exploits': CPTS/D/1/6/1.md
+              - 'Shared Libraries': CPTS/D/1/6/2.md
+              - 'Shared Object Hijacking': CPTS/D/1/6/3.md
+              - 'Python Library Hijacking': CPTS/D/1/6/4.md
+            - 'Recent 0-Days':
+              - 'Sudo': CPTS/D/1/7/1.md
+              - 'Polkit': CPTS/D/1/7/2.md
+              - 'Dirty Pipe': CPTS/D/1/7/3.md
+              - 'Netfilter': CPTS/D/1/7/4.md
+            - 'Hardening Considerations':
+              - 'Linux Hardening': CPTS/D/1/8/1.md
+          - 'Windows Privilege Escalation':
+            - 'Introduction':
+              - 'Introduction to Windows Privilege Escalation': CPTS/D/2/1/1.md
+              - 'Useful Tools': CPTS/D/2/1/2.md
+            - 'Getting the Lay of the Land':
+              - 'Situational Awareness': CPTS/D/2/2/1.md
+              - 'Initial Enumeration': CPTS/D/2/2/2.md
+              - 'Communication with Processes': CPTS/D/2/2/3.md
+            - 'Windows Users Privileges':
+              - 'Windows Privileges Overview': CPTS/D/2/3/1.md
+              - 'Selmpersonate and SeAssignPrimaryToken': CPTS/D/2/3/2.md
+              - 'SeDebugPrivilege': CPTS/D/2/3/3.md
+              - 'SeTakeOwnershipPrivilege': CPTS/D/2/3/4.md
+            - 'Windows Group Privileges':
+              - 'Windows Built-in Groups': CPTS/D/2/4/1.md
+              - 'Event Log Readers': CPTS/D/2/4/2.md
+              - 'DnsAdmins': CPTS/D/2/4/3.md
+              - 'Hyper-V Administrators': CPTS/D/2/4/4.md
+              - 'Print Operators': CPTS/D/2/4/5.md
+              - 'Server Operators': CPTS/D/2/4/6.md
+            - 'Attacking the OS':
+              - 'User Account Control': CPTS/D/2/5/1.md
+              - 'Weak Permissions': CPTS/D/2/5/2.md
+              - 'Kernel Exploits': CPTS/D/2/5/3.md
+              - 'Vulnerable Services': CPTS/D/2/5/4.md
+              - 'DLL Injection': CPTS/D/2/5/5.md
+            - 'Credential Theft':
+              - 'Credential Hunting': CPTS/D/2/6/1.md
+              - 'Other Files': CPTS/D/2/6/2.md
+              - 'Further Credential Theft': CPTS/D/2/6/3.md
+            - 'Restricted Environments':
+              - 'Citrix Breakout': CPTS/D/2/7/1.md
+            - 'Additional Techniques':
+              - 'Interacting with Users': CPTS/D/2/8/1.md
+              - 'Pillaging': CPTS/D/2/8/2.md
+              - 'Miscellaneous Techniques': CPTS/D/2/8/3.md
+            - 'Dealing with End of Life Systems':
+              - 'Legacy Operating Systems': CPTS/D/2/9/1.md
+              - 'Windows Server': CPTS/D/2/9/2.md
+              - 'Windows Desktop Versions': CPTS/D/2/9/3.md
+            - 'Closing Thoughts':
+              - 'Windows Hardening': CPTS/D/2/10/1.md
+        - 'Reporting and Capstone':
+          - 'Documentation and Reporting':
+            - 'Introduction':
+              - 'Introduction to Documentation and Reporting': CPTS/E/1/1/1.md
+            - 'Preparation':
+              - 'Notetaking and Organization': CPTS/E/1/2/1.md
+              - 'Types of Reports': CPTS/E/1/2/2.md
+              - 'Components of a Report': CPTS/E/1/2/3.md
+            - 'Reporting':
+              - 'How to Write Up a Finding': CPTS/E/1/3/1.md
+              - 'Reporting Tips and Tricks': CPTS/E/1/3/2.md
+            - 'Next Steps':
+              - 'Beyond this Module': CPTS/E/1/4/1.md
+          - 'Attacking Enterprise Networks':
+            - 'Pre-Engagement':
+              - 'Intro to Attacking Enterprise Networks': CPTS/E/2/1/1.md
+              - 'Scenario and Kickoff': CPTS/E/2/1/2.md
+            - 'External Testing':
+              - 'External Information Gathering': CPTS/E/2/2/1.md
+              - 'Service Enumeration and Exploitation': CPTS/E/2/2/2.md
+              - 'Web Enumeration and Exploitation': CPTS/E/2/2/3.md
+              - 'Initial Access': CPTS/E/2/2/4.md
+            - 'Internal Testing':
+              - 'Post-Exploitation Persistence': CPTS/E/2/3/1.md
+              - 'Internal Information Gathering': CPTS/E/2/3/2.md
+              - 'Exploitation and Privilege Escalation': CPTS/E/2/3/3.md
+            - 'Lateral Movement and Privilege Escalation':
+              - 'Lateral Movement': CPTS/E/2/4/1.md
+              - 'Active Directory Compromise': CPTS/E/2/4/2.md
+              - 'Post-Exploitation': CPTS/E/2/4/3.md
+            - 'Wrapping Up':
+              - 'Engagement Closeout': CPTS/E/2/5/1.md
+              - 'Beyond this Module': CPTS/E/2/5/2.md
+      - 'Core Impact':
+        - 'Getting Started with Core Impact':
+          - 'User Interface': CI/A/1/1.md
+          - 'Cleanup': CI/A/11/1.md
+          - 'Reporting': CI/A/12/1.md
+          - 'Using Modules': CI/A/2/1.md
+          - 'Workspace Management': CI/A/3/1.md
+          - 'Teaming': CI/A/4/1.md
+          - 'Generating Agents': CI/A/5/1.md
+          - 'Command and Control Options': CI/A/6/1.md
+          - 'Using Search': CI/A/7/1.md
+          - 'Agent Persistence': CI/A/8/1.md
+          - 'Creating Macros': CI/A/9/1.md
+        - 'Core Impact Training in 20 Minutes':
+          - 'Discovery Methods and RPTs': CI/B/1/1.md
+          - 'Attacking Web Applications': CI/B/2/1.md
+          - 'Pivoting': CI/B/3/1.md
+          - 'Setting Up Listeners': CI/B/4/1.md
+          - 'Password Spraying': CI/B/5/1.md
+          - 'Man-in-the-Middle Attacks': CI/B/6/1.md
+          - 'Post-Exploitation Techniques': CI/B/7/1.md
+          - 'Pen Test Reporting': CI/B/8/1.md
+        - 'Core Impact Advanced Techniques':
+          - 'MITRE ATT&CK': CI/C/1/1.md
+          - 'Password Attacks': CI/C/2/1.md
+          - 'Windows Secret Dump': CI/C/3/1.md
+          - '.NET Assembly Execution': CI/C/4/1.md
+          - 'Restful API Utilization': CI/C/5/1.md
+          - 'Active Directory Attacks': CI/C/6/1.md
+          - 'Golden Ticket': CI/C/7/1.md
+          - 'Agent Process Injection': CI/C/8/1.md
+          - 'Session Passing From Core Impact to Cobalt': CI/C/9/1.md
+        - 'Local Information Gathering, Ids and Privilege Escalation in Core Impact':
+          - 'Local Information Gathering, Identities, and Privilege Escalation in Core Impact': CI/D/1/1.md
+        - 'Using Core Impact with PowerShell Empire':
+          - 'Using Core Impact with PowerShell Empire': CI/E/1/1.md
+        - 'Conducting Phishing Attacks in Core Impact':
+          - 'LinkedIn Phishing Campaign': CI/F/1/1.md
+          - 'Phishing Attacks Using SMTP': CI/F/2/1.md
+
   - HTB: https://app.hackthebox.com/profile/1199698
   - Github: https://github.com/dcollaoa
   - Linkedin: https://www.linkedin.com/in/dcollaoa/
