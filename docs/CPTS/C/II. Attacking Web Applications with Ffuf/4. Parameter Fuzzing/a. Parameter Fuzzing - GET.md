@@ -1,0 +1,51 @@
+Si ejecutamos un escaneo recursivo con `ffuf` en `admin.academy.htb`, deberíamos encontrar `http://admin.academy.htb:PORT/admin/admin.php`. Si intentamos acceder a esta página, vemos lo siguiente:
+
+![[Pasted image 20240716005128.png]]
+
+Esto indica que debe haber algo que identifica a los usuarios para verificar si tienen acceso para leer el `flag`. No iniciamos sesión, ni tenemos ninguna cookie que pueda ser verificada en el backend. Así que, tal vez haya una key que podamos pasar a la página para leer el `flag`. Dichas keys usualmente se pasan como un `parameter`, utilizando una solicitud HTTP `GET` o `POST`. Esta sección discutirá cómo fuzzing para dichos parámetros hasta que identifiquemos un parámetro que pueda ser aceptado por la página.
+
+**Consejo:** El fuzzing de parámetros puede exponer parámetros no publicados que son públicamente accesibles. Dichos parámetros tienden a estar menos probados y menos seguros, por lo que es importante probar dichos parámetros para las vulnerabilidades web que discutimos en otros módulos.
+
+## GET Request Fuzzing
+
+De manera similar a cómo hemos estado fuzzing varias partes de un sitio web, usaremos `ffuf` para enumerar parámetros. Primero comencemos con fuzzing para solicitudes `GET`, que usualmente se pasan justo después de la URL, con un símbolo `?`, como:
+
+- `http://admin.academy.htb:PORT/admin/admin.php?param1=key`.
+
+Entonces, todo lo que tenemos que hacer es reemplazar `param1` en el ejemplo anterior con `FUZZ` y volver a ejecutar nuestro escaneo. Sin embargo, antes de poder comenzar, debemos elegir una wordlist adecuada. Una vez más, `SecLists` tiene justo eso en `/opt/useful/SecLists/Discovery/Web-Content/burp-parameter-names.txt`. Con eso, podemos ejecutar nuestro escaneo.
+
+Una vez más, obtendremos muchos resultados, por lo que filtraremos el tamaño de respuesta predeterminado que estamos obteniendo.
+
+```r
+ffuf -w /opt/useful/SecLists/Discovery/Web-Content/burp-parameter-names.txt:FUZZ -u http://admin.academy.htb:PORT/admin/admin.php?FUZZ=key -fs xxx
+
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v1.1.0-git
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://admin.academy.htb:PORT/admin/admin.php?FUZZ=key
+ :: Wordlist         : FUZZ: /opt/useful/SecLists/Discovery/Web-Content/burp-parameter-names.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200,204,301,302,307,401,403
+ :: Filter           : Response size: xxx
+________________________________________________
+
+<...SNIP...>                    [Status: xxx, Size: xxx, Words: xxx, Lines: xxx]
+```
+
+Obtenemos un resultado. Probemos visitar la página y agregar este parámetro `GET`, y veamos si ahora podemos leer el flag:
+
+![[Pasted image 20240716005302.png]]
+
+Como podemos ver, el único resultado que obtuvimos ha sido `deprecated` y parece que ya no está en uso.

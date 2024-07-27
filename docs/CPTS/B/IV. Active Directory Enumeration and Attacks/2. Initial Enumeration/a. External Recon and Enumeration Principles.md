@@ -1,0 +1,189 @@
+Antes de iniciar cualquier pentest, puede ser beneficioso realizar `external reconnaissance` de tu objetivo. Esto puede servir para diversas funciones, tales como:
+
+- Validar la información proporcionada en el documento de alcance por el cliente.
+- Asegurarse de que estás tomando acciones dentro del alcance adecuado cuando trabajas de forma remota.
+- Buscar cualquier información que sea públicamente accesible y que pueda afectar el resultado de tu prueba, como credenciales filtradas.
+
+Piénsalo de esta manera; estamos tratando de obtener el `lay of the land` para asegurarnos de proporcionar la prueba más completa posible para nuestro cliente. Esto también significa identificar posibles filtraciones de información y datos de brechas en el mundo. Esto puede ser tan simple como obtener un formato de nombre de usuario del sitio web principal del cliente o de las redes sociales. También podemos profundizar buscando en repositorios de GitHub credenciales dejadas en pushs de código, buscando en documentos enlaces a una intranet o sitios accesibles de forma remota, y buscando cualquier información que pueda indicarnos cómo está configurado el entorno empresarial.
+
+---
+
+## What Are We Looking For?
+
+Cuando realizamos nuestro `external reconnaissance`, hay varios elementos clave que deberíamos buscar. Esta información puede no siempre estar accesible públicamente, pero sería prudente ver qué hay disponible. Si nos quedamos atascados durante un test de penetración, mirar hacia atrás a lo que se pudo obtener a través de la recon pasiva puede darnos el empujón necesario para avanzar, como datos de brechas de contraseñas que podrían usarse para acceder a una VPN u otro servicio externo. La tabla a continuación destaca el "`What`" en lo que estaríamos buscando durante esta fase de nuestro compromiso.
+
+|**Data Point**|**Description**|
+|---|---|
+|`IP Space`|ASN válido para nuestro objetivo, bloques de red en uso para la infraestructura pública de la organización, presencia en la nube y los proveedores de alojamiento, entradas de registros DNS, etc.|
+|`Domain Information`|Basado en datos de IP, DNS y registros de sitios. ¿Quién administra el dominio? ¿Hay subdominios vinculados a nuestro objetivo? ¿Hay servicios de dominio públicamente accesibles presentes? (Servidores de correo, DNS, sitios web, portales VPN, etc.) ¿Podemos determinar qué tipo de defensas están en su lugar? (SIEM, AV, IPS/IDS en uso, etc.)|
+|`Schema Format`|¿Podemos descubrir las cuentas de correo electrónico de la organización, nombres de usuario de AD e incluso políticas de contraseñas? Cualquier cosa que nos dé información que podamos usar para construir una lista de nombres de usuario válida para probar servicios externos para password spraying, credential stuffing, brute forcing, etc.|
+|`Data Disclosures`|Para las divulgaciones de datos, buscaremos archivos públicamente accesibles (.pdf, .ppt, .docx, .xlsx, etc.) para cualquier información que ayude a esclarecer el objetivo. Por ejemplo, cualquier archivo publicado que contenga listados de `intranet`, metadatos de usuarios, shares u otro software o hardware crítico en el entorno (credenciales enviadas a un repositorio público de GitHub, el formato de nombre de usuario interno de AD en los metadatos de un PDF, por ejemplo).|
+|`Breach Data`|Cualquier nombre de usuario, contraseñas u otra información crítica públicamente liberada que pueda ayudar a un atacante a obtener una posición.|
+  
+Hemos abordado el `why` y el `what` de `external reconnaissance`; vamos a profundizar en el `where` y el `how`.
+
+---
+
+## Where Are We Looking?
+
+Nuestra lista de puntos de datos anteriores se puede recopilar de muchas maneras diferentes. Hay muchos sitios web y herramientas diferentes que pueden proporcionarnos parte o toda la información anterior que podríamos usar para obtener información vital para nuestra evaluación. La tabla a continuación enumera algunos recursos potenciales y ejemplos que se pueden usar.
+
+|**Resource**|**Examples**|
+|---|---|
+|`ASN / IP registrars`|[IANA](https://www.iana.org/), [arin](https://www.arin.net/) para búsquedas en las Américas, [RIPE](https://www.ripe.net/) para búsquedas en Europa, [BGP Toolkit](https://bgp.he.net/)|
+|`Domain Registrars & DNS`|[Domaintools](https://www.domaintools.com/), [PTRArchive](http://ptrarchive.com/), [ICANN](https://lookup.icann.org/lookup), solicitudes manuales de registros DNS contra el dominio en cuestión o contra servidores DNS conocidos, como `8.8.8.8`.|
+|`Social Media`|Búsqueda en LinkedIn, Twitter, Facebook, los principales sitios de redes sociales de tu región, artículos de noticias y cualquier información relevante que puedas encontrar sobre la organización.|
+|`Public-Facing Company Websites`|A menudo, el sitio web público de una corporación tendrá información relevante incrustada. Artículos de noticias, documentos incrustados y las páginas "About Us" y "Contact Us" también pueden ser minas de oro.|
+|`Cloud & Dev Storage Spaces`|[GitHub](https://github.com/), [AWS S3 buckets & Azure Blog storage containers](https://grayhatwarfare.com/), [Google searches using "Dorks"](https://www.exploit-db.com/google-hacking-database)|
+|`Breach Data Sources`|[HaveIBeenPwned](https://haveibeenpwned.com/) para determinar si alguna cuenta de correo corporativa aparece en datos de brechas públicas, [Dehashed](https://www.dehashed.com/) para buscar correos corporativos con contraseñas en texto claro o hashes que podemos intentar descifrar fuera de línea. Luego podemos intentar estas contraseñas contra cualquier portal de inicio de sesión expuesto (Citrix, RDS, OWA, 0365, VPN, VMware Horizon, aplicaciones personalizadas, etc.) que pueda usar autenticación AD.|
+
+### Finding Address Spaces
+
+![image](https://academy.hackthebox.com/storage/modules/143/bgp-toolkit.png)
+
+El `BGP-Toolkit` alojado por [Hurricane Electric](http://he.net/) es un recurso fantástico para investigar qué bloques de direcciones están asignados a una organización y en qué ASN residen. Solo introduce un dominio o dirección IP, y la herramienta buscará cualquier resultado que pueda encontrar. Podemos obtener mucha información de esto. Muchas grandes corporaciones a menudo alojarán su infraestructura, y dado que tienen una gran huella, tendrán su propio ASN. Esto típicamente no será el caso para organizaciones más pequeñas o empresas incipientes. A medida que investigues, ten esto en cuenta, ya que las organizaciones más pequeñas a menudo alojarán sus sitios web y otra infraestructura en el espacio de otra persona (Cloudflare, Google Cloud, AWS o Azure, por ejemplo). Entender dónde reside esa infraestructura es extremadamente importante para nuestras pruebas. Tenemos que asegurarnos de que no estamos interactuando con infraestructura fuera de nuestro alcance. Si no somos cuidadosos mientras realizamos pentests contra una organización más pequeña, podríamos terminar causando daño inadvertidamente a otra organización que comparte esa infraestructura. Tienes un acuerdo para probar con el cliente, no con otros en el mismo servidor o con el proveedor. Las preguntas sobre infraestructura autohospedada o gestionada por terceros deben manejarse durante el proceso de alcance y estar claramente enumeradas en cualquier documento de alcance que recibas.
+
+En algunos casos, tu cliente puede necesitar obtener una aprobación por escrito de un proveedor de alojamiento de terceros antes de que puedas probar. Otros, como AWS, tienen guías específicas para realizar tests de penetración y no requieren aprobación previa para probar algunos de sus servicios. Otros, como Oracle, te piden que envíes una `Cloud Security Testing Notification`. Estos tipos de pasos deben ser manejados por la gestión de tu empresa, el equipo legal, el equipo de contratos, etc. Si tienes dudas, escala antes de atacar cualquier servicio externo del que no estés seguro durante una evaluación. Es nuestra responsabilidad asegurarnos de tener permiso explícito para atacar cualquier host (tanto interno como externo), y detenerse y aclarar el alcance por escrito nunca hace daño.
+
+### DNS
+
+DNS es una gran manera de validar nuestro alcance y descubrir hosts alcanzables que el cliente no divulgó en su documento de alcance. Sitios como [domaintools](https://whois.domaintools.com/), y [viewdns.info](https://viewdns.info/) son excelentes lugares para comenzar. Podemos obtener muchos registros y otros datos que van desde la resolución DNS hasta probar si el sitio es accesible en países más restringidos. A veces podemos encontrar hosts adicionales fuera del alcance, pero que parecen interesantes. En ese caso, podríamos llevar esta lista a nuestro cliente para ver si alguno de ellos debería incluirse en el alcance. También podemos encontrar subdominios interesantes que no estaban listados en los documentos de alcance, pero que residen en direcciones IP dentro del alcance y, por lo tanto, son justos para nosotros.
+
+### Viewdns.info
+
+![image](https://academy.hackthebox.com/storage/modules/143/viewdnsinfo.png)
+
+Esta también es una gran manera de validar algunos de los datos encontrados en nuestras búsquedas de IP/ASN. No toda la información sobre el dominio encontrado estará actualizada, y realizar verificaciones que puedan validar lo que vemos es siempre una buena práctica.
+
+### Public Data
+
+Las redes sociales pueden ser una mina de oro de datos interesantes que pueden darnos una pista de cómo está estructurada la organización, qué tipo de equipos operan, posibles implementaciones de software y seguridad, su esquema y más. Además de esa lista están los sitios relacionados con el empleo como LinkedIn, Indeed
+
+.com y Glassdoor. Las publicaciones de trabajo simples a menudo revelan mucho sobre una empresa. Por ejemplo, mira la lista de trabajos a continuación. Es para un `SharePoint Administrator` y puede darnos pistas sobre muchas cosas. Podemos decir por la lista que la empresa ha estado usando SharePoint durante un tiempo y tiene un programa maduro ya que están hablando de programas de seguridad, respaldo y recuperación ante desastres, y más. Lo que es interesante para nosotros en esta publicación es que podemos ver que la empresa probablemente usa SharePoint 2013 y SharePoint 2016. Eso significa que pueden haber actualizado en su lugar, dejando potencialmente vulnerabilidades que pueden no existir en versiones más nuevas. Esto también significa que podemos encontrarnos con diferentes versiones de SharePoint durante nuestros compromisos.
+
+### Sharepoint Admin Job Listing
+
+![image](https://academy.hackthebox.com/storage/modules/143/spjob2.png)
+
+No descartes la información pública como las publicaciones de trabajo o las redes sociales. Puedes aprender mucho sobre una organización solo por lo que publican, y una publicación bien intencionada podría revelar datos relevantes para nosotros como penetration testers.
+
+Los sitios web alojados por la organización también son excelentes lugares para buscar información. Podemos recopilar correos de contacto, números de teléfono, organigramas, documentos publicados, etc. Estos sitios, específicamente los documentos incrustados, pueden tener a menudo enlaces a infraestructura interna o sitios de intranet que de otro modo no conocerías. Verificar cualquier información públicamente accesible para esos tipos de detalles puede ser una victoria rápida al intentar formular una imagen de la estructura del dominio. Con el creciente uso de sitios como GitHub, almacenamiento en la nube de AWS y otras plataformas web, los datos también pueden filtrarse de forma no intencional. Por ejemplo, un desarrollador que trabaja en un proyecto puede dejar accidentalmente algunas credenciales o notas hardcoded en una liberación de código. Si sabes dónde buscar esos datos, puede darte una victoria fácil. Podría significar la diferencia entre tener que hacer password spraying y forzar credenciales durante horas o días o obtener una posición rápida con credenciales de desarrollador, que también pueden tener permisos elevados. Herramientas como [Trufflehog](https://github.com/trufflesecurity/truffleHog) y sitios como [Greyhat Warfare](https://buckets.grayhatwarfare.com/) son recursos fantásticos para encontrar estas pistas.
+
+Hemos pasado algún tiempo discutiendo la enumeración externa y la recon de una organización, pero esto es solo una pieza del rompecabezas. Para una introducción más detallada a OSINT y la enumeración externa, consulta los módulos [Footprinting](https://academy.hackthebox.com/course/preview/footprinting) y [OSINT:Corporate Recon](https://academy.hackthebox.com/course/preview/osint-corporate-recon).
+
+Hasta este punto, hemos sido principalmente pasivos en nuestras discusiones. A medida que avanzas en el pentest, te volverás más práctico, validando la información que has encontrado y sondeando el dominio para obtener más información. Tomémonos un minuto para discutir los principios de enumeración y cómo podemos implementar un proceso para realizar estas acciones.
+
+---
+
+## Overarching Enumeration Principles
+
+Teniendo en cuenta que nuestro objetivo es entender mejor a nuestro objetivo, estamos buscando todas las posibles vías que podamos encontrar que nos proporcionen una ruta potencial hacia el interior. La enumeración en sí es un proceso iterativo que repetiremos varias veces a lo largo de un test de penetración. Además del documento de alcance del cliente, esta es nuestra fuente principal de información, por lo que queremos asegurarnos de no dejar ninguna piedra sin voltear. Al comenzar nuestra enumeración, primero utilizaremos recursos `passive`, comenzando con un alcance amplio y reduciendo. Una vez que agotemos nuestra primera ronda de enumeración pasiva, necesitaremos examinar los resultados y luego pasar a nuestra fase de enumeración activa.
+
+---
+
+## Example Enumeration Process
+
+Ya hemos cubierto bastantes conceptos relacionados con la enumeración. Empecemos a juntarlos todos. Practicaremos nuestras tácticas de enumeración en el dominio `inlanefreight.com` sin realizar ningún escaneo pesado (como Nmap o escaneos de vulnerabilidades que están fuera del alcance). Comenzaremos primero verificando nuestros datos de bloques de red y viendo qué podemos encontrar.
+
+### Check for ASN/IP & Domain Data
+
+![image](https://academy.hackthebox.com/storage/modules/143/BGPhe-inlane.png)
+
+De esta primera mirada, ya hemos obtenido alguna información interesante. BGP.he está informando:
+
+- IP Address: 134.209.24.248
+- Mail Server: mail1.inlanefreight.com
+- Nameservers: NS1.inlanefreight.com & NS2.inlanefreight.com
+
+Por ahora, esto es lo que nos importa de su salida. Inlanefreight no es una gran corporación, por lo que no esperábamos encontrar que tenía su propio ASN. Ahora validemos parte de esta información.
+
+### Viewdns Results
+
+![image](https://academy.hackthebox.com/storage/modules/143/viewdns-results.png)
+
+En la solicitud anterior, utilizamos `viewdns.info` para validar la dirección IP de nuestro objetivo. Ambos resultados coinciden, lo cual es una buena señal. Ahora probemos otra ruta para validar los dos nameservers en nuestros resultados.
+
+```r
+[!bash!]$ nslookup ns1.inlanefreight.com
+
+Server:		192.168.186.1
+Address:	192.168.186.1#53
+
+Non-authoritative answer:
+Name:	ns1.inlanefreight.com
+Address: 178.128.39.165
+
+nslookup ns2.inlanefreight.com
+Server:		192.168.86.1
+Address:	192.168.86.1#53
+
+Non-authoritative answer:
+Name:	ns2.inlanefreight.com
+Address: 206.189.119.186 
+```
+
+Ahora tenemos `two` nuevas direcciones IP para agregar a nuestra lista para validación y pruebas. Antes de tomar cualquier otra acción con ellas, asegúrate de que estén dentro del alcance de tu prueba. Para nuestros propósitos, las direcciones IP reales no estarían dentro del alcance para el escaneo, pero podríamos navegar pasivamente por cualquier sitio web para buscar datos interesantes. Por ahora, eso es todo con la enumeración de información de dominio desde DNS. Echemos un vistazo a la información públicamente disponible.
+
+Inlanefreight es una empresa ficticia que estamos utilizando para este módulo, por lo que no hay presencia real en las redes sociales. Sin embargo, verificaríamos sitios como LinkedIn, Twitter, Instagram y Facebook en busca de información útil si fuera real. En su lugar, pasaremos a examinar el sitio web `inlanefreight.com`.
+
+La primera verificación que realizamos fue buscar cualquier documento. Usando `filetype:pdf inurl:inlanefreight.com` como búsqueda, estamos buscando PDFs.
+
+### Hunting For Files
+
+![image](https://academy.hackthebox.com/storage/modules/143/google-dorks.png)
+
+Apareció un documento, por lo que necesitamos asegurarnos de anotar el documento y su ubicación y descargar una copia localmente para examinarla. Siempre es mejor guardar archivos, capturas de pantalla, resultados de escaneo, salida de herramientas, etc., tan pronto como los encontremos o los generemos. Esto nos ayuda a mantener un registro lo más completo posible y no arriesgarnos a olvidar dónde vimos algo o perder datos críticos. A continuación, busquemos cualquier dirección de correo electrónico que podamos encontrar.
+
+### Hunting E-mail Addresses
+
+![image](https://academy.hackthebox.com/storage/modules/143/intext-dork.png)
+
+Usando el dork `intext:"@inlanefreight.com" inurl:inlanefreight.com`, estamos buscando cualquier instancia que aparezca similar al final de una dirección de correo electrónico en el sitio web. Un resultado prometedor apareció con una página de contacto. Cuando miramos la página (que se muestra a continuación), podemos ver una gran lista de empleados y su información de contacto. Esta información puede ser útil ya que podemos determinar que estas personas son al menos probablemente activas y todavía están trabajando con la empresa.
+
+### E-mail Dork Results
+
+Navegando por la [contact page](https://www.inlanefreight.com/index.php/contact/), podemos ver varios correos electrónicos para el personal en diferentes oficinas alrededor del mundo. Ahora tenemos una idea de su convención de nombres de correo electrónico (first.last) y dónde trabajan algunas personas en la organización. Esto podría ser útil en futuros ataques de password spraying o si la ingeniería social/phishing formara parte del alcance de nuestro compromiso.
+
+![image](https://academy.hackthebox.com/storage/modules/143/ilfreightemails.png)
+
+### Username Harvesting
+
+Podemos usar una herramienta como [linkedin2username](https://github.com/initstring/linkedin2username) para extraer datos de la página de LinkedIn de una empresa y crear varias combinaciones de nombres de usuario (flast, first.last, f.last, etc.) que se pueden agregar a nuestra lista de posibles objetivos de password spraying.
+
+### Credential Hunting
+
+[Dehashed](http://dehashed.com/) es una excelente herramienta para buscar credenciales en texto claro y hashes de contraseñas en datos de brechas. Podemos buscar en el sitio o usando un script que realiza consultas a través de la API. Típicamente encontraremos muchas contraseñas antiguas para usuarios que no funcionan en portales externos que usan autenticación AD (o interna), pero ¡podríamos tener suerte! Esta es otra herramienta que puede ser útil para crear una lista de usuarios para password spraying externo o interno.
+
+
+
+**Note**: Para nuestros propósitos, los datos de ejemplo a continuación son ficticios.
+
+```r
+[!bash!]$ sudo python3 dehashed.py -q inlanefreight.local -p
+
+id : 5996447501
+email : roger.grimes@inlanefreight.local
+username : rgrimes
+password : Ilovefishing!
+hashed_password : 
+name : Roger Grimes
+vin : 
+address : 
+phone : 
+database_name : ModBSolutions
+
+id : 7344467234
+email : jane.yu@inlanefreight.local
+username : jyu
+password : Starlight1982_!
+hashed_password : 
+name : Jane Yu
+vin : 
+address : 
+phone : 
+database_name : MyFitnessPal
+
+<SNIP>
+```
+
+Ahora que tenemos el control de esto, intenta buscar otros resultados relacionados con el dominio inlanefreight.com. ¿Qué puedes encontrar? ¿Hay otros archivos, páginas o información útil incrustados en el sitio? Esta sección demostró la importancia de analizar a fondo nuestro objetivo, siempre y cuando nos mantengamos dentro del alcance y no probemos nada para lo que no estemos autorizados, y respetemos las limitaciones de tiempo del engagement. He tenido varias evaluaciones donde tuve problemas para obtener acceso desde un punto de vista anónimo en la red interna y recurrí a crear una lista de palabras utilizando diversas fuentes externas (Google, scraping de LinkedIn, Dehashed, etc.) y luego realicé ataques de password spraying interno dirigidos para obtener credenciales válidas de una cuenta de usuario de dominio estándar. Como veremos en las siguientes secciones, podemos realizar la gran mayoría de nuestra enumeración interna de AD con solo un conjunto de credenciales de usuario de dominio de bajo privilegio e incluso muchos ataques. La diversión comienza una vez que tenemos un conjunto de credenciales. Vamos a pasar a la enumeración interna y comenzar a analizar el dominio interno `INLANEFREIGHT.LOCAL` de manera pasiva y activa según el alcance y las reglas de compromiso de nuestra evaluación.

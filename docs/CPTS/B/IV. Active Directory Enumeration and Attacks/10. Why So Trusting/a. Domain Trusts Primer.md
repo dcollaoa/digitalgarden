@@ -1,0 +1,252 @@
+## Scenario
+
+Muchas organizaciones grandes adquirirán nuevas compañías con el tiempo y las integrarán. Una forma de hacerlo para facilitar el uso es establecer una relación de confianza con el nuevo dominio. Al hacerlo, se puede evitar la migración de todos los objetos establecidos, lo que hace que la integración sea mucho más rápida. Esta confianza también puede introducir debilidades en el entorno del cliente si no son cuidadosos. Un subdominio con una falla o vulnerabilidad explotable puede proporcionarnos una ruta rápida hacia el dominio objetivo. Las empresas también pueden establecer confianzas con otras empresas (como un MSP), un cliente u otras unidades de negocio de la misma empresa (como una división de la empresa en otra región geográfica). Vamos a explorar más sobre las confianzas de dominio y cómo podemos abusar de la funcionalidad incorporada durante nuestras evaluaciones.
+
+---
+
+## Domain Trusts Overview
+
+Una [trust](https://social.technet.microsoft.com/wiki/contents/articles/50969.active-directory-forest-trust-attention-points.aspx) se utiliza para establecer autenticación forest-forest o domain-domain (intra-domain), lo que permite a los usuarios acceder a recursos en (o realizar tareas administrativas) otro dominio, fuera del dominio principal donde reside su cuenta. Una trust crea un enlace entre los sistemas de autenticación de dos dominios y puede permitir comunicación unidireccional o bidireccional (bidireccional). Una organización puede crear varios tipos de trusts:
+
+- `Parent-child`: Dos o más dominios dentro del mismo forest. El dominio hijo tiene una confianza transitiva bidireccional con el dominio principal, lo que significa que los usuarios en el dominio hijo `corp.inlanefreight.local` podrían autenticarse en el dominio principal `inlanefreight.local`, y viceversa.
+- `Cross-link`: Una confianza entre dominios hijos para acelerar la autenticación.
+- `External`: Una confianza no transitiva entre dos dominios separados en forests separados que no están ya unidos por una confianza forestal. Este tipo de confianza utiliza [SID filtering](https://www.serverbrain.org/active-directory-2008/sid-history-and-sid-filtering.html) o filtra las solicitudes de autenticación (por SID) que no provienen del dominio de confianza.
+- `Tree-root`: Una confianza transitiva bidireccional entre un dominio raíz del forest y un nuevo dominio raíz del árbol. Se crean por diseño cuando se configura un nuevo dominio raíz del árbol dentro de un forest.
+- `Forest`: Una confianza transitiva entre dos dominios raíz del forest.
+- [ESAE](https://docs.microsoft.com/en-us/security/compass/esae-retirement): Un bastion forest utilizado para administrar Active Directory.
+
+Al establecer una trust, ciertos elementos pueden ser modificados dependiendo del caso de negocio.
+
+Las trusts pueden ser transitivas o no transitivas.
+
+- Una `transitive trust` significa que la confianza se extiende a los objetos que el dominio hijo confía. Por ejemplo, supongamos que tenemos tres dominios. En una relación transitiva, si `Domain A` tiene una confianza con `Domain B`, y `Domain B` tiene una `transitive trust` con `Domain C`, entonces `Domain A` confiará automáticamente en `Domain C`.
+- En una `non-transitive trust`, solo se confía en el propio dominio hijo.
+
+![image](https://academy.hackthebox.com/storage/modules/143/transitive-trusts.png)
+
+Adaptado de [aquí](https://zindagitech.com/wp-content/uploads/2021/09/Picture2-Deepak-4.png.webp)
+
+### Trust Table Side By Side
+
+|Transitive|Non-Transitive|
+|---|---|
+|Shared, 1 to many|Direct trust|
+|The trust is shared with anyone in the forest|Not extended to next level child domains|
+|Forest, tree-root, parent-child, and cross-link trusts are transitive|Typical for external or custom trust setups|
+
+Una comparación fácil de hacer puede ser la entrega de paquetes a tu casa. Para una `transitive trust`, has extendido el permiso a cualquiera en tu hogar (forest) para aceptar un paquete en tu nombre. Para una `non-transitive trust`, has dado órdenes estrictas con el paquete de que nadie más que el servicio de entrega y tú pueden manejar el paquete, y solo tú puedes firmarlo.
+
+Las trusts se pueden configurar en dos direcciones: unidireccional o bidireccional.
+
+- `One-way trust`: Los usuarios en un dominio `trusted` pueden acceder a recursos en un dominio de confianza, no viceversa.
+- `Bidirectional trust`: Los usuarios de ambos dominios de confianza pueden acceder a recursos en el otro dominio. Por ejemplo, en una confianza bidireccional entre `INLANEFREIGHT.LOCAL` y `FREIGHTLOGISTICS.LOCAL`, los usuarios en `INLANEFREIGHT.LOCAL` podrían acceder a recursos en `FREIGHTLOGISTICS.LOCAL`, y viceversa.
+
+Las trusts de dominio a menudo se configuran incorrectamente y pueden proporcionarnos rutas de ataque críticas no intencionadas. Además, las trusts configuradas para facilitar el uso pueden no ser revisadas más tarde por posibles implicaciones de seguridad si la seguridad no se considera antes de establecer la relación de confianza. Una fusión y adquisición (M&A) entre dos empresas puede resultar en confianzas bidireccionales con empresas adquiridas, lo que puede introducir riesgos desconocidos en el entorno de la empresa adquirente si la postura de seguridad de la empresa adquirida es desconocida y no probada. Si alguien quisiera atacar tu organización, también podría observar la otra empresa que adquiriste como un objetivo potencialmente más suave de atacar, permitiéndoles entrar en tu organización indirectamente. No es raro poder realizar un ataque como Kerberoasting contra un dominio fuera del dominio principal y obtener un usuario que tiene acceso administrativo dentro del dominio principal. He realizado muchas pruebas de penetración donde este era el caso: no pude encontrar un punto de apoyo en el dominio principal, pero pude encontrar una falla en un dominio de confianza que, a su vez, me dio un punto de apoyo o incluso derechos de administrador completo en el dominio principal. Este tipo de ataque "end-around" podría prevenirse si la seguridad se considera como primordial antes de establecer cualquier tipo de confianza de dominio. A medida que examinamos las relaciones de confianza, ten en cuenta estos pensamientos para el reporte. A menudo, encontraremos que la organización más grande no sabe que existe una relación de confianza con uno o más dominios.
+
+A continuación, se muestra una representación gráfica de los diversos tipos de trust.
+
+![image](https://academy.hackthebox.com/storage/modules/143/trusts-diagram.png)
+
+---
+
+## Enumerating Trust Relationships
+
+Podemos usar el [Get-ADTrust](https://docs.microsoft.com/en-us/powershell/module/activedirectory/get-adtrust?view=windowsserver2022-ps) cmdlet para enumerar las relaciones de confianza de dominio. Esto es especialmente útil si estamos limitados a usar solo herramientas integradas.
+
+### Using Get-ADTrust
+
+```r
+PS C:\htb> Import-Module activedirectory
+PS C:\htb> Get-ADTrust -Filter *
+
+Direction               : BiDirectional
+DisallowTransivity      : False
+DistinguishedName       : CN=LOGISTICS.INLANEFREIGHT.LOCAL,CN=System,DC=INLANEFREIGHT,DC=LOCAL
+ForestTransitive        : False
+IntraForest             : True
+IsTreeParent            : False
+IsTreeRoot              : False
+Name                    : LOGISTICS.INLANEFREIGHT.LOCAL
+ObjectClass             : trustedDomain
+ObjectGUID              : f48a1169-2e58-42c1-ba32-a6ccb10057ec
+SelectiveAuthentication : False
+SIDFilteringForestAware : False
+SIDFilteringQuarantined : False
+Source                  : DC=INLANEFREIGHT,DC=LOCAL
+Target                  : LOGISTICS.INLANEFREIGHT.LOCAL
+TGTDelegation           : False
+TrustAttributes         : 32
+TrustedPolicy           :
+TrustingPolicy          :
+TrustType               : Uplevel
+UplevelOnly             : False
+UsesAESKeys             : False
+UsesRC4Encryption       : False
+
+Direction               : BiDirectional
+DisallowTransivity      : False
+DistinguishedName       : CN=FREIGHTLOGISTICS.LOCAL,CN=System,DC=INLANEFREIGHT,DC=LOCAL
+ForestTransitive        : True
+IntraForest             : False
+IsTreeParent            : False
+IsTreeRoot              : False
+Name                    : FREIGHTLOGISTICS.LOCAL
+ObjectClass             : trustedDomain
+ObjectGUID              : 1597717f-89b7-49b8-9cd9-0801d52475ca
+SelectiveAuthentication : False
+SIDFilteringForestAware : False
+SIDFilteringQuarantined : False
+Source                  : DC=INLANEFREIGHT,DC=LOCAL
+Target                  : FREIGHTLOGISTICS.LOCAL
+TGTDelegation           : False
+TrustAttributes         : 8
+TrustedPolicy           :
+TrustingPolicy          :
+TrustType               : Uplevel
+UplevelOnly             : False
+UsesAESKeys             : False
+UsesRC4Encryption       : False
+```
+
+La salida anterior muestra que nuestro dominio actual `INLANEFREIGHT.LOCAL` tiene dos confianzas de dominio. La primera es con `LOGISTICS.INLANEFREIGHT.LOCAL`, y la propiedad `IntraForest` muestra que este es un dominio hijo, y actualmente estamos posicionados en el dominio raíz del forest. La segunda confianza es con el dominio `FREIGHTLOGISTICS.LOCAL,` y la propiedad `ForestTransitive` está configurada en `True`, lo que significa que esta es una confianza forestal o externa. Podemos ver que ambas confianzas están configuradas para ser bidireccionales, lo que significa que los usuarios pueden autenticarse en ambas direcciones a través de ambas confianzas. Esto es importante anotarlo durante una evaluación. Si no podemos autenticarnos a través de una confianza, no podemos realizar ninguna enumeración ni ataques a través de la confianza.
+
+Además de usar herramientas integradas de AD como el módulo Active Directory PowerShell, tanto PowerView como BloodHound se pueden utilizar para enumerar relaciones de confianza, el tipo de confianzas establecidas y el flujo de autenticación. Después de importar PowerView, podemos usar la función [Get-DomainTrust](https://powersploit.readthedocs.io/en/latest/Recon/Get-DomainTrust/) para enumerar qué confianzas existen, si las hay.
+
+### Checking for Existing Trusts using Get-DomainTrust
+
+```r
+PS C:\htb> Get-DomainTrust 
+
+SourceName      : INLANEFREIGHT.LOCAL
+TargetName      : LOGISTICS.INLANEFREIGHT.LOCAL
+TrustType       : WINDOWS_ACTIVE_DIRECTORY
+TrustAttributes : WITHIN_FOREST
+TrustDirection  : Bidirectional
+WhenCreated     : 11/1/2021 6:20:22 PM
+WhenChanged     : 2/26/2022 11:55:55 PM
+
+SourceName      : INLANEFREIGHT.LOCAL
+TargetName      : FREIGHTLOGISTICS.LOCAL
+TrustType       : WINDOWS_ACTIVE_DIRECTORY
+TrustAttributes : FOREST_TRANSITIVE
+TrustDirection  : Bidirectional
+WhenCreated     : 11/1/2021 8:07:09 PM
+WhenChanged     : 2/27/2022 12:02:39 AM
+```
+
+PowerView se puede usar para realizar un mapeo de confianza de dominio y proporcionar información como el tipo de confianza (parent/child, external, forest) y la dirección de la confianza (unidireccional o bidireccional). Esta información es beneficiosa una vez que se obtiene un punto de apoyo, y planeamos comprometer aún más el entorno.
+
+### Using Get-DomainTrustMapping
+
+```r
+PS C:\htb> Get-DomainTrustMapping
+
+SourceName      : INLANEFREIGHT.LOCAL
+TargetName      : LOGISTICS.INLANEFREIGHT.LOCAL
+TrustType       : WINDOWS_ACTIVE_DIRECTORY
+TrustAttributes : WITHIN_FOREST
+TrustDirection  : Bidirectional
+WhenCreated     : 11/1/2021 6:20:22 PM
+WhenChanged     : 2/26/2022 11:55:55 PM
+
+SourceName      : INLANEFREIGHT.LOCAL
+TargetName      : FREIGHTLOGISTICS.LOCAL
+TrustType       : WINDOWS_ACTIVE_DIRECTORY
+TrustAttributes : FOREST_TRANSITIVE
+TrustDirection  : Bidirectional
+WhenCreated     : 11/1/2021 8:07:09 PM
+WhenChanged     : 2/27/2022 12:02:39 AM
+
+SourceName      : FREIGHTLOGISTICS.LOCAL
+TargetName      : INLANEFREIGHT.LOCAL
+TrustType       : WINDOWS_ACTIVE_DIRECTORY
+TrustAttributes : FOREST_TRANSITIVE
+TrustDirection  : Bidirectional
+WhenCreated     : 11/1/2021 8:07:08 PM
+WhenChanged     : 2/27/2022 12:02:41 AM
+
+SourceName      : LOGISTICS.INLANEFREIGHT.LOCAL
+TargetName      : INLANEFREIGHT.LOCAL
+TrustType       : WINDOWS_ACTIVE_DIRECTORY
+TrustAttributes : WITHIN_FOREST
+TrustDirection  : Bidirectional
+WhenCreated     : 11/1/2021 6:20:22 PM
+WhenChanged     : 2/26/2022 11:55:55 PM
+```
+
+Desde aquí, podríamos comenzar a realizar la enumeración a través de las confianzas. Por ejemplo, podríamos buscar a todos los usuarios en el dominio hijo:
+
+### Checking Users in the Child Domain using Get-DomainUser
+
+```r
+PS C:\htb> Get-DomainUser -Domain LOGISTICS.INLANEFREIGHT.LOCAL | select SamAccountName
+
+samaccountname
+--------------
+htb-student_adm
+Administrator
+Guest
+lab_adm
+krbtgt
+```
+
+Otra herramienta que podemos usar para obtener Domain Trust es `netdom`. El subcomando `netdom query` de la herramienta de línea de comandos `netdom` en Windows puede recuperar información sobre el dominio, incluida una lista de estaciones de trabajo, servidores y confianzas de dominio.
+
+### Using netdom to query domain trust
+
+```r
+C:\htb> netdom query /domain:inlanefreight.local trust
+Direction Trusted\Trusting domain                         Trust type
+========= =======================                         ==========
+
+<->       LOGISTICS.INLANEFREIGHT.LOCAL
+Direct
+ Not found
+
+<->       FREIGHTLOGISTICS.LOCAL
+Direct
+ Not found
+
+The command completed successfully.
+```
+
+### Using netdom to query domain controllers
+
+```r
+C:\htb> netdom query /domain:inlanefreight.local dc
+List of domain controllers with accounts in the domain:
+
+ACADEMY-EA-DC01
+The command completed successfully.
+```
+
+### Using netdom to query workstations and servers
+
+```r
+C:\htb> netdom query /domain:inlanefreight.local workstation
+List of workstations with accounts in the domain:
+
+ACADEMY-EA-MS01
+ACADEMY-EA-MX01      ( Workstation or Server )
+
+SQL01      ( Workstation or Server )
+ILF-XRG      ( Workstation or Server )
+MAINLON      ( Workstation or Server )
+CISERVER      ( Workstation or Server )
+INDEX-DEV-LON      ( Workstation or Server )
+...SNIP...
+```
+
+También podemos usar BloodH
+
+ound para visualizar estas relaciones de confianza usando la consulta predefinida `Map Domain Trusts`. Aquí podemos ver fácilmente que existen dos confianzas bidireccionales.
+
+### Visualizing Trust Relationships in BloodHound
+
+![image](https://academy.hackthebox.com/storage/modules/143/BH_trusts.png)
+
+---
+
+## Onwards
+
+En las siguientes secciones, cubriremos ataques comunes que podemos realizar contra confianzas de dominio child --> parent y a través de confianzas forestales bidireccionales. No se deben pasar por alto este tipo de ataques, pero siempre debemos verificar con nuestro cliente para asegurarnos de que cualquier confianza que descubramos durante nuestra enumeración esté dentro del alcance de la evaluación y no estemos saliendo de las Reglas de Compromiso.

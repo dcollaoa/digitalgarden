@@ -1,0 +1,192 @@
+Después de obtener un punto de apoyo, podríamos usar este acceso para tener una idea del estado defensivo de los hosts, enumerar el dominio más a fondo ahora que nuestra visibilidad no está tan restringida y, si es necesario, trabajar "living off the land" utilizando herramientas que existen de manera nativa en los hosts. Es importante entender los controles de seguridad en una organización, ya que los productos en uso pueden afectar las herramientas que utilizamos para nuestra enumeración de AD, así como la explotación y post-explotación. Comprender las protecciones a las que nos enfrentamos ayudará a informar nuestras decisiones sobre el uso de herramientas y nos asistirá en la planificación de nuestro curso de acción, evitando o modificando ciertas herramientas. Algunas organizaciones tienen protecciones más estrictas que otras, y algunas no aplican los controles de seguridad de manera uniforme en todas partes. Puede haber políticas aplicadas a ciertas máquinas que pueden hacer nuestra enumeración más difícil y que no se aplican en otras máquinas.
+
+Nota: Esta sección está destinada a mostrar posibles controles de seguridad en un dominio, pero no tiene un componente interactivo. Enumerar y eludir los controles de seguridad están fuera del alcance de este módulo, pero queríamos dar una visión general de las posibles tecnologías que podemos encontrar durante una evaluación.
+
+---
+
+## Windows Defender
+
+Windows Defender (o [Microsoft Defender](https://en.wikipedia.org/wiki/Microsoft_Defender) después de la actualización de mayo de 2020 de Windows 10) ha mejorado mucho a lo largo de los años y, por defecto, bloqueará herramientas como `PowerView`. Hay formas de eludir estas protecciones. Estas formas se cubrirán en otros módulos. Podemos usar el cmdlet de PowerShell incorporado [Get-MpComputerStatus](https://docs.microsoft.com/en-us/powershell/module/defender/get-mpcomputerstatus?view=win10-ps) para obtener el estado actual de Defender. Aquí, podemos ver que el parámetro `RealTimeProtectionEnabled` está configurado en `True`, lo que significa que Defender está habilitado en el sistema.
+
+### Checking the Status of Defender with Get-MpComputerStatus
+
+```r
+PS C:\htb> Get-MpComputerStatus
+
+AMEngineVersion                 : 1.1.17400.5
+AMProductVersion                : 4.10.14393.0
+AMServiceEnabled                : True
+AMServiceVersion                : 4.10.14393.0
+AntispywareEnabled              : True
+AntispywareSignatureAge         : 1
+AntispywareSignatureLastUpdated : 9/2/2020 11:31:50 AM
+AntispywareSignatureVersion     : 1.323.392.0
+AntivirusEnabled                : True
+AntivirusSignatureAge           : 1
+AntivirusSignatureLastUpdated   : 9/2/2020 11:31:51 AM
+AntivirusSignatureVersion       : 1.323.392.0
+BehaviorMonitorEnabled          : False
+ComputerID                      : 07D23A51-F83F-4651-B9ED-110FF2B83A9C
+ComputerState                   : 0
+FullScanAge                     : 4294967295
+FullScanEndTime                 :
+FullScanStartTime               :
+IoavProtectionEnabled           : False
+LastFullScanSource              : 0
+LastQuickScanSource             : 2
+NISEnabled                      : False
+NISEngineVersion                : 0.0.0.0
+NISSignatureAge                 : 4294967295
+NISSignatureLastUpdated         :
+NISSignatureVersion             : 0.0.0.0
+OnAccessProtectionEnabled       : False
+QuickScanAge                    : 0
+QuickScanEndTime                : 9/3/2020 12:50:45 AM
+QuickScanStartTime              : 9/3/2020 12:49:49 AM
+RealTimeProtectionEnabled       : True
+RealTimeScanDirection           : 0
+PSComputerName                  :
+```
+
+---
+
+## AppLocker
+
+Una lista blanca de aplicaciones es una lista de aplicaciones o ejecutables aprobados que están permitidos en un sistema. El objetivo es proteger el entorno de malware dañino y software no aprobado que no se alinea con las necesidades específicas de negocio de una organización. [AppLocker](https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-defender-application-control/applocker/what-is-applocker) es la solución de lista blanca de aplicaciones de Microsoft y brinda a los administradores de sistemas control sobre qué aplicaciones y archivos pueden ejecutar los usuarios. Proporciona control granular sobre ejecutables, scripts, archivos de instalación de Windows, DLLs, aplicaciones empaquetadas y instaladores de aplicaciones empaquetadas. Es común que las organizaciones bloqueen cmd.exe y PowerShell.exe y el acceso de escritura a ciertos directorios, pero todo esto se puede eludir. Las organizaciones también suelen centrarse en bloquear el ejecutable `PowerShell.exe`, pero se olvidan de las otras [ubicaciones de ejecutables de PowerShell](https://www.powershelladmin.com/wiki/PowerShell_Executables_File_System_Locations) como `%SystemRoot%\SysWOW64\WindowsPowerShell\v1.0\powershell.exe` o `PowerShell_ISE.exe`. Podemos ver que este es el caso en las reglas de `AppLocker` mostradas a continuación. Se impide a todos los Domain Users ejecutar el ejecutable de PowerShell de 64 bits ubicado en:
+
+`%SystemRoot%\system32\WindowsPowerShell\v1.0\powershell.exe`
+
+Entonces, simplemente podemos llamarlo desde otras ubicaciones. A veces, nos encontramos con políticas de `AppLocker` más estrictas que requieren más creatividad para eludirlas. Estas formas se cubrirán en otros módulos.
+
+### Using Get-AppLockerPolicy cmdlet
+
+```r
+PS C:\htb> Get-AppLockerPolicy -Effective | select -ExpandProperty RuleCollections
+
+PathConditions      : {%SYSTEM32%\WINDOWSPOWERSHELL\V1.0\POWERSHELL.EXE}
+PathExceptions      : {}
+PublisherExceptions : {}
+HashExceptions      : {}
+Id                  : 3d57af4a-6cf8-4e5b-acfc-c2c2956061fa
+Name                : Block PowerShell
+Description         : Blocks Domain Users from using PowerShell on workstations
+UserOrGroupSid      : S-1-5-21-2974783224-3764228556-2640795941-513
+Action              : Deny
+
+PathConditions      : {%PROGRAMFILES%\*}
+PathExceptions      : {}
+PublisherExceptions : {}
+HashExceptions      : {}
+Id                  : 921cc481-6e17-4653-8f75-050b80acca20
+Name                : (Default Rule) All files located in the Program Files folder
+Description         : Allows members of the Everyone group to run applications that are located in the Program Files folder.
+UserOrGroupSid      : S-1-1-0
+Action              : Allow
+
+PathConditions      : {%WINDIR%\*}
+PathExceptions      : {}
+PublisherExceptions : {}
+HashExceptions      : {}
+Id                  : a61c8b2c-a319-4cd0-9690-d2177cad7b51
+Name                : (Default Rule) All files located in the Windows folder
+Description         : Allows members of the Everyone group to run applications that are located in the Windows folder.
+UserOrGroupSid      : S-1-1-0
+Action              : Allow
+
+PathConditions      : {*}
+PathExceptions      : {}
+PublisherExceptions : {}
+HashExceptions      : {}
+Id                  : fd686d83-a829-4351-8ff4-27c7de5755d2
+Name                : (Default Rule) All files
+Description         : Allows members of the local Administrators group to run all applications.
+UserOrGroupSid      : S-1-5-32-544
+Action              : Allow
+```
+
+---
+
+## PowerShell Constrained Language Mode
+
+PowerShell [Constrained Language Mode](https://devblogs.microsoft.com/powershell/powershell-constrained-language-mode/) bloquea muchas de las características necesarias para usar PowerShell de manera efectiva, como bloquear objetos COM, solo permitir tipos .NET aprobados, flujos de trabajo basados en XAML, clases de PowerShell y más. Podemos enumerar rápidamente si estamos en Full Language Mode o Constrained Language Mode.
+
+### Enumerating Language Mode
+
+```r
+PS C:\htb> $ExecutionContext.SessionState.LanguageMode
+
+ConstrainedLanguage
+```
+
+---
+
+## LAPS
+
+La [Local Administrator Password Solution (LAPS)](https://www.microsoft.com/en-us/download/details.aspx?id=46899) de Microsoft se usa para randomizar y rotar las contraseñas del administrador local en hosts Windows y prevenir el movimiento lateral. Podemos enumerar qué usuarios del dominio pueden leer la contraseña LAPS establecida para máquinas con LAPS instalado y qué máquinas no tienen LAPS instalado. El [LAPSToolkit](https://github.com/leoloobeek/LAPSToolkit) facilita enormemente esto con varias funciones. Una de ellas es analizar `ExtendedRights` para todas las computadoras con LAPS habilitado. Esto mostrará los grupos específicamente delegados para leer contraseñas LAPS, que a menudo son usuarios en grupos protegidos. Una cuenta que ha unido una computadora a un dominio recibe `All Extended Rights` sobre ese host, y este derecho le da la capacidad de leer contraseñas. La enumeración puede mostrar una cuenta de usuario que puede leer la contraseña LAPS en un host. Esto puede ayudarnos a apuntar a usuarios específicos de AD que pueden leer contraseñas LAPS
+
+.
+
+### Using Find-LAPSDelegatedGroups
+
+```r
+PS C:\htb> Find-LAPSDelegatedGroups
+
+OrgUnit                                             Delegated Groups
+-------                                             ----------------
+OU=Servers,DC=INLANEFREIGHT,DC=LOCAL                INLANEFREIGHT\Domain Admins
+OU=Servers,DC=INLANEFREIGHT,DC=LOCAL                INLANEFREIGHT\LAPS Admins
+OU=Workstations,DC=INLANEFREIGHT,DC=LOCAL           INLANEFREIGHT\Domain Admins
+OU=Workstations,DC=INLANEFREIGHT,DC=LOCAL           INLANEFREIGHT\LAPS Admins
+OU=Web Servers,OU=Servers,DC=INLANEFREIGHT,DC=LOCAL INLANEFREIGHT\Domain Admins
+OU=Web Servers,OU=Servers,DC=INLANEFREIGHT,DC=LOCAL INLANEFREIGHT\LAPS Admins
+OU=SQL Servers,OU=Servers,DC=INLANEFREIGHT,DC=LOCAL INLANEFREIGHT\Domain Admins
+OU=SQL Servers,OU=Servers,DC=INLANEFREIGHT,DC=LOCAL INLANEFREIGHT\LAPS Admins
+OU=File Servers,OU=Servers,DC=INLANEFREIGHT,DC=L... INLANEFREIGHT\Domain Admins
+OU=File Servers,OU=Servers,DC=INLANEFREIGHT,DC=L... INLANEFREIGHT\LAPS Admins
+OU=Contractor Laptops,OU=Workstations,DC=INLANEF... INLANEFREIGHT\Domain Admins
+OU=Contractor Laptops,OU=Workstations,DC=INLANEF... INLANEFREIGHT\LAPS Admins
+OU=Staff Workstations,OU=Workstations,DC=INLANEF... INLANEFREIGHT\Domain Admins
+OU=Staff Workstations,OU=Workstations,DC=INLANEF... INLANEFREIGHT\LAPS Admins
+OU=Executive Workstations,OU=Workstations,DC=INL... INLANEFREIGHT\Domain Admins
+OU=Executive Workstations,OU=Workstations,DC=INL... INLANEFREIGHT\LAPS Admins
+OU=Mail Servers,OU=Servers,DC=INLANEFREIGHT,DC=L... INLANEFREIGHT\Domain Admins
+OU=Mail Servers,OU=Servers,DC=INLANEFREIGHT,DC=L... INLANEFREIGHT\LAPS Admins
+```
+
+El `Find-AdmPwdExtendedRights` verifica los derechos en cada computadora con LAPS habilitado para cualquier grupo con acceso de lectura y usuarios con "All Extended Rights". Los usuarios con "All Extended Rights" pueden leer contraseñas LAPS y pueden estar menos protegidos que los usuarios en grupos delegados, por lo que vale la pena verificarlos.
+
+### Using Find-AdmPwdExtendedRights
+
+```r
+PS C:\htb> Find-AdmPwdExtendedRights
+
+ComputerName                Identity                    Reason
+------------                --------                    ------
+EXCHG01.INLANEFREIGHT.LOCAL INLANEFREIGHT\Domain Admins Delegated
+EXCHG01.INLANEFREIGHT.LOCAL INLANEFREIGHT\LAPS Admins   Delegated
+SQL01.INLANEFREIGHT.LOCAL   INLANEFREIGHT\Domain Admins Delegated
+SQL01.INLANEFREIGHT.LOCAL   INLANEFREIGHT\LAPS Admins   Delegated
+WS01.INLANEFREIGHT.LOCAL    INLANEFREIGHT\Domain Admins Delegated
+WS01.INLANEFREIGHT.LOCAL    INLANEFREIGHT\LAPS Admins   Delegated
+```
+
+Podemos usar la función `Get-LAPSComputers` para buscar computadoras que tengan LAPS habilitado cuando expiran las contraseñas, e incluso las contraseñas aleatorias en texto claro si nuestro usuario tiene acceso.
+
+### Using Get-LAPSComputers
+
+```r
+PS C:\htb> Get-LAPSComputers
+
+ComputerName                Password       Expiration
+------------                --------       ----------
+DC01.INLANEFREIGHT.LOCAL    6DZ[+A/[]19d$F 08/26/2020 23:29:45
+EXCHG01.INLANEFREIGHT.LOCAL oj+2A+[hHMMtj, 09/26/2020 00:51:30
+SQL01.INLANEFREIGHT.LOCAL   9G#f;p41dcAe,s 09/26/2020 00:30:09
+WS01.INLANEFREIGHT.LOCAL    TCaG-F)3No;l8C 09/26/2020 00:46:04
+```
+
+---
+
+## Conclusion
+
+Como hemos visto en esta sección, hay varias otras técnicas útiles de enumeración de AD disponibles para determinar qué protecciones están en su lugar. Vale la pena familiarizarse con todas estas herramientas y técnicas, y agregarlas a tu arsenal de opciones. Ahora, continuemos nuestra enumeración del dominio INLANEFREIGHT.LOCAL desde un punto de vista con credenciales.

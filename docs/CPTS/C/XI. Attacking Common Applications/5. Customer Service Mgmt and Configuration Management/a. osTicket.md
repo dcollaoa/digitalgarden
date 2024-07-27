@@ -1,0 +1,165 @@
+[osTicket](https://osticket.com/) es un sistema de gestión de tickets de soporte open-source. Puede compararse con sistemas como Jira, OTRS, Request Tracker y Spiceworks. osTicket puede integrar consultas de usuarios desde email, teléfono y formularios web en una interfaz web. osTicket está escrito en PHP y utiliza un backend MySQL. Puede instalarse en Windows o Linux. Aunque no hay mucha información de mercado fácilmente disponible sobre osTicket, una búsqueda rápida en Google de `Helpdesk software - powered by osTicket` devuelve aproximadamente 44,000 resultados, muchos de los cuales parecen ser empresas, sistemas escolares, universidades, gobiernos locales, etc., usando la aplicación. osTicket incluso se mostró brevemente en el show [Mr. Robot](https://forum.osticket.com/d/86225-osticket-on-usas-mr-robot-s01e08).
+
+Además de aprender sobre la enumeración y ataque de osTicket, el propósito de esta sección es también introducirte al mundo de los sistemas de gestión de tickets de soporte y por qué no deben ser pasados por alto durante nuestras evaluaciones.
+
+---
+
+## Footprinting/Discovery/Enumeration
+
+Mirando nuestro escaneo de EyeWitness de antes, notamos una captura de pantalla de una instancia de osTicket que también muestra que se estableció una cookie llamada `OSTSESSID` al visitar la página.
+
+![image](https://academy.hackthebox.com/storage/modules/113/osticket_eyewitness.png)
+
+Además, la mayoría de las instalaciones de osTicket mostrarán el logo de osTicket con la frase `powered by` delante de él en el pie de página de la página. El pie de página también puede contener las palabras `Support Ticket System`.
+
+`http://support.inlanefreight.local/`
+
+![](https://academy.hackthebox.com/storage/modules/113/osticket_main.png)
+
+Un escaneo de Nmap solo mostrará información sobre el servidor web, como Apache o IIS, y no nos ayudará a obtener información de la aplicación.
+
+`osTicket` es una aplicación web que está altamente mantenida y atendida. Si miramos los [CVEs](https://www.cvedetails.com/vendor/2292/Osticket.html) encontrados a lo largo de las décadas, no encontraremos muchas vulnerabilidades y exploits que osTicket pueda tener. Este es un excelente ejemplo para mostrar lo importante que es entender cómo funciona una aplicación web. Incluso si la aplicación no es vulnerable, aún puede ser utilizada para nuestros propósitos. Aquí podemos desglosar las funciones principales en capas:
+
+|`1. User input`|`2. Processing`|`3. Solution`|
+|---|---|---|
+
+### User Input
+
+La función principal de osTicket es informar a los empleados de la empresa sobre un problema para que un problema pueda ser resuelto con el servicio u otros componentes. Una gran ventaja que tenemos aquí es que la aplicación es open-source. Por lo tanto, tenemos muchos tutoriales y ejemplos disponibles para observar más de cerca la aplicación. Por ejemplo, de la [documentación](https://docs.osticket.com/en/latest/Getting%20Started/Post-Installation.html) de osTicket, podemos ver que solo el personal y los usuarios con privilegios de administrador pueden acceder al panel de administración. Así que si nuestra empresa objetivo usa esta o una aplicación similar, podemos causar un problema y "hacernos los tontos" y contactar al personal de la empresa. La simulada "falta de" conocimiento sobre los servicios ofrecidos por la empresa en combinación con un problema técnico es un enfoque de ingeniería social muy común para obtener más información de la empresa.
+
+### Processing
+
+Como personal o administradores, intentan reproducir errores significativos para encontrar la causa del problema. El procesamiento finalmente se realiza internamente en un entorno aislado que tendrá configuraciones muy similares a los sistemas en producción. Si el personal y los administradores sospechan que hay un error interno que puede estar afectando el negocio, entrarán en más detalles para descubrir posibles errores de código y abordar problemas más importantes.
+
+### Solution
+
+Dependiendo de la profundidad del problema, es muy probable que otros miembros del personal de los departamentos técnicos participen en la correspondencia por email. Esto nos dará nuevas direcciones de email para usar contra el panel de administración de osTicket (en el peor de los casos) y posibles nombres de usuario con los que podemos realizar OSINT o intentar aplicar a otros servicios de la empresa.
+
+---
+
+## Attacking osTicket
+
+Una búsqueda de osTicket en exploit-db muestra varios problemas, incluyendo inclusión remota de archivos, SQL injection, carga arbitraria de archivos, XSS, etc. La versión 1.14.1 de osTicket sufre de [CVE-2020-24881](https://nvd.nist.gov/vuln/detail/CVE-2020-24881) que era una vulnerabilidad de SSRF. Si se explota, este tipo de fallo puede ser aprovechado para obtener acceso a recursos internos o realizar un escaneo de puertos internos.
+
+Además de las vulnerabilidades relacionadas con aplicaciones web, los portales de soporte a veces pueden ser utilizados para obtener una dirección de email de un dominio de empresa, que puede ser usada para registrarse en otras aplicaciones expuestas que requieren que se envíe una verificación de email. Como se mencionó anteriormente en el módulo, esto se ilustra en la caja de liberación semanal de HTB [Delivery](https://0xdf.gitlab.io/2021/05/22/htb-delivery.html) con un video walkthrough [aquí](https://www.youtube.com/watch?v=gbs43E71mFM).
+
+Vamos a recorrer un ejemplo rápido, que está relacionado con este [excelente post](https://medium.com/intigriti/how-i-hacked-hundreds-of-companies-through-their-helpdesk-b7680ddc2d4c) que [@ippsec](https://twitter.com/ippsec) también mencionó fue una inspiración para su caja Delivery que recomiendo mucho revisar después de leer esta sección.
+
+Supongamos que encontramos un servicio expuesto como un servidor de Slack de una empresa o GitLab, que requiere una dirección de email válida de la empresa para unirse. Muchas empresas tienen un email de soporte como `support@inlanefreight.local`, y los emails enviados a este están disponibles en portales de soporte en línea que pueden variar desde Zendesk hasta una herramienta interna personalizada. Además, un portal de soporte puede asignar una dirección de email interna temporal a un nuevo ticket para que los usuarios puedan verificar rápidamente su estado.
+
+Si encontramos un portal de soporte al cliente durante nuestra evaluación y podemos enviar un nuevo ticket, es posible que podamos obtener una dirección de email válida de la empresa.
+
+`http://support.inlanefreight.local/open.php`
+
+![](https://academy.hackthebox.com/storage/modules/113/new_ticket.png)
+
+Esta es una versión modificada de osTicket como ejemplo, pero podemos ver que se proporcionó una dirección de email.
+
+`http://support.inlanefreight.local/open.php`
+
+![](https://academy.hackthebox.com/storage/modules/113/ticket_email.png)
+
+Ahora, si iniciamos sesión, podemos ver información sobre el ticket y formas de publicar una respuesta. Si la empresa configuró su software de helpdesk para correlacionar números de tickets con emails, entonces cualquier email enviado al email que recibimos al registrarnos, `940288@inlanefreight.local`, aparecería aquí. Con esta configuración, si podemos encontrar un portal externo como una Wiki, servicio de chat (Slack, Mattermost, Rocket.chat), o un repositorio de Git como GitLab o Bitbucket, es posible que podamos usar este email para registrar una cuenta y el portal de soporte para recibir un email de confirmación de registro.
+
+`http://support.inlanefreight.local/open.php`
+
+![](https://academy.hackthebox.com/storage/modules/113/ost_tickets.png)
+
+---
+
+## osTicket - Exposición de Datos Sensibles
+
+Supongamos que estamos en una prueba de penetración externa. Durante nuestro OSINT y recopilación de información, descubrimos varias credenciales de usuario utilizando la herramienta [Dehashed](http://dehashed.com/) (para nuestros propósitos, los datos de muestra a continuación son ficticios).
+
+```r
+sudo python3 dehashed.py -q inlanefreight.local -p
+
+id : 5996447501
+email : julie.clayton@inlanefreight.local
+username : jclayton
+password : JulieC8765!
+hashed_password : 
+name : Julie Clayton
+vin : 
+address : 
+phone : 
+database_name : ModBSolutions
+
+
+id : 7344467234
+email : kevin@inlanefreight.local
+username : kgrimes
+password : Fish1ng_s3ason!
+hashed_password : 
+name : Kevin Grimes
+vin : 
+address : 
+phone : 
+database_name : MyFitnessPal
+
+<SNIP>
+```
+
+Este volcado muestra contraseñas en texto claro para dos usuarios diferentes: `jclayton` y `kgrimes`. En este punto, también hemos realizado una enumeración de subdominios y hemos encontrado varios interesantes.
+
+```r
+cat ilfreight_subdomains
+
+vpn.inlanefreight.local
+support.inlanefreight.local
+ns1.inlanefreight.local
+mail.inlanefreight.local
+apps.inlanefreight.local
+ftp.inlanefreight.local
+dev.inlanefreight.local
+ir.inlanefreight.local
+auth.inlanefreight.local
+careers.inlanefreight.local
+portal-stage.inlanefreight.local
+dns1.inlanefreight.local
+dns2.inlanefreight.local
+meet.inlanefreight.local
+portal-test.inlanefreight.local
+home.in
+
+lanefreight.local
+legacy.inlanefreight.local
+```
+
+Navegamos a cada subdominio y encontramos que muchos están obsoletos, pero `support.inlanefreight.local` y `vpn.inlanefreight.local` están activos y son muy prometedores. `Support.inlanefreight.local` está alojando una instancia de osTicket, y `vpn.inlanefreight.local` es un portal web Barracuda SSL VPN que no parece estar usando autenticación multifactor.
+
+`http://support.inlanefreight.local/scp/login.php`
+
+![](https://academy.hackthebox.com/storage/modules/113/osticket_admin.png)
+
+Probamos las credenciales para `jclayton`. Sin suerte. Luego probamos las credenciales para `kgrimes` y no tenemos éxito, pero notando que la página de inicio de sesión también acepta una dirección de email, probamos `kevin@inlanefreight.local` y ¡obtenemos un inicio de sesión exitoso!
+
+`http://support.inlanefreight.local/scp/login.php`
+
+![](https://academy.hackthebox.com/storage/modules/113/osticket_kevin.png)
+
+El usuario `kevin` parece ser un agente de soporte, pero no tiene tickets abiertos. ¿Quizás ya no está activo? En una empresa ocupada, esperaríamos ver algunos tickets abiertos. Investigando un poco, encontramos un ticket cerrado, una conversación entre un empleado remoto y el agente de soporte.
+
+`http://support.inlanefreight.local/scp/login.php`
+
+![](https://academy.hackthebox.com/storage/modules/113/osticket_ticket.png)
+
+El empleado indica que fue bloqueado de su cuenta VPN y pide al agente que la restablezca. El agente luego le dice al usuario que la contraseña se restableció a la contraseña estándar para nuevos empleados. El usuario no tiene esta contraseña y pide al agente que lo llame para proporcionarle la contraseña (¡buena conciencia de seguridad!). El agente luego comete un error y envía la contraseña al usuario directamente a través del portal. Desde aquí, podríamos intentar esta contraseña contra el portal VPN expuesto ya que el usuario puede no haberla cambiado.
+
+Además, el agente de soporte indica que esta es la contraseña estándar dada a los nuevos usuarios y restablece la contraseña del usuario a este valor. Hemos estado en muchas organizaciones donde el helpdesk usa una contraseña estándar para nuevos usuarios y restablecimientos de contraseñas. A menudo, la política de contraseñas del dominio es laxa y no obliga al usuario a cambiarla en el próximo inicio de sesión. Si este es el caso, podría funcionar para otros usuarios. Aunque está fuera del alcance de este módulo, en este escenario, valdría la pena usar herramientas como [linkedin2username](https://github.com/initstring/linkedin2username) para crear una lista de usuarios de empleados de la empresa e intentar un ataque de password spraying contra el endpoint VPN con esta contraseña estándar.
+
+Muchas aplicaciones como osTicket también contienen una libreta de direcciones. También valdría la pena exportar todos los emails/nombres de usuario de la libreta de direcciones como parte de nuestra enumeración, ya que podrían resultar útiles en un ataque como password spraying.
+
+---
+
+## Closing Thoughts
+
+Aunque esta sección mostró algunos escenarios ficticios, se basan en cosas que es probable que veamos en el mundo real. Cuando nos encontremos con portales de soporte (especialmente externos), deberíamos probar la funcionalidad y ver si podemos hacer cosas como crear un ticket y que se nos asigne una dirección de email legítima de la empresa. A partir de ahí, podríamos usar la dirección de email para iniciar sesión en otros servicios de la empresa y obtener acceso a datos sensibles.
+
+Esta sección también muestra los peligros del re-uso de contraseñas y el tipo de datos que es muy probable que encontremos si podemos acceder a la cola de tickets de soporte de un agente de helpdesk. Las organizaciones pueden prevenir este tipo de filtración de información tomando algunos pasos relativamente fáciles:
+
+- Limitar qué aplicaciones están expuestas externamente.
+- Aplicar autenticación multifactor en todos los portales externos.
+- Proveer entrenamiento de concientización de seguridad a todos los empleados y aconsejarles que no usen sus emails corporativos para registrarse en servicios de terceros.
+- Aplicar una política de contraseñas fuertes en Active Directory y en todas las aplicaciones, prohibiendo palabras comunes como variaciones de `welcome`, y `password`, el nombre de la empresa, y estaciones del año y meses.
+- Requerir que un usuario cambie su contraseña después de su inicio de sesión inicial y expirar periódicamente las contraseñas de los usuarios.

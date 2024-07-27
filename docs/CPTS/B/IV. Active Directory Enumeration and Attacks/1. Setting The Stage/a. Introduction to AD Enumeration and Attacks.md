@@ -1,0 +1,89 @@
+## Active Directory Explained
+
+`Active Directory` (`AD`) es un servicio de directorio para entornos empresariales de Windows que se implementó oficialmente en el año 2000 con el lanzamiento de Windows Server 2000 y se ha mejorado gradualmente con cada versión subsiguiente del sistema operativo de servidor. AD se basa en los protocolos x.500 y LDAP que lo precedieron y aún utiliza estos protocolos de alguna forma hoy en día. Es una estructura distribuida y jerárquica que permite la gestión centralizada de los recursos de una organización, incluyendo usuarios, computadoras, grupos, dispositivos de red, comparticiones de archivos, políticas de grupo, dispositivos y confianzas. AD proporciona funciones de `authentication, accounting, and authorization` dentro de un entorno empresarial de Windows. Si es la primera vez que aprendes sobre Active Directory o escuchas estos términos, consulta el módulo [Intro To Active Directory](https://academy.hackthebox.com/catalogue) para una mirada más profunda a la estructura y función de AD, objetos de AD, etc.
+
+---
+
+## Why Should We Care About AD?
+
+En el momento de redactar este módulo, Microsoft Active Directory posee alrededor del `43%` de la [market share](https://www.slintel.com/tech/identity-and-access-management/microsoft-active-directory-market-share#faqs) para organizaciones empresariales que utilizan soluciones de `Identity and Access management`. Esta es una gran porción del mercado, y no es probable que desaparezca pronto ya que Microsoft está mejorando e integrando implementaciones con Azure AD. Otra estadística interesante a considerar es que, solo en los últimos dos años, Microsoft ha tenido más de `2000` vulnerabilidades reportadas vinculadas a un [CVE](https://www.cvedetails.com/vendor/26/Microsoft.html). Los muchos servicios de AD y su propósito principal de hacer que la información sea fácil de encontrar y acceder lo convierten en un gigante difícil de gestionar y endurecer correctamente. Esto expone a las empresas a vulnerabilidades y explotación debido a simples configuraciones incorrectas de servicios y permisos. Une estas configuraciones incorrectas y facilidad de acceso con vulnerabilidades comunes de usuarios y sistemas operativos, y tienes una tormenta perfecta para que un atacante se aproveche. Con todo esto en mente, este módulo explorará algunos de estos problemas comunes y nos mostrará cómo identificarlos, enumerarlos y aprovechar su existencia. Practicaremos la enumeración de AD utilizando herramientas y lenguajes nativos como `Sysinternals`, `WMI`, `DNS` y muchos otros. Algunos ataques que también practicaremos incluyen `Password spraying`, `Kerberoasting`, utilizando herramientas como `Responder`, `Kerbrute`, `Bloodhound` y mucho más.
+
+A menudo podemos encontrarnos en una red sin un camino claro hacia un punto de apoyo mediante un exploit remoto como una aplicación o servicio vulnerable. Sin embargo, estamos dentro de un entorno de Active Directory, lo que puede conducir a un punto de apoyo de muchas maneras. El objetivo general de obtener un punto de apoyo en el entorno de AD de un cliente es `escalate privileges` moviéndose lateral o verticalmente a través de la red hasta que logremos el objetivo de la evaluación. El objetivo puede variar de un cliente a otro. Puede ser acceder a un host específico, la bandeja de entrada de correo electrónico de un usuario, una base de datos o simplemente la completa toma de control del dominio y buscar todas las posibles rutas para acceder al nivel de Domain Admin dentro del período de prueba. Muchas herramientas de código abierto están disponibles para facilitar la enumeración y el ataque de Active Directory. Para ser más efectivos, debemos entender cómo realizar la mayor parte de esta enumeración manualmente. Más importante aún, necesitamos entender el "por qué" detrás de ciertos fallos y configuraciones incorrectas. Esto nos hará más efectivos como atacantes y nos equipará para dar recomendaciones sólidas a nuestros clientes sobre los problemas principales dentro de su entorno, así como consejos claros y accionables de remediación.
+
+Necesitamos sentirnos cómodos enumerando y atacando AD tanto desde Windows como desde Linux, con un conjunto limitado de herramientas o herramientas integradas de Windows, también conocido como "`living off the land`." Es común encontrarse en situaciones donde nuestras herramientas fallan, son bloqueadas, o estamos realizando una evaluación donde el cliente nos hace trabajar desde una `managed workstation` o una `VDI instance` en lugar del host de ataque personalizado de Linux o Windows al que podemos habernos acostumbrado. Para ser efectivos en todas las situaciones, debemos ser capaces de adaptarnos rápidamente sobre la marcha, entender los muchos matices de AD y saber cómo acceder a ellos incluso cuando nuestras opciones son severamente limitadas.
+
+---
+
+## Real-World Examples
+
+Veamos algunos escenarios para ver qué es posible en un compromiso del mundo real centrado en AD:
+
+**Scenario 1 - Waiting On An Admin**
+
+Durante este compromiso, comprometí un único host y obtuve acceso a nivel `SYSTEM`. Como este era un host unido al dominio, pude usar este acceso para enumerar el dominio. Pasé por toda la enumeración estándar, pero no encontré mucho. Había `Service Principal Names` (SPNs) presentes en el entorno, y pude realizar un ataque de Kerberoasting y recuperar TGS tickets para algunas cuentas. Intenté descifrarlos con Hashcat y algunas de mis wordlists y reglas estándar, pero no tuve éxito al principio. Terminé dejando un trabajo de descifrado en ejecución durante la noche con una wordlist muy grande combinada con la regla [d3ad0ne](https://github.com/hashcat/hashcat/blob/master/rules/d3ad0ne.rule) que viene con Hashcat. A la mañana siguiente tuve un acierto en un ticket y recuperé la contraseña en texto claro para una cuenta de usuario. Esta cuenta no me dio acceso significativo, pero me dio acceso de escritura en ciertas comparticiones de archivos. Usé este acceso para dejar archivos SCF en las comparticiones y dejé Responder en funcionamiento. Después de un tiempo, obtuve un solo acierto, el `NetNTLMv2 hash` de un usuario. Revisé la salida de BloodHound y noté que este usuario era en realidad un administrador de dominio. ¡Fácil desde aquí!
+
+---
+
+**Scenario 2 - Spraying The Night Away**
+
+Password spraying puede ser una forma extremadamente efectiva de obtener un punto de apoyo en un dominio, pero debemos tener mucho cuidado de no bloquear las cuentas de usuario en el proceso. En un compromiso, encontré una sesión SMB NULL usando la herramienta [enum4linux](https://github.com/CiscoCXSecurity/enum4linux) y recuperé una lista de `all` los usuarios del dominio y la `password policy` del dominio. Conocer la política de contraseñas fue crucial porque pude asegurarme de que me mantenía dentro de los parámetros para no bloquear ninguna cuenta y también supe que la política era una contraseña mínima de ocho caracteres y se exigía la complejidad de la contraseña (lo que significa que la contraseña de un usuario requería 3/4 de carácter especial, número, mayúscula o minúscula, es decir, Welcome1). Probé varias contraseñas débiles comunes como Welcome1, `Password1`, Password123, `Spring2018`, etc., pero no obtuve ningún acierto. Finalmente, intenté con `Spring@18` y obtuve un acierto. Con esta cuenta, ejecuté BloodHound y encontré varios hosts donde este usuario tenía acceso de administrador local. Noté que una cuenta de administrador de dominio tenía una sesión activa en uno de estos hosts. Pude usar la herramienta Rubeus y extraer el ticket TGT de Kerberos para este usuario del dominio. A partir de ahí, pude realizar un ataque de `pass-the-ticket` y autenticarme como este usuario administrador de dominio. Como beneficio adicional, pude tomar el control del dominio de confianza porque el grupo de Domain Administrators para el dominio que tomé estaba en el grupo de Administrators en el dominio de confianza mediante la membresía de grupo anidada, lo que significa que pude usar el mismo conjunto de credenciales para autenticarme en el otro dominio con acceso a nivel administrativo completo.
+
+---
+
+**Scenario 3 - Fighting In The Dark**
+
+Había intentado todas mis formas estándar de obtener un punto de apoyo en este tercer compromiso, y nada había funcionado. Decidí que usaría la herramienta [Kerbrute](https://github.com/ropnop/kerbrute) para intentar enumerar nombres de usuario válidos y luego, si encontraba alguno, intentar un ataque de password spraying dirigido, ya que no conocía la política de contraseñas y no quería bloquear ninguna cuenta. Usé la herramienta [linkedin2username](https://github.com/initstring/linkedin2username) para crear posibles nombres de usuario a partir de la página de LinkedIn de la compañía. Combiné esta lista con varias listas de nombres de usuario del repositorio de GitHub [statistically-likely-usernames](https://github.com/insidetrust/statistically-likely-usernames) y, después de usar la característica `userenum` de Kerbrute, terminé con **516** usuarios válidos. Sabía que debía proceder con cuidado con el password spraying, así que probé con la contraseña `Welcome2021` y obtuve un solo acierto. Con esta cuenta, ejecuté la versión de Python de BloodHound desde mi host de ataque y descubrí que todos los usuarios del dominio tenían acceso RDP a una sola máquina. Me conecté a este host y usé la herramienta de PowerShell [DomainPasswordSpray](https://github.com/dafthack/DomainPasswordSpray) para hacer spraying nuevamente. Estaba más confiado esta vez porque podía a) ver la política de contraseñas y b) la herramienta DomainPasswordSpray eliminará las cuentas cerc
+
+anas al bloqueo de la lista de objetivos. Dado que estaba autenticado dentro del dominio, ahora podía hacer spraying con todos los usuarios del dominio, lo que me dio significativamente más objetivos. Intenté nuevamente con la contraseña común Fall2021 y obtuve varios aciertos, todos para usuarios que no estaban en mi lista inicial. Verifiqué los derechos de cada una de estas cuentas y descubrí que una estaba en el grupo de Help Desk, que tenía derechos de [GenericAll](https://bloodhound.readthedocs.io/en/latest/data-analysis/edges.html#genericall) sobre el grupo [Enterprise Key Admins](https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/active-directory-security-groups#enterprise-key-admins). El grupo Enterprise Key Admins tenía privilegios de GenericAll sobre un controlador de dominio, así que agregué la cuenta que controlaba a este grupo, me autentiqué nuevamente y heredé estos privilegios. Usando estos derechos, realicé el ataque [Shadow Credentials](https://posts.specterops.io/shadow-credentials-abusing-key-trust-account-mapping-for-takeover-8ee1a53566ab) y recuperé el NT hash para la cuenta de máquina del controlador de dominio. Con este NT hash, luego pude realizar un ataque DCSync y recuperar los hashes de contraseña NTLM para todos los usuarios en el dominio porque un controlador de dominio puede realizar replicación, que se requiere para DCSync.
+
+---
+
+## This Is The Way
+
+Estos escenarios pueden parecer abrumadores con muchos conceptos desconocidos en este momento, pero después de completar este módulo, estarás familiarizado con la mayoría de ellos (algunos conceptos descritos en estos escenarios están fuera del alcance de este módulo). Estos muestran la importancia de la enumeración iterativa, entender nuestro objetivo y adaptarse y pensar fuera de la caja mientras trabajamos en un entorno. Realizaremos muchas de las partes de las cadenas de ataque descritas anteriormente en estas secciones del módulo, y luego tendrás la oportunidad de poner tus habilidades a prueba atacando dos entornos de AD diferentes al final de este módulo y descubriendo tus propias cadenas de ataque. Abróchate el cinturón porque este será un viaje divertido pero agitado a través del mundo salvaje que es `enumerating` y `attacking` Active Directory.
+
+---
+
+## Practical Examples
+
+A lo largo del módulo, cubriremos ejemplos con la salida de comandos correspondiente. La mayoría de los cuales se pueden reproducir en las VMs objetivo que se pueden generar dentro de las secciones relevantes. Se te proporcionarán credenciales RDP para interactuar con algunas de las VMs objetivo para aprender cómo enumerar y atacar desde un host de Windows (`MS01`) y acceso SSH a un host preconfigurado de Parrot Linux (`ATTACK01`) para realizar ejemplos de enumeración y ataque desde Linux. Puedes conectarte desde Pwnbox o tu propia VM (después de descargar una clave VPN una vez que se genere una máquina) a través de RDP usando [FreeRDP](https://github.com/FreeRDP/FreeRDP/wiki/CommandLineInterface), [Remmina](https://remmina.org/) o el cliente RDP de tu elección donde sea aplicable o el cliente SSH incorporado en Pwnbox o tu propia VM.
+
+---
+
+### Connecting via FreeRDP
+
+Podemos conectarnos a través de la línea de comandos usando el comando:
+
+```r
+xfreerdp /v:<MS01 target IP> /u:htb-student /p:Academy_student_AD!
+```
+
+### Connecting via SSH
+
+Podemos conectarnos al host de ataque Parrot Linux proporcionado usando el comando, luego ingresar la contraseña proporcionada cuando se solicite.
+
+```r
+ssh htb-student@<ATTACK01 target IP>
+```
+
+### Xfreerdp to the ATTACK01 Parrot Host
+
+También instalamos un servidor `XRDP` en el host `ATTACK01` para proporcionar acceso GUI al host de ataque Parrot. Esto se puede usar para interactuar con la herramienta GUI BloodHound que cubriremos más adelante en esta sección. En secciones donde se genere este host (donde se te da acceso SSH) también puedes conectarte a él usando `xfreerdp` usando el mismo comando que usarías con el host de ataque de Windows mencionado anteriormente:
+
+```r
+xfreerdp /v:<ATTACK01 target IP> /u:htb-student /p:HTB_@cademy_stdnt!
+```
+
+La mayoría de las secciones proporcionarán credenciales para el usuario `htb-student` en `MS01` o `ATTACK01`. Dependiendo del material y desafíos, algunas secciones te harán autenticarte en un objetivo con un usuario diferente, y se proporcionarán credenciales alternas.
+
+---
+
+## Toolkit
+
+Proveemos un host de ataque de Windows y Parrot Linux en el laboratorio que acompaña a este módulo. Todas las herramientas necesarias para realizar todos los ejemplos y resolver todas las preguntas a lo largo de las secciones del módulo están presentes en los hosts. Las herramientas necesarias para el host de ataque de Windows, `MS01`, se encuentran en el directorio `C:\Tools`. Otras, como el módulo de PowerShell de Active Directory, se cargarán al abrir una ventana de consola de PowerShell. Las herramientas en el host de ataque de Linux, `ATTACK01`, están instaladas y agregadas al PATH del usuario `htb-student` o presentes en el directorio `/opt`. Por supuesto, (y es alentado) puedes compilar (donde sea necesario) y subir tus propias herramientas y scripts a los hosts de ataque para acostumbrarte a hacerlo o alojarlas en una compartición SMB desde Pwnbox trabajando con las herramientas de esa manera. Ten en cuenta que al realizar una prueba de penetración real en la red de un cliente, siempre es mejor compilar las herramientas tú mismo para examinar el código de antemano y asegurarte de que no haya nada malicioso oculto en el ejecutable compilado. No queremos llevar herramientas infectadas a la red de un cliente y exponerlas a un ataque externo.
+
+---
+
+¡Diviértete, y no olvides pensar fuera de la caja! AD es inmenso. No lo dominarás de la noche a la mañana, pero sigue trabajando en ello y pronto el contenido de este módulo será algo natural para ti.
+
+-**mrb3n**

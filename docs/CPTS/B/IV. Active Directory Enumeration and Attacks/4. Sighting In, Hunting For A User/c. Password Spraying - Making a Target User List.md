@@ -1,0 +1,237 @@
+## Detailed User Enumeration
+
+Para montar un ataque de password spraying exitoso, primero necesitamos una lista de usuarios válidos del dominio con los que intentar autenticarnos. Hay varias formas en las que podemos reunir una lista de usuarios válidos:
+
+- Aprovechando una sesión NULL de SMB para recuperar una lista completa de usuarios del dominio desde el Domain Controller.
+- Utilizando un enlace anónimo de LDAP para consultar LDAP de forma anónima y obtener la lista de usuarios del dominio.
+- Usando una herramienta como `Kerbrute` para validar usuarios utilizando una lista de palabras de una fuente como el repositorio de GitHub [statistically-likely-usernames](https://github.com/insidetrust/statistically-likely-usernames), o recopilada utilizando una herramienta como [linkedin2username](https://github.com/initstring/linkedin2username) para crear una lista de usuarios potencialmente válidos.
+- Usando un conjunto de credenciales de un sistema de ataque Linux o Windows, ya sea proporcionado por nuestro cliente o obtenido por otros medios, como el envenenamiento de respuestas LLMNR/NBT-NS usando `Responder` o incluso un password spray exitoso usando una lista de palabras más pequeña.
+
+Sea cual sea el método que elijamos, también es vital considerar la política de contraseñas del dominio. Si tenemos una sesión NULL de SMB, un enlace anónimo de LDAP o un conjunto de credenciales válidas, podemos enumerar la política de contraseñas. Tener esta política en mano es muy útil porque la longitud mínima de la contraseña y si la complejidad de la contraseña está habilitada nos puede ayudar a formular la lista de contraseñas que intentaremos en nuestros intentos de spray. Conocer el umbral de bloqueo de cuenta y el temporizador de contraseñas incorrectas nos dirá cuántos intentos de spray podemos hacer a la vez sin bloquear ninguna cuenta y cuántos minutos debemos esperar entre los intentos de spray.
+
+Nuevamente, si no conocemos la política de contraseñas, siempre podemos preguntar a nuestro cliente y, si no nos la proporcionan, podemos intentar un intento de password spraying muy dirigido como un "hail mary" si se han agotado todas las demás opciones para un punto de apoyo. También podríamos intentar un spray cada pocas horas para no bloquear ninguna cuenta. Independientemente del método que elijamos, y si tenemos la política de contraseñas o no, siempre debemos llevar un registro de nuestras actividades, incluyendo, pero no limitado a:
+
+- Las cuentas objetivo
+- Domain Controller usado en el ataque
+- Hora del spray
+- Fecha del spray
+- Password(s) intentados
+
+Esto nos ayudará a asegurarnos de no duplicar esfuerzos. Si ocurre un bloqueo de cuenta o nuestro cliente nota intentos de inicio de sesión sospechosos, podemos proporcionarles nuestras notas para cruzarlas con sus sistemas de registro y asegurarnos de que no estaba ocurriendo nada nefasto en la red.
+
+---
+
+## SMB NULL Session to Pull User List
+
+Si estás en una máquina interna pero no tienes credenciales válidas del dominio, puedes buscar sesiones NULL de SMB o enlaces anónimos de LDAP en los Domain Controllers. Cualquiera de estos te permitirá obtener una lista precisa de todos los usuarios dentro de Active Directory y la política de contraseñas. Si ya tienes credenciales para un usuario del dominio o acceso `SYSTEM` en un host de Windows, entonces puedes consultar fácilmente Active Directory para esta información.
+
+Es posible hacer esto usando la cuenta SYSTEM porque puede `impersonate` la computadora. Un objeto de computadora se trata como una cuenta de usuario del dominio (con algunas diferencias, como la autenticación a través de trusts entre bosques). Si no tienes una cuenta válida del dominio, y las sesiones NULL de SMB y los enlaces anónimos de LDAP no son posibles, puedes crear una lista de usuarios usando recursos externos como la recolección de correos electrónicos y LinkedIn. Esta lista de usuarios no será tan completa, pero puede ser suficiente para proporcionarte acceso a Active Directory.
+
+Algunas herramientas que pueden aprovechar las sesiones NULL de SMB y los enlaces anónimos de LDAP incluyen [enum4linux](https://github.com/portcullislabs/enum4linux), [rpcclient](https://www.samba.org/samba/docs/current/man-html/rpcclient.1.html), y [CrackMapExec](https://github.com/byt3bl33d3r/CrackMapExec), entre otras. Independientemente de la herramienta, tendremos que hacer un poco de filtrado para limpiar la salida y obtener una lista de solo nombres de usuario, uno en cada línea. Podemos hacer esto con `enum4linux` con el flag `-U`.
+
+### Using enum4linux
+
+```r
+enum4linux -U 172.16.5.5  | grep "user:" | cut -f2 -d"[" | cut -f1 -d"]"
+
+administrator
+guest
+krbtgt
+lab_adm
+htb-student
+avazquez
+pfalcon
+fanthony
+wdillard
+lbradford
+sgage
+asanchez
+dbranch
+ccruz
+njohnson
+mholliday
+
+<SNIP>
+```
+
+Podemos usar el comando `enumdomusers` después de conectarnos de forma anónima usando `rpcclient`.
+
+### Using rpcclient
+
+```r
+rpcclient -U "" -N 172.16.5.5
+
+rpcclient $> enumdomusers 
+user:[administrator] rid:[0x1f4]
+user:[guest] rid:[0x1f5]
+user:[krbtgt] rid:[0x1f6]
+user:[lab_adm] rid:[0x3e9]
+user:[htb-student] rid:[0x457]
+user:[avazquez] rid:[0x458]
+
+<SNIP>
+```
+
+Finalmente, podemos usar `CrackMapExec` con el flag `--users`. Esta es una herramienta útil que también mostrará el `badpwdcount` (intentos de inicio de sesión inválidos), por lo que podemos eliminar cualquier cuenta de nuestra lista que esté cerca del umbral de bloqueo. También muestra el `baddpwdtime`, que es la fecha y hora del último intento de contraseña incorrecta, por lo que podemos ver qué tan cerca está una cuenta de tener su `badpwdcount` reiniciado. En un entorno con múltiples Domain Controllers, este valor se mantiene por separado en cada uno. Para obtener un total preciso de los intentos de contraseñas incorrectas de la cuenta, tendríamos que consultar cada Domain Controller y usar la suma de los valores o consultar el Domain Controller con el rol de PDC Emulator FSMO.
+
+### Using CrackMapExec --users Flag
+
+```r
+crackmapexec smb 172.16.5.5 --users
+
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  [*] Windows 10.0 Build 17763 x64 (name:ACADEMY-EA-DC01) (domain:INLANEFREIGHT.LOCAL) (signing:True) (SMBv1:False)
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  [+] Enumerated domain user(s)
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  INLANEFREIGHT.LOCAL\administrator                  badpwdcount: 0 baddpwdtime: 2022-01-10 13:23:09.463228
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  INLANEFREIGHT.LOCAL\guest                          badpwdcount: 0 baddpwdtime: 1600-12-31 19:03:58
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  INLANEFREIGHT.LOCAL\lab_adm                        badpwdcount: 0 baddpwdtime: 2021-12-21 14:10:56.859064
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  INLANEFREIGHT.LOCAL\krbtgt                         badpwdcount: 0 baddpwdtime: 1600-12-31 19:03:58
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  INLANEFREIGHT.LOCAL\htb-student                    badpwdcount: 0 baddpwdtime: 2022-02-22 14:48:26.653366
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  INLANEFREIGHT.LOCAL\avazquez                       badpwdcount: 0 baddpwdtime: 2022-02-17 22:59:22.684613
+
+<SNIP>
+```
+
+---
+
+## Gathering Users with LDAP Anonymous
+
+Podemos usar varias herramientas para reunir usuarios cuando encontramos un enlace anónimo de LDAP. Algunos ejemplos incluyen [windapsearch](https://github.com/ropnop/windapsearch) y [ldapsearch](https://linux.die.net/man/1/ldapsearch). Si elegimos usar `ldapsearch` necesitaremos especificar un filtro de búsqueda LDAP válido. Podemos aprender más sobre estos filtros de búsqueda en el módulo [Active Directory LDAP](https://academy.hackthebox.com/course/preview/active-directory-ldap).
+
+### Using ldapsearch
+
+```r
+ldapsearch -h 
+
+172.16.5.5 -x -b "DC=INLANEFREIGHT,DC=LOCAL" -s sub "(&(objectclass=user))"  | grep sAMAccountName: | cut -f2 -d" "
+
+guest
+ACADEMY-EA-DC01$
+ACADEMY-EA-MS01$
+ACADEMY-EA-WEB01$
+htb-student
+avazquez
+pfalcon
+fanthony
+wdillard
+lbradford
+sgage
+asanchez
+dbranch
+
+<SNIP>
+```
+
+Herramientas como `windapsearch` hacen esto más fácil (aunque aún deberíamos entender cómo crear nuestros propios filtros de búsqueda LDAP). Aquí podemos especificar el acceso anónimo proporcionando un nombre de usuario en blanco con el flag `-u` y el flag `-U` para indicar a la herramienta que recupere solo usuarios.
+
+### Using windapsearch
+
+```r
+./windapsearch.py --dc-ip 172.16.5.5 -u "" -U
+
+[+] No username provided. Will try anonymous bind.
+[+] Using Domain Controller at: 172.16.5.5
+[+] Getting defaultNamingContext from Root DSE
+[+]	Found: DC=INLANEFREIGHT,DC=LOCAL
+[+] Attempting bind
+[+]	...success! Binded as: 
+[+]	 None
+
+[+] Enumerating all AD users
+[+]	Found 2906 users: 
+
+cn: Guest
+
+cn: Htb Student
+userPrincipalName: htb-student@inlanefreight.local
+
+cn: Annie Vazquez
+userPrincipalName: avazquez@inlanefreight.local
+
+cn: Paul Falcon
+userPrincipalName: pfalcon@inlanefreight.local
+
+cn: Fae Anthony
+userPrincipalName: fanthony@inlanefreight.local
+
+cn: Walter Dillard
+userPrincipalName: wdillard@inlanefreight.local
+
+<SNIP>
+```
+
+---
+
+## Enumerating Users with Kerbrute
+
+Como se mencionó en la sección `Initial Enumeration of The Domain`, si no tenemos acceso en absoluto desde nuestra posición en la red interna, podemos usar `Kerbrute` para enumerar cuentas AD válidas y para password spraying.
+
+Esta herramienta utiliza [Kerberos Pre-Authentication](https://ldapwiki.com/wiki/Wiki.jsp?page=Kerberos%20Pre-Authentication), que es una forma mucho más rápida y potencialmente más sigilosa de realizar password spraying. Este método no genera el ID de evento de Windows [4625: An account failed to log on](https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4625), o un fallo de inicio de sesión que a menudo se monitorea. La herramienta envía solicitudes de TGT al Domain Controller sin Kerberos Pre-Authentication para realizar la enumeración de nombres de usuario. Si el KDC responde con el error `PRINCIPAL UNKNOWN`, el nombre de usuario no es válido. Siempre que el KDC solicite Kerberos Pre-Authentication, esto indica que el nombre de usuario existe, y la herramienta lo marcará como válido. Este método de enumeración de nombres de usuario no causa fallos de inicio de sesión y no bloqueará cuentas. Sin embargo, una vez que tengamos una lista de usuarios válidos y cambiemos de marcha para usar esta herramienta para password spraying, los intentos fallidos de Kerberos Pre-Authentication contarán para los intentos fallidos de inicio de sesión de una cuenta y pueden llevar al bloqueo de la cuenta, por lo que aún debemos tener cuidado independientemente del método elegido.
+
+Probemos este método usando la lista de palabras [jsmith.txt](https://github.com/insidetrust/statistically-likely-usernames/blob/master/jsmith.txt) de 48,705 nombres de usuario comunes posibles en el formato `flast`. El repositorio de GitHub [statistically-likely-usernames](https://github.com/insidetrust/statistically-likely-usernames) es un excelente recurso para este tipo de ataque y contiene una variedad de listas de nombres de usuario diferentes que podemos usar para enumerar nombres de usuario válidos usando `Kerbrute`.
+
+### Kerbrute User Enumeration
+
+```r
+ kerbrute userenum -d inlanefreight.local --dc 172.16.5.5 /opt/jsmith.txt 
+
+    __             __               __     
+   / /_____  _____/ /_  _______  __/ /____ 
+  / //_/ _ \/ ___/ __ \/ ___/ / / / __/ _ \
+ / ,< /  __/ /  / /_/ / /  / /_/ / /_/  __/
+/_/|_|\___/_/  /_.___/_/   \__,_/\__/\___/                                        
+
+Version: dev (9cfb81e) - 02/17/22 - Ronnie Flathers @ropnop
+
+2022/02/17 22:16:11 >  Using KDC(s):
+2022/02/17 22:16:11 >  	172.16.5.5:88
+
+2022/02/17 22:16:11 >  [+] VALID USERNAME:	 jjones@inlanefreight.local
+2022/02/17 22:16:11 >  [+] VALID USERNAME:	 sbrown@inlanefreight.local
+2022/02/17 22:16:11 >  [+] VALID USERNAME:	 tjohnson@inlanefreight.local
+2022/02/17 22:16:11 >  [+] VALID USERNAME:	 jwilson@inlanefreight.local
+2022/02/17 22:16:11 >  [+] VALID USERNAME:	 bdavis@inlanefreight.local
+2022/02/17 22:16:11 >  [+] VALID USERNAME:	 njohnson@inlanefreight.local
+2022/02/17 22:16:11 >  [+] VALID USERNAME:	 asanchez@inlanefreight.local
+2022/02/17 22:16:11 >  [+] VALID USERNAME:	 dlewis@inlanefreight.local
+2022/02/17 22:16:11 >  [+] VALID USERNAME:	 ccruz@inlanefreight.local
+
+<SNIP>
+```
+
+Hemos verificado más de 48,000 nombres de usuario en poco más de 12 segundos y descubierto más de 50 válidos. Usar Kerbrute para la enumeración de nombres de usuario generará el ID de evento [4768: A Kerberos authentication ticket (TGT) was requested](https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4768). Esto solo se activará si el [registro de eventos de Kerberos](https://docs.microsoft.com/en-us/troubleshoot/windows-server/identity/enable-kerberos-event-logging) está habilitado a través de la política de grupo. Los defensores pueden ajustar sus herramientas SIEM para buscar una afluencia de este ID de evento, lo que puede indicar un ataque. Si tenemos éxito con este método durante una prueba de penetración, esto puede ser una excelente recomendación para agregar a nuestro informe.
+
+Si no podemos crear una lista de nombres de usuario válidos usando cualquiera de los métodos resaltados anteriormente, podríamos volver a la recopilación de información externa y buscar direcciones de correo electrónico de la empresa o usar una herramienta como [linkedin2username](https://github.com/initstring/linkedin2username) para combinar posibles nombres de usuario de la página de LinkedIn de una empresa.
+
+---
+
+## Credentialed Enumeration to Build our User List
+
+Con credenciales válidas, podemos usar cualquiera de las herramientas mencionadas anteriormente para construir una lista de usuarios. Una forma rápida y fácil es usar CrackMapExec.
+
+### Using CrackMapExec with Valid Credentials
+
+```r
+sudo crackmapexec smb 172.16.5.5 -u htb-student -p Academy_student_AD! --users
+
+[sudo] password for htb-student: 
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  [*] Windows 10.0 Build 17763 x64 (name:ACADEMY-EA-DC01) (domain:INLANEFREIGHT.LOCAL) (signing:True) (SMBv1:False)
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  [+] INLANEFREIGHT.LOCAL\htb-student:Academy_student_AD! 
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  [+] Enumerated domain user(s)
+SMB         172.16.5.5      445    ACADEMY-EA-DC01  INLANEFREIGHT.LOCAL\administrator                  badpwdcount: 1 baddpwdtime: 2022-02-23 21:43:35.059620
+SMB         172.16.5.5      445    INLANEFREIGHT.LOCAL\guest                          badpwdcount: 0 baddpwdtime: 1600-12-31 19:03:58
+SMB         172.16.5.5      445    INLANEFREIGHT.LOCAL\lab_adm                        badpwdcount: 0 baddpwdtime: 2021-12-21
+
+ 14:10:56.859064
+SMB         172.16.5.5      445    INLANEFREIGHT.LOCAL\krbtgt                         badpwdcount: 0 baddpwdtime: 1600-12-31 19:03:58
+SMB         172.16.5.5      445    INLANEFREIGHT.LOCAL\htb-student                    badpwdcount: 0 baddpwdtime: 2022-02-22 14:48:26.653366
+SMB         172.16.5.5      445    INLANEFREIGHT.LOCAL\avazquez                       badpwdcount: 20 baddpwdtime: 2022-02-17 22:59:22.684613
+SMB         172.16.5.5      445    INLANEFREIGHT.LOCAL\pfalcon                        badpwdcount: 0 baddpwdtime: 1600-12-31 19:03:58
+
+<SNIP>
+```
+
+---
+
+## Now for the Fun
+
+Ahora que hemos cubierto la creación de una lista de usuarios objetivo para spraying y discutido las políticas de contraseñas, pongámonos manos a la obra realizando ataques de password spraying de varias formas desde un host de ataque Linux y luego desde un host de Windows.

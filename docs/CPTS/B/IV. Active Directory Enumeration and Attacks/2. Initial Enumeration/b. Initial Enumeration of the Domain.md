@@ -1,0 +1,461 @@
+Estamos al inicio de nuestra prueba de penetración centrada en Active Directory contra Inlanefreight. Hemos realizado alguna recopilación de información básica y obtenido una idea de lo que podemos esperar del cliente a través de los documentos de alcance.
+
+---
+
+## Setting Up
+
+Para esta primera parte de la prueba, estamos comenzando en un host de ataque ubicado dentro de la red para nosotros. Esta es una manera común en la que un cliente puede seleccionar para que realicemos una prueba de penetración interna. Una lista de los tipos de configuraciones que un cliente puede elegir para las pruebas incluye:
+
+- Una distribución de pruebas de penetración (generalmente Linux) como una máquina virtual en su infraestructura interna que llama a un host de salto que controlamos a través de VPN, y al que podemos conectarnos mediante SSH.
+- Un dispositivo físico conectado a un puerto ethernet que llama a nosotros a través de VPN, y al que podemos conectarnos mediante SSH.
+- Presencia física en su oficina con nuestra laptop conectada a un puerto ethernet.
+- Una máquina virtual Linux en Azure o AWS con acceso a la red interna a la que podemos conectarnos mediante SSH usando autenticación de clave pública y nuestra dirección IP pública en la lista blanca.
+- Acceso VPN a su red interna (un poco limitado porque no podremos realizar ciertos ataques como LLMNR/NBT-NS Poisoning).
+- Desde una laptop corporativa conectada a la VPN del cliente.
+- En una estación de trabajo gestionada (generalmente Windows), físicamente en su oficina con acceso limitado o sin acceso a internet o capacidad para instalar herramientas. También pueden elegir esta opción pero darnos acceso completo a internet, administrador local y poner la protección de endpoint en modo monitor para que podamos instalar herramientas a voluntad.
+- En un escritorio virtual (VDI) accesible mediante Citrix o similar, con una de las configuraciones descritas para la estación de trabajo gestionada, típicamente accesible a través de VPN ya sea de forma remota o desde una laptop corporativa.
+
+Estas son las configuraciones más comunes que he visto, aunque un cliente puede proponer otra variación de una de estas. El cliente también puede elegir un enfoque "grey box" donde nos dan solo una lista de direcciones IP/rangos de red CIDR dentro del alcance, o "black box" donde tenemos que conectarnos y hacer todo el descubrimiento a ciegas utilizando varias técnicas. Finalmente, pueden elegir pruebas evasivas, no evasivas o híbridas evasivas (comenzando "silenciosamente" y aumentando gradualmente el ruido para ver en qué umbral somos detectados y luego cambiando a pruebas no evasivas). También pueden optar por que comencemos sin credenciales o desde la perspectiva de un usuario de dominio estándar.
+
+Nuestro cliente Inlanefreight ha elegido el siguiente enfoque porque buscan una evaluación lo más completa posible. En este momento, su programa de seguridad no es lo suficientemente maduro para beneficiarse de ninguna forma de pruebas evasivas o un enfoque "black box".
+
+- Una VM personalizada de pentesting dentro de su red interna que llama a nuestro host de salto y a la que podemos conectarnos mediante SSH para realizar pruebas.
+- También nos han dado un host Windows en el que podemos cargar herramientas si es necesario.
+- Nos han pedido que comencemos desde un punto de vista no autenticado pero también nos han dado una cuenta de usuario estándar de dominio (`htb-student`) que se puede usar para acceder al host de ataque Windows.
+- Pruebas "grey box". Nos han dado el rango de red 172.16.5.0/23 y ninguna otra información sobre la red.
+- Pruebas no evasivas.
+
+No se nos han proporcionado credenciales ni un mapa detallado de la red interna.
+
+---
+
+## Tasks
+
+Nuestras tareas para esta sección son:
+
+- Enumerar la red interna, identificando hosts, servicios críticos y posibles vías para obtener un punto de apoyo.
+- Esto puede incluir medidas activas y pasivas para identificar usuarios, hosts y vulnerabilidades que podamos aprovechar para ampliar nuestro acceso.
+- Documentar cualquier hallazgo que encontremos para su uso posterior. ¡Extremadamente importante!
+
+Comenzaremos desde nuestro host de ataque Linux sin credenciales de usuario de dominio. Es común comenzar una prueba de penetración de esta manera. Muchas organizaciones desean ver qué puedes hacer desde una perspectiva ciega, como esta, antes de proporcionarte más información para la prueba. Esto da una visión más realista de qué avenidas potenciales tendría un adversario para infiltrarse en el dominio. Puede ayudarles a ver qué podría hacer un atacante si gana acceso no autorizado a través de internet (es decir, un ataque de phishing), acceso físico al edificio, acceso inalámbrico desde el exterior (si la red inalámbrica toca el entorno de AD), o incluso un empleado deshonesto. Dependiendo del éxito de esta fase, el cliente puede proporcionarnos acceso a un host unido al dominio o un conjunto de credenciales para la red para acelerar las pruebas y permitirnos cubrir la mayor cantidad de terreno posible.
+
+A continuación se presentan algunos de los puntos de datos clave que debemos buscar en este momento y anotar en nuestra herramienta de toma de notas de preferencia y guardar la salida de escaneos/herramientas en archivos siempre que sea posible.
+
+### Key Data Points
+
+|**Data Point**|**Descripción**|
+|---|---|
+|`AD Users`|Estamos tratando de enumerar cuentas de usuario válidas que podamos apuntar para password spraying.|
+|`AD Joined Computers`|Computadoras clave incluyen Controladores de Dominio, servidores de archivos, servidores SQL, servidores web, servidores de correo Exchange, servidores de bases de datos, etc.|
+|`Key Services`|Kerberos, NetBIOS, LDAP, DNS|
+|`Vulnerable Hosts and Services`|Cualquier cosa que pueda ser una victoria rápida. (es decir, un host fácil de explotar y obtener un punto de apoyo)|
+
+---
+
+## TTPs
+
+Enumerar un entorno de AD puede ser abrumador si se aborda sin un plan. Hay una gran cantidad de datos almacenados en AD, y puede llevar mucho tiempo revisar si no se observa en etapas progresivas, y es probable que nos perdamos cosas. Necesitamos establecer un plan de juego para nosotros mismos y abordarlo pieza por pieza. Todos trabajamos de maneras ligeramente diferentes, por lo que a medida que ganemos más experiencia, comenzaremos a desarrollar nuestra propia metodología repetible que funcione mejor para nosotros. Independientemente de cómo procedamos, generalmente comenzamos en el mismo lugar y buscamos los mismos puntos de datos. Experimentaremos con muchas herramientas en esta sección y las siguientes. Es importante reproducir cada ejemplo e incluso tratar de recrear ejemplos con diferentes herramientas para ver cómo funcionan de manera diferente, aprender su sintaxis y encontrar qué enfoque funciona mejor para nosotros.
+
+Comenzaremos con la identificación `pasiva` de cualquier host en la red, seguida de la validación `activa` de los resultados para saber más sobre cada host (qué servicios están en ejecución, nombres, vulnerabilidades potenciales, etc.). Una vez que sepamos qué hosts existen, podemos proceder a sondear esos hosts, buscando cualquier dato interesante que podamos obtener de ellos. Después de haber cumplido estas tareas, deberíamos detenernos y reagruparnos y ver qué información tenemos. En este momento, con suerte, tendremos un conjunto de credenciales o una cuenta de usuario para apuntar a un host unido al dominio o tendremos la capacidad de comenzar la enumeración autenticada desde nuestro host de ataque Linux.
+
+Veamos algunas herramientas y técnicas que nos ayudarán con esta enumeración.
+
+### Identifying Hosts
+
+Primero, tomemos un tiempo para escuchar la red y ver qué está pasando. Podemos usar `Wireshark` y `TCPDump` para "poner nuestro oído al cable" y ver qué hosts y tipos de tráfico de red podemos capturar. Esto es particularmente útil si el enfoque de evaluación es "black box". Notamos algunas solicitudes y respuestas [ARP](https://en.wikipedia.org/wiki/Address_Resolution_Protocol), [MDNS](https://en.wikipedia.org/wiki/Multicast_DNS), y otros paquetes básicos de [capa dos](https://www.juniper.net/documentation/us/en/software/junos/multicast-l2/topics/topic-map/layer-2-understanding.html) (dado que estamos en una red conmutada, estamos limitados al dominio de broadcast actual), algunos de los cuales podemos ver a continuación. Este es un gran comienzo que nos da algunos bits de información sobre la configuración de la red del cliente.
+
+Desplácese hasta la parte inferior, inicie el objetivo, conéctese al host de ataque Linux usando `xfreerdp` y encienda Wireshark para comenzar a capturar tráfico.
+
+### Start Wireshark on ea-attack01
+
+```r
+┌─[htb-student@ea-attack01]─[~]
+└──╼ $sudo -E wireshark
+
+11:28:20.487     Main Warn QStandardPaths: runtime directory '/run/user/1001' is not owned by UID 0, but a directory permissions 0700 owned by UID 1001 GID 1002
+<SNIP>
+```
+
+### Wireshark Output
+
+![image](https://academy.hackthebox.com/storage/modules/143/ea-wireshark.png)
+
+- Los paquetes ARP nos hacen conscientes de los hosts: 172.16.5.5, 172.16.5.25, 172.16.5.50, 172.16.5.100, y 172.16.5.125.
+
+![image](https://academy.hackthebox.com/storage/modules/143/ea-wireshark-mdns.png)
+
+- MDNS nos hace conscientes del host ACADEMY-EA-WEB01.
+
+Si estamos en un host sin GUI (lo cual es típico), podemos usar [tcpdump](https://linux.die.net/man/8/tcpdump), [net-creds](https://github.com/DanMcInerney/net-creds), y [NetMiner](https://www.netminer.com/en/product/netminer.php), etc., para realizar las mismas funciones. También podemos usar tcpdump para guardar una captura en un archivo .pc
+
+ap, transferirlo a otro host y abrirlo en Wireshark.
+
+### Tcpdump Output
+
+```r
+sudo tcpdump -i ens224 
+```
+
+![image](https://academy.hackthebox.com/storage/modules/143/tcpdump-example.png)
+
+No hay una única forma correcta de escuchar y capturar el tráfico de red. Hay muchas herramientas que pueden procesar datos de red. Wireshark y tcpdump son solo algunas de las más fáciles de usar y más ampliamente conocidas. Dependiendo del host en el que estés, es posible que ya tengas una herramienta de monitoreo de red incorporada, como `pktmon.exe`, que se agregó a todas las ediciones de Windows 10. Como nota para las pruebas, siempre es una buena idea guardar el tráfico PCAP que captures. Puedes revisarlo nuevamente más tarde para buscar más pistas y es una excelente información adicional para incluir al redactar tus informes.
+
+Nuestra primera mirada al tráfico de red nos señaló un par de hosts a través de `MDNS` y `ARP`. Ahora utilicemos una herramienta llamada `Responder` para analizar el tráfico de red y determinar si algo más en el dominio aparece.
+
+[Responder](https://github.com/lgandx/Responder-Windows) es una herramienta construida para escuchar, analizar y envenenar solicitudes y respuestas `LLMNR`, `NBT-NS` y `MDNS`. Tiene muchas más funciones, pero por ahora, todo lo que estamos utilizando es la herramienta en su modo de análisis. Esto escuchará pasivamente la red y no enviará paquetes envenenados. Cubriremos esta herramienta más a fondo en secciones posteriores.
+
+### Starting Responder
+
+```r
+sudo responder -I ens224 -A 
+```
+
+### Responder Results
+
+![image](https://academy.hackthebox.com/storage/modules/143/responder-example.gif)
+
+Al iniciar Responder con el modo de análisis pasivo habilitado, veremos que las solicitudes fluyen en nuestra sesión. Observa a continuación que encontramos algunos hosts únicos no mencionados anteriormente en nuestras capturas de Wireshark. Vale la pena anotarlos ya que estamos comenzando a construir una buena lista de objetivos de IPs y nombres de hosts DNS.
+
+Nuestras verificaciones pasivas nos han dado algunos hosts a tener en cuenta para una enumeración más detallada. Ahora realicemos algunas verificaciones activas comenzando con un barrido ICMP rápido de la subred usando `fping`.
+
+[Fping](https://fping.org/) nos proporciona una capacidad similar a la aplicación ping estándar en el sentido de que utiliza solicitudes y respuestas ICMP para comunicarse con un host. Donde fping brilla es en su capacidad para emitir paquetes ICMP contra una lista de múltiples hosts a la vez y su capacidad de ser scriptable. Además, trabaja de manera round-robin, consultando hosts de manera cíclica en lugar de esperar a que múltiples solicitudes a un solo host regresen antes de continuar. Estas verificaciones nos ayudarán a determinar si hay algo más activo en la red interna. ICMP no es una solución única, pero es una manera fácil de obtener una idea inicial de lo que existe. Otros puertos abiertos y protocolos activos pueden apuntar a nuevos hosts para objetivos posteriores. Vamos a verlo en acción.
+
+### FPing Active Checks
+
+Aquí comenzaremos `fping` con algunas flags: `a` para mostrar objetivos que están vivos, `s` para imprimir estadísticas al final del escaneo, `g` para generar una lista de objetivos desde la red CIDR y `q` para no mostrar resultados por objetivo.
+
+```r
+fping -asgq 172.16.5.0/23
+
+172.16.5.5
+172.16.5.25
+172.16.5.50
+172.16.5.100
+172.16.5.125
+172.16.5.200
+172.16.5.225
+172.16.5.238
+172.16.5.240
+
+     510 targets
+       9 alive
+     501 unreachable
+       0 unknown addresses
+
+    2004 timeouts (waiting for response)
+    2013 ICMP Echos sent
+       9 ICMP Echo Replies received
+    2004 other ICMP received
+
+ 0.029 ms (min round trip time)
+ 0.396 ms (avg round trip time)
+ 0.799 ms (max round trip time)
+       15.366 sec (elapsed real time)
+```
+
+El comando anterior valida qué hosts están activos en la red `/23` y lo hace de manera silenciosa en lugar de llenar la terminal con resultados para cada IP en la lista de objetivos. Podemos combinar los resultados exitosos y la información que obtenemos de nuestras verificaciones pasivas en una lista para un escaneo más detallado con Nmap. Desde el comando `fping`, podemos ver 9 "hosts vivos", incluyendo nuestro host de ataque.
+
+Nota: Los resultados del escaneo en la red de destino diferirán del resultado del comando en esta sección debido al tamaño de la red del laboratorio. Aún vale la pena reproducir cada ejemplo para practicar cómo funcionan estas herramientas y anotar cada host que esté vivo en este laboratorio.
+
+### Nmap Scanning
+
+Ahora que tenemos una lista de hosts activos dentro de nuestra red, podemos enumerar esos hosts más a fondo. Estamos buscando determinar qué servicios está ejecutando cada host, identificar hosts críticos como `Domain Controllers` y `servidores web`, e identificar hosts potencialmente vulnerables para sondear más adelante. Con nuestro enfoque en AD, después de hacer un barrido amplio, sería prudente centrarnos en los protocolos estándar que generalmente se ven acompañando a los servicios de AD, como DNS, SMB, LDAP y Kerberos, por nombrar algunos. A continuación, un ejemplo rápido de un escaneo simple con Nmap.
+
+```r
+sudo nmap -v -A -iL hosts.txt -oN /home/htb-student/Documents/host-enum
+```
+
+El escaneo [-A (Aggressive scan options)](https://nmap.org/book/man-misc-options.html) realizará varias funciones. Una de las más importantes es una enumeración rápida de puertos bien conocidos para incluir servicios web, servicios de dominio, etc. Para nuestro archivo hosts.txt, algunos de nuestros resultados de Responder y fping se superpusieron (encontramos el nombre y la dirección IP), así que para mantenerlo simple, solo se alimentó la dirección IP en hosts.txt para el escaneo.
+
+### NMAP Result Highlights
+
+```r
+Nmap scan report for inlanefreight.local (172.16.5.5)
+Host is up (0.069s latency).
+Not shown: 987 closed tcp ports (conn-refused)
+PORT     STATE SERVICE       VERSION
+53/tcp   open  domain        Simple DNS Plus
+88/tcp   open  kerberos-sec  Microsoft Windows Kerberos (server time: 2022-04-04 15:12:06Z)
+135/tcp  open  msrpc         Microsoft Windows RPC
+139/tcp  open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: INLANEFREIGHT.LOCAL0., Site: Default-First-Site-Name)
+|_ssl-date: 2022-04-04T15:12:53+00:00; -1s from scanner time.
+| ssl-cert: Subject:
+| Subject Alternative Name: DNS:ACADEMY-EA-DC01.INLANEFREIGHT.LOCAL
+| Issuer: commonName=INLANEFREIGHT-CA
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2022-03-30T22:40:24
+| Not valid after:  2023-03-30T22:40:24
+| MD5:   3a09 d87a 9ccb 5498 2533 e339 ebe3 443f
+|_SHA-1: 9731 d8ec b219 4301 c231 793e f913 6868 d39f 7920
+445/tcp  open  microsoft-ds?
+464/tcp  open  kpasswd5?
+593/tcp  open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp  open  ssl/ldap      Microsoft Windows Active Directory LDAP (Domain: INLANEFREIGHT.LOCAL0., Site: Default-First-Site-Name)
+<SNIP>  
+3268/tcp open  ldap          Microsoft Windows Active Directory LDAP (Domain: INLANEFREIGHT.LOCAL0., Site: Default-First-Site-Name)
+3269/tcp open  ssl/ldap      Microsoft Windows Active Directory LDAP (Domain: INLANEFREIGHT.LOCAL0., Site: Default-First-Site-Name)
+3389/tcp open  ms-wbt-server Microsoft Terminal Services
+| rdp-ntlm-info:
+|   Target_Name: INLANEFREIGHT
+|   NetBIOS_Domain_Name: INLANEFREIGHT
+|   NetBIOS_Computer_Name: ACADEMY-EA-DC01
+|   DNS_Domain_Name: INLANEFREIGHT.LOCAL
+|   DNS_Computer_Name: ACADEMY-EA-DC01.INLANEFREIGHT.LOCAL
+|   DNS_Tree_Name: INLANEFREIGHT.LOCAL
+|   Product_Version: 10.0.17763
+|_  System_Time: 2022-04-04T15:12:45+00:00
+<SNIP>
+5357/tcp open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-title: Service Unavailable
+|_http-server-header: Microsoft-HTTPAPI/2.0
+Service Info: Host: ACADEMY-EA-DC01; OS: Windows; CPE: cpe:/o:microsoft:windows
+```
+
+Nuestros escaneos nos han proporcionado el estándar de nombres utilizados por NetBIOS y DNS, podemos ver que algunos hosts tienen RDP abierto, y nos han señalado en la dirección del `Domain Controller` principal para el dominio INLANEFREIGHT.LOCAL (ACADEMY-EA-DC01.INLANEFREIGHT.LOCAL). Los resultados a continuación muestran algunos resultados interesantes sobre un posible host desactualizado (no en nuestro laboratorio actual).
+
+```r
+nmap -A 172.16.5.100
+
+Starting Nmap 7.92 ( https://nmap.org ) at 2022-04-08 13:42 EDT
+Nmap scan report for 172.16.5.100
+Host is up (0.071s latency).
+Not shown: 989 closed tcp ports (conn-refused)
+PORT      STATE SERVICE      VERSION
+80/tcp    open  http         Microsoft IIS httpd 7.5
+|_http-title: Site doesn't have a title (text/html).
+|_http-server-header: Microsoft-IIS/7.5
+| http-methods: 
+|_  Potentially risky methods: TRACE
+135/tcp   open  msrpc        Microsoft Windows RPC
+139/tcp   open  netbios-ssn  Microsoft Windows netbios-ssn
+443/tcp   open  https?
+445/tcp   open  microsoft-ds Windows Server 2008 R2 Standard 7600 microsoft-ds
+1433/tcp  open  ms-sql-s     Microsoft SQL Server 2008 R2 10.50.1600.00; RTM
+| ssl-cert: Subject: commonName=SSL_Self_Signed_Fallback
+| Not valid before: 2022-04-08T17:38:25
+|_Not valid after:  2052-04-08T17:38:25
+|_ssl-date: 2022-04-08T17:43:53+00:00; 0s from scanner time.
+| ms-sql-ntlm-info: 
+|   Target_Name: INLANEFREIGHT
+|   NetBIOS_Domain_Name: INLANEFREIGHT
+|   NetBIOS_Computer_Name: ACADEMY-EA-CTX1
+|   DNS_Domain_Name: INLANEFREIGHT.LOCAL
+|   DNS_Computer_Name: ACADEMY-EA-CTX1.INLANEFREIGHT.LOCAL
+|_  Product_Version: 6.1.7600
+Host script results:
+| smb2-security-mode: 
+|   2.1: 
+|_    Message signing enabled but not required
+| ms-sql-info: 
+|   172.16.5.100:1433: 
+|     Version: 
+|       name: Microsoft SQL Server 2008 R2 RTM
+|       number: 10.50.1600.00
+|       Product: Microsoft SQL Server 2008 R2
+|       Service pack level: RTM
+|       Post-SP patches applied: false
+|_    TCP port: 1433
+|_nbstat: NetBIOS name: ACADEMY-EA-CTX1, NetBIOS user: <unknown>, NetBIOS MAC: 00:50:56:b9:c7:1c (VMware)
+| smb-os-discovery: 
+|   OS: Windows Server 2008 R2 Standard 7600 (Windows Server 2008 R2 Standard 6.1)
+|   OS CPE: cpe:/o:microsoft:windows_server_2008::-
+|   Computer name: ACADEMY-EA-CTX1
+|   NetBIOS computer name: ACADEMY-EA-CTX1\x00
+|   Domain name: INLANEFREIGHT.LOCAL
+|   Forest name: INLANEFREIGHT.LOCAL
+|   FQDN: ACADEMY-EA-CTX1.INLANEFREIGHT.LOCAL
+|_  System time: 2022-04-08T10:43:48-07:00
+
+<SNIP>
+```
+
+Podemos ver en la salida anterior que tenemos un host potencial que ejecuta un sistema operativo desactualizado (Windows 7, 8 o Server 2008 según la salida). Esto es de interés para nosotros ya que significa que hay sistemas operativos heredados ejecutándose en este entorno de AD. También significa que hay potencial para que funcionen exploits antiguos como EternalBlue, MS08-067 y otros, y nos proporcionen una shell a nivel SYSTEM. Por raro que parezca tener hosts ejecutando software heredado o sistemas operativos obsoletos, es aún común en entornos empresariales grandes. A menudo tendrás algún proceso o equipo como una línea de producción o el HVAC basado en el sistema operativo más antiguo y ha estado en su lugar durante mucho tiempo. Sacar de línea ese equipo es costoso y puede perjudicar a una organización, por lo que los hosts heredados a menudo se dejan en su lugar. Es probable que intenten construir una carcasa externa sólida de Firewalls, IDS/IPS y otras soluciones de monitoreo y protección alrededor de esos sistemas. Si puedes encontrar tu camino hacia uno, es un gran problema y puede ser un punto de apoyo rápido y fácil. Antes de explotar sistemas heredados, sin embargo, deberíamos alertar a nuestro cliente y obtener su aprobación por escrito en caso de que un ataque resulte en inestabilidad del sistema o lleve un servicio o el host a estar fuera de línea. Pueden preferir que solo observemos, informemos y sigamos adelante sin explotar activamente el sistema.
+
+Los resultados de estos escaneos nos darán pistas sobre dónde comenzaremos a buscar posibles avenidas de enumeración del dominio, no solo escaneos de hosts. Necesitamos encontrar nuestro camino hacia una cuenta de usuario de dominio. Mirando nuestros resultados, encontramos varios servidores que alojan servicios de dominio (DC01, MX01, WS01, etc.). Ahora que sabemos qué existe y qué servicios están en ejecución, podemos sondear esos servidores e intentar enumerar usuarios. Asegúrate de usar la flag `-oA` como una mejor práctica al realizar escaneos con Nmap. Esto asegurará que tengamos nuestros resultados de escaneo en varios formatos para propósitos de registro y formatos que se puedan manipular e introducir en otras herramientas.
+
+Debemos ser conscientes de qué escaneos realizamos y cómo funcionan. Algunos de los escaneos con scripts de Nmap ejecutan verificaciones de vulnerabilidad activas contra un host que podrían causar inestabilidad del sistema o llevarlo fuera de línea, causando problemas para el cliente o algo peor. Por ejemplo, ejecutar un escaneo de descubrimiento grande contra una red con dispositivos como sensores o controladores lógicos podría potencialmente sobrecargarlos y interrumpir el equipo industrial del cliente, causando una pérdida de producto o capacidad. Tómate el tiempo para entender los escaneos que usas antes de ejecutarlos en el entorno de un cliente.
+
+Lo más probable es que volvamos a estos resultados más tarde para una mayor enumeración, así que no los olvides. Necesitamos encontrar nuestro camino hacia una cuenta de usuario de dominio o acceso a nivel `SYSTEM` en un host unido al dominio para poder obtener un punto de apoyo y comenzar la diversión real. Vamos a sumergirnos en la búsqueda de una cuenta de usuario.
+
+---
+
+## Identifying Users
+
+Si nuestro cliente no nos proporciona un usuario para comenzar las pruebas (lo cual es a menudo el caso), necesitaremos encontrar una manera de establecer un punto de apoyo en el dominio obteniendo credenciales en texto claro o un hash de contraseña NTLM para un usuario, una shell SYSTEM en un host unido al dominio, o una shell en el contexto de una cuenta de usuario de dominio. Obtener un usuario válido con credenciales es crucial en las primeras etapas de una prueba de penetración interna. Este acceso (incluso en el nivel más
+
+ bajo) abre muchas oportunidades para realizar enumeración e incluso ataques. Veamos una forma en la que podemos comenzar a reunir una lista de usuarios válidos en un dominio para usarlos más adelante en nuestra evaluación.
+
+### Kerbrute - Internal AD Username Enumeration
+
+[Kerbrute](https://github.com/ropnop/kerbrute) puede ser una opción más sigilosa para la enumeración de cuentas de dominio. Aprovecha el hecho de que los fallos de preautenticación de Kerberos a menudo no activarán registros o alertas. Utilizaremos Kerbrute junto con las listas de usuarios `jsmith.txt` o `jsmith2.txt` de [Insidetrust](https://github.com/insidetrust/statistically-likely-usernames). Este repositorio contiene muchas listas de usuarios diferentes que pueden ser extremadamente útiles al intentar enumerar usuarios cuando se comienza desde una perspectiva no autenticada. Podemos apuntar Kerbrute al DC que encontramos anteriormente y alimentarlo con una lista de palabras. La herramienta es rápida y se nos proporcionarán resultados que nos permiten saber si las cuentas encontradas son válidas o no, lo cual es un gran punto de partida para lanzar ataques como password spraying, que cubriremos en profundidad más adelante en este módulo.
+
+Para comenzar con Kerbrute, podemos descargar [binaries precompilados](https://github.com/ropnop/kerbrute/releases/latest) de la herramienta para probar desde Linux, Windows y Mac, o podemos compilarlo nosotros mismos. Esta es generalmente la mejor práctica para cualquier herramienta que introducimos en el entorno del cliente. Para compilar los binaries para usar en el sistema de nuestra elección, primero clonamos el repo:
+
+### Cloning Kerbrute GitHub Repo
+
+```r
+sudo git clone https://github.com/ropnop/kerbrute.git
+
+Cloning into 'kerbrute'...
+remote: Enumerating objects: 845, done.
+remote: Counting objects: 100% (47/47), done.
+remote: Compressing objects: 100% (36/36), done.
+remote: Total 845 (delta 18), reused 28 (delta 10), pack-reused 798
+Receiving objects: 100% (845/845), 419.70 KiB | 2.72 MiB/s, done.
+Resolving deltas: 100% (371/371), done.
+```
+
+Escribir `make help` nos mostrará las opciones de compilación disponibles.
+
+### Listing Compiling Options
+
+```r
+make help
+
+help:            Show this help.
+windows:  Make Windows x86 and x64 Binaries
+linux:  Make Linux x86 and x64 Binaries
+mac:  Make Darwin (Mac) x86 and x64 Binaries
+clean:  Delete any binaries
+all:  Make Windows, Linux and Mac x86/x64 Binaries
+```
+
+Podemos elegir compilar solo un binary o escribir `make all` y compilar uno para su uso en sistemas Linux, Windows y Mac (una versión x86 y x64 para cada uno).
+
+### Compiling for Multiple Platforms and Architectures
+
+```r
+sudo make all
+
+go: downloading github.com/spf13/cobra v1.1.1
+go: downloading github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
+go: downloading github.com/ropnop/gokrb5/v8 v8.0.0-20201111231119-729746023c02
+go: downloading github.com/spf13/pflag v1.0.5
+go: downloading github.com/jcmturner/gofork v1.0.0
+go: downloading github.com/hashicorp/go-uuid v1.0.2
+go: downloading golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
+go: downloading github.com/jcmturner/rpc/v2 v2.0.2
+go: downloading github.com/jcmturner/dnsutils/v2 v2.0.0
+go: downloading github.com/jcmturner/aescts/v2 v2.0.0
+go: downloading golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa
+cd /tmp/kerbrute
+rm -f kerbrute kerbrute.exe kerbrute kerbrute.exe kerbrute.test kerbrute.test.exe kerbrute.test kerbrute.test.exe main main.exe
+rm -f /root/go/bin/kerbrute
+Done.
+Building for windows amd64..
+
+<SNIP>
+```
+
+El directorio `dist` recién creado contendrá nuestros binaries compilados.
+
+### Listing the Compiled Binaries in dist
+
+```r
+ls dist/
+
+kerbrute_darwin_amd64  kerbrute_linux_386  kerbrute_linux_amd64  kerbrute_windows_386.exe  kerbrute_windows_amd64.exe
+```
+
+Luego podemos probar el binary para asegurarnos de que funciona correctamente. Usaremos la versión x64 en el host de ataque Parrot Linux suministrado en el entorno objetivo.
+
+### Testing the kerbrute_linux_amd64 Binary
+
+```r
+./kerbrute_linux_amd64 
+
+    __             __               __     
+   / /_____  _____/ /_  _______  __/ /____ 
+  / //_/ _ \/ ___/ __ \/ ___/ / / / __/ _ \
+ / ,< /  __/ /  / /_/ / /  / /_/ / /_/  __/
+/_/|_|\___/_/  /_.___/_/   \__,_/\__/\___/                                        
+
+Version: dev (9cfb81e) - 02/17/22 - Ronnie Flathers @ropnop
+
+This tool is designed to assist in quickly bruteforcing valid Active Directory accounts through Kerberos Pre-Authentication.
+It is designed to be used on an internal Windows domain with access to one of the Domain Controllers.
+Warning: failed Kerberos Pre-Auth counts as a failed login and WILL lock out accounts
+
+Usage:
+  kerbrute [command]
+  
+  <SNIP>
+```
+
+Podemos agregar la herramienta a nuestro PATH para que sea fácilmente accesible desde cualquier lugar en el host.
+
+### Adding the Tool to our Path
+
+```r
+echo $PATH
+/home/htb-student/.local/bin:/snap/bin:/usr/sandbox/:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games:/usr/share/games:/usr/local/sbin:/usr/sbin:/sbin:/snap/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games:/home/htb-student/.dotnet/tools
+```
+
+### Moving the Binary
+
+```r
+sudo mv kerbrute_linux_amd64 /usr/local/bin/kerbrute
+```
+
+Ahora podemos escribir `kerbrute` desde cualquier ubicación en el sistema y podremos acceder a la herramienta. Siéntete libre de seguir en tu sistema y practicar los pasos anteriores. Ahora ejecutemos un ejemplo de uso de la herramienta para reunir una lista inicial de nombres de usuario.
+
+### Enumerating Users with Kerbrute
+
+```r
+kerbrute userenum -d INLANEFREIGHT.LOCAL --dc 172.16.5.5 jsmith.txt -o valid_ad_users
+
+2021/11/17 23:01:46 >  Using KDC(s):
+2021/11/17 23:01:46 >   172.16.5.5:88
+2021/11/17 23:01:46 >  [+] VALID USERNAME:       jjones@INLANEFREIGHT.LOCAL
+2021/11/17 23:01:46 >  [+] VALID USERNAME:       sbrown@INLANEFREIGHT.LOCAL
+2021/11/17 23:01:46 >  [+] VALID USERNAME:       tjohnson@INLANEFREIGHT.LOCAL
+2021/11/17 23:01:50 >  [+] VALID USERNAME:       evalentin@INLANEFREIGHT.LOCAL
+
+ <SNIP>
+ 
+2021/11/17 23:01:51 >  [+] VALID USERNAME:       sgage@INLANEFREIGHT.LOCAL
+2021/11/17 23:01:51 >  [+] VALID USERNAME:       jshay@INLANEFREIGHT.LOCAL
+2021/11/17 23:01:51 >  [+] VALID USERNAME:       jhermann@INLANEFREIGHT.LOCAL
+2021/11/17 23:01:51 >  [+] VALID USERNAME:       whouse@INLANEFREIGHT.LOCAL
+2021/11/17 23:01:51 >  [+] VALID USERNAME:       emercer@INLANEFREIGHT.LOCAL
+2021/11/17 23:01:52 >  [+] VALID USERNAME:       wshepherd@INLANEFREIGHT.LOCAL
+2021/11/17 23:01:56 >  Done! Tested 48705 usernames (56 valid) in 9.940 seconds
+```
+
+Podemos ver en nuestra salida que validamos 56 usuarios en el dominio INLANEFREIGHT.LOCAL y solo tomó unos segundos hacerlo. Ahora podemos tomar estos resultados y construir una lista para usar en ataques de password spraying dirigidos.
+
+---
+
+## Identifying Potential Vulnerabilities
+
+La cuenta del [sistema local](https://docs.microsoft.com/en-us/windows/win32/services/localsystem-account) `NT AUTHORITY\SYSTEM` es una cuenta integrada en los sistemas operativos Windows. Tiene el nivel más alto de acceso en el SO y se utiliza para ejecutar la mayoría de los servicios de Windows. También es muy común que los servicios de terceros se ejecuten en el contexto de esta cuenta por defecto. Una cuenta `SYSTEM` en un host `unido al dominio` podrá enumerar Active Directory suplantando la cuenta de la computadora, que es esencialmente solo otro tipo de cuenta de usuario. Tener acceso a nivel SYSTEM dentro de un entorno de dominio es casi equivalente a tener una cuenta de usuario de dominio.
+
+Hay varias formas de obtener acceso a nivel SYSTEM en un host, incluyendo pero no limitado a:
+
+- Explotaciones remotas de Windows como MS08-067, EternalBlue o BlueKeep.
+- Abusar de un servicio que se ejecute en el contexto de la `cuenta SYSTEM`, o abusar de los privilegios de la cuenta de servicio `SeImpersonate` utilizando [Juicy Potato](https://github.com/ohpe/juicy-potato). Este tipo de ataque es posible en sistemas operativos Windows más antiguos, pero no siempre es posible con Windows Server 2019.
+- Vulnerabilidades de escalada de privilegios locales en sistemas operativos Windows como el día cero del Programador de tareas de Windows 10.
+- Obtener acceso de administrador en un host unido al dominio con una cuenta local y usar Psexec para lanzar una ventana cmd de SYSTEM.
+
+Al obtener acceso a nivel SYSTEM en un host unido al dominio, podrás realizar acciones como, pero no limitadas a:
+
+- Enumerar el dominio utilizando herramientas integradas o herramientas ofensivas como BloodHound y PowerView.
+- Realizar ataques de Kerberoasting / ASREPRoasting dentro del mismo dominio.
+- Ejecutar herramientas como Inveigh para recopilar hashes Net-NTLMv2 o realizar ataques de relay SMB.
+- Realizar suplantación de tokens para secuestrar una cuenta de usuario de dominio privilegiada.
+- Llevar a cabo ataques ACL.
+
+---
+
+## A Word Of Caution
+
+Mantén en mente el alcance y estilo de la prueba al elegir una herramienta para usar. Si estás realizando una prueba de penetración no evasiva, con todo a la vista y el personal del cliente sabiendo que estás allí, generalmente no importa cuántos ruidos hagas. Sin embargo, durante una prueba de penetración evasiva, una evaluación adversarial o un engagement de red team, estás tratando de imitar las Herramientas, Tácticas y Procedimientos de un atacante potencial. Con eso en mente, `el sigilo` es una preocupación. Lanzar Nmap a toda una red no es exactamente silencioso, y muchas de las herramientas que usamos comúnmente en una prueba de penetración activarán alarmas para un SOC educado y preparado o un Blue Teamer. Asegúrate siempre de clarificar el objetivo de tu evaluación con el cliente por escrito antes de que comience.
+
+---
+
+## Let's Find a User
+
+En las siguientes secciones, buscaremos una cuenta de usuario de dominio utilizando técnicas como LLMNR/NBT-NS Poisoning y password spraying. Estos ataques son excelentes maneras de obtener un punto de apoyo, pero deben ejercerse con precaución y un entendimiento de las herramientas y técnicas. Ahora busquemos una cuenta de usuario para que podamos pasar a la siguiente fase de nuestra evaluación y comenzar a desmantelar el dominio pieza por pieza y cavar profundamente en busca de una multitud de configuraciones incorrectas y fallas.

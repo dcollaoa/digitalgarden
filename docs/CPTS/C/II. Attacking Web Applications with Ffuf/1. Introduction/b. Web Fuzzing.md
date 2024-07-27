@@ -1,0 +1,45 @@
+Comenzaremos aprendiendo los conceptos básicos de cómo usar `ffuf` para hacer fuzzing en sitios web en busca de directorios. Ejecutamos el ejercicio en la pregunta a continuación, visitamos la URL que nos proporciona y vemos el siguiente sitio web:
+
+`http://SERVER_IP:PORT`
+
+![[Pasted image 20240716004440.png]]
+
+El sitio web no tiene enlaces a nada más, ni nos proporciona ninguna información que pueda llevarnos a más páginas. Así que, parece que nuestra única opción es hacer `fuzz` en el sitio web.
+
+---
+
+## Fuzzing
+
+El término `fuzzing` se refiere a una técnica de prueba que envía varios tipos de entradas de usuario a una cierta interfaz para estudiar cómo reaccionaría. Si estuviéramos haciendo fuzzing para vulnerabilidades de SQL injection, estaríamos enviando caracteres especiales aleatorios y viendo cómo reaccionaría el servidor. Si estuviéramos haciendo fuzzing para un buffer overflow, estaríamos enviando cadenas largas y aumentando su longitud para ver si y cuándo el binario se rompería.
+
+Usualmente utilizamos listas de palabras predefinidas de términos comúnmente usados para cada tipo de prueba de fuzzing web para ver si el servidor web los aceptaría. Esto se hace porque los servidores web no suelen proporcionar un directorio de todos los enlaces y dominios disponibles (a menos que estén terriblemente configurados), por lo que tendríamos que verificar varios enlaces y ver cuáles devuelven páginas. Por ejemplo, si visitamos [https://www.hackthebox.eu/doesnotexist](https://www.hackthebox.eu/doesnotexist), obtendríamos un código HTTP `404 Page Not Found` y veríamos la siguiente página:
+
+`https://www.hackthebox.eu/doesnotexist`
+
+![](https://academy.hackthebox.com/storage/modules/54/web_fnb_HTB_404.jpg)
+
+Sin embargo, si visitamos una página que existe, como `/login`, obtendríamos la página de inicio de sesión y recibiríamos un código HTTP `200 OK`, y veríamos la siguiente página:
+
+`https://www.hackthebox.eu/login`
+
+![](https://academy.hackthebox.com/storage/modules/54/web_fnb_HTB_login.jpg)
+
+Esta es la idea básica detrás del fuzzing web para páginas y directorios. Sin embargo, no podemos hacerlo manualmente, ya que tomaría una eternidad. Por eso tenemos herramientas que hacen esto automáticamente, de manera eficiente y muy rápidamente. Dichas herramientas envían cientos de solicitudes cada segundo, estudian el código de respuesta HTTP y determinan si la página existe o no. Así, podemos determinar rápidamente qué páginas existen y luego examinarlas manualmente para ver su contenido.
+
+---
+
+## Wordlists
+
+Para determinar qué páginas existen, deberíamos tener una lista de palabras que contenga palabras comúnmente usadas para directorios y páginas web, muy similar a un `Password Dictionary Attack`, del cual hablaremos más adelante en el módulo. Aunque esto no revelará todas las páginas bajo un sitio web específico, ya que algunas páginas tienen nombres aleatorios o usan nombres únicos, en general, esto devuelve la mayoría de las páginas, alcanzando hasta un 90% de éxito en algunos sitios web.
+
+No tendremos que reinventar la rueda creando manualmente estas listas de palabras, ya que se han hecho grandes esfuerzos para buscar en la web y determinar las palabras más comúnmente usadas para cada tipo de fuzzing. Algunas de las listas de palabras más comúnmente usadas se pueden encontrar en el repositorio de GitHub [SecLists](https://github.com/danielmiessler/SecLists), que categoriza las listas de palabras bajo varios tipos de fuzzing, incluyendo contraseñas comúnmente usadas, que utilizaremos más adelante para la fuerza bruta de contraseñas.
+
+Dentro de nuestra PwnBox, podemos encontrar todo el repositorio `SecLists` disponible en `/opt/useful/SecLists`. La lista de palabras específica que utilizaremos para fuzzing de páginas y directorios es otra lista de palabras comúnmente usada llamada `directory-list-2.3`, y está disponible en varias formas y tamaños. Podemos encontrar la que usaremos en:
+
+```r
+locate directory-list-2.3-small.txt
+
+/opt/useful/SecLists/Discovery/Web-Content/directory-list-2.3-small.txt
+```
+
+Consejo: Al echar un vistazo a esta lista de palabras, notaremos que contiene comentarios de copyright al principio, que pueden ser considerados como parte de la lista de palabras y desordenar los resultados. Podemos usar lo siguiente en `ffuf` para deshacernos de estas líneas con la flag `-ic`.

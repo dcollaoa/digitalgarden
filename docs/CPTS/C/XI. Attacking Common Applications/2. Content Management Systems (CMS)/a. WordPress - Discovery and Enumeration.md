@@ -1,0 +1,343 @@
+[WordPress](https://wordpress.org/), lanzado en 2003, es un Sistema de Gestión de Contenidos (CMS) de código abierto que puede ser utilizado para múltiples propósitos. Frecuentemente se usa para alojar blogs y foros. WordPress es altamente personalizable y amigable con SEO, lo que lo hace popular entre las empresas. Sin embargo, su capacidad de personalización y naturaleza extensible lo hacen propenso a vulnerabilidades a través de temas y plugins de terceros. WordPress está escrito en PHP y generalmente se ejecuta en Apache con MySQL como backend.
+
+Al momento de escribir, WordPress representa alrededor del 32.5% de todos los sitios en internet y es el CMS más popular por cuota de mercado. Aquí hay algunos datos interesantes sobre WordPress.
+
+- WordPress ofrece más de 50,000 plugins y más de 4,100 temas con licencia GPL.
+- Se han lanzado 317 versiones diferentes de WordPress desde su lanzamiento inicial.
+- Aproximadamente 661 nuevos sitios web de WordPress se construyen cada día.
+- Los blogs de WordPress están escritos en más de 120 idiomas.
+- Un estudio mostró que aproximadamente el 8% de los hacks de WordPress ocurren debido a contraseñas débiles, mientras que el 60% se debieron a una versión desactualizada de WordPress.
+- Según WPScan, de casi 4,000 vulnerabilidades conocidas, el 54% son de plugins, el 31.5% del núcleo de WordPress, y el 14.5% de los temas de WordPress.
+- Algunas marcas importantes que usan WordPress incluyen The New York Times, eBay, Sony, Forbes, Disney, Facebook, Mercedes-Benz y muchas más.
+
+Como podemos ver en estas estadísticas, WordPress es extremadamente prevalente en internet y presenta una vasta superficie de ataque. Es muy probable que encontremos WordPress durante muchas de nuestras evaluaciones de External Penetration Test, y debemos entender cómo funciona, cómo enumerarlo y las diversas formas en que puede ser atacado.
+
+El módulo [Hacking WordPress](https://academy.hackthebox.com/course/preview/hacking-wordpress) en HTB Academy profundiza mucho en la estructura y función de WordPress y las formas en que puede ser abusado.
+
+Imaginemos que durante un penetration test externo, encontramos una empresa que aloja su sitio web principal basado en WordPress. Al igual que muchas otras aplicaciones, WordPress tiene archivos individuales que nos permiten identificar esa aplicación. Además, los archivos, la estructura de carpetas, los nombres de archivos y la funcionalidad de cada script PHP pueden ser utilizados para descubrir incluso la versión instalada de WordPress. En esta aplicación web, por defecto, se añade metadata en el código fuente HTML de la página web, que a veces incluso ya contiene la versión. Por lo tanto, veamos qué posibilidades tenemos para encontrar información más detallada sobre WordPress.
+
+---
+
+## Discovery/Footprinting
+
+Una forma rápida de identificar un sitio de WordPress es navegando al archivo `/robots.txt`. Un típico `robots.txt` en una instalación de WordPress puede verse así:
+
+```r
+User-agent: *
+Disallow: /wp-admin/
+Allow: /wp-admin/admin-ajax.php
+Disallow: /wp-content/uploads/wpforms/
+
+Sitemap: https://inlanefreight.local/wp-sitemap.xml
+```
+
+Aquí la presencia de los directorios `/wp-admin` y `/wp-content` sería una clara señal de que estamos tratando con WordPress. Normalmente, intentar navegar al directorio `wp-admin` nos redirigirá a la página `wp-login.php`. Este es el portal de inicio de sesión para el back-end de la instancia de WordPress.
+
+`http://blog.inlanefreight.local/wp-login.php`
+
+![](https://academy.hackthebox.com/storage/modules/113/wp-login2.png)
+
+WordPress almacena sus plugins en el directorio `wp-content/plugins`. Esta carpeta es útil para enumerar plugins vulnerables. Los temas se almacenan en el directorio `wp-content/themes`. Estos archivos deben ser enumerados cuidadosamente ya que pueden conducir a RCE.
+
+Hay cinco tipos de usuarios en una instalación estándar de WordPress.
+
+1. Administrator: Este usuario tiene acceso a funciones administrativas dentro del sitio web. Esto incluye agregar y eliminar usuarios y publicaciones, así como editar el código fuente.
+2. Editor: Un editor puede publicar y gestionar publicaciones, incluidas las de otros usuarios.
+3. Author: Puede publicar y gestionar sus propias publicaciones.
+4. Contributor: Estos usuarios pueden escribir y gestionar sus propias publicaciones, pero no pueden publicarlas.
+5. Subscriber: Son usuarios estándar que pueden navegar publicaciones y editar sus perfiles.
+
+Obtener acceso a un administrador suele ser suficiente para obtener ejecución de código en el servidor. Los editores y autores pueden tener acceso a ciertos plugins vulnerables, a los cuales los usuarios normales no.
+
+---
+
+## Enumeration
+
+Otra forma rápida de identificar un sitio de WordPress es mirando el código fuente de la página. Ver la página con `cURL` y buscar `WordPress` puede ayudarnos a confirmar que se está utilizando WordPress y a encontrar el número de versión, el cual debemos anotar para más adelante. Podemos enumerar WordPress usando una variedad de tácticas manuales y automatizadas.
+
+```r
+curl -s http://blog.inlanefreight.local | grep WordPress
+
+<meta name="generator" content="WordPress 5.8" /
+```
+
+Navegar por el sitio y revisar el código fuente de la página nos dará pistas sobre el tema en uso, los plugins instalados e incluso los nombres de usuario si los nombres de los autores se publican con las publicaciones. Debemos dedicar algo de tiempo a navegar manualmente por el sitio y revisar el código fuente de cada página, buscando en el directorio `wp-content`, `themes` y `plugin`, y comenzando a construir una lista de puntos de datos interesantes.
+
+Mirando el código fuente de la página, podemos ver que el tema [Business Gravity](https://wordpress.org/themes/business-gravity/) está en uso. Podemos ir más allá e intentar identificar la versión del tema y buscar cualquier vulnerabilidad conocida que lo afecte.
+
+```r
+curl -s http://blog.inlanefreight.local/ | grep themes
+
+<link rel='stylesheet' id='bootstrap-css'  href='http://blog.inlanefreight.local/wp-content/themes/business-gravity/assets/vendors/bootstrap/css/bootstrap.min.css' type='text/css' media='all' />
+```
+
+A continuación, veamos qué plugins podemos descubrir.
+
+```r
+curl -s http://blog.inlanefreight.local/ | grep plugins
+
+<link rel='stylesheet' id='contact-form-7-css'  href='http://blog.inlanefreight.local/wp-content/plugins/contact-form-7/includes/css/styles.css?ver=5.4.2' type='text/css' media='all' />
+<script type='text/javascript' src='http://blog.inlanefreight.local/wp-content/plugins/mail-masta/lib/subscriber.js?ver=5.8' id='subscriber-js-js'></script>
+<script type='text/javascript' src='http://blog.inlanefreight.local/wp-content/plugins/mail-masta/lib/jquery.validationEngine-en.js?ver=5.8' id='validation-engine-en-js'></script>
+<script type='text/javascript' src='http://blog.inlanefreight.local/wp-content/plugins/mail-masta/lib/jquery.validationEngine.js?ver=5.8' id='validation-engine-js'></script>
+		<link rel='stylesheet' id='mm_frontend-css'  href='http://blog.inlanefreight.local/wp-content/plugins/mail-masta/lib/css/mm_frontend.css?ver=5.8' type='text/css' media='all' />
+<script type='text/javascript' src='http://blog.inlanefreight.local/wp-content/plugins/contact-form-7/includes/js/index.js?ver=5.4.2' id='contact-form-7-js'></script>
+```
+
+Del output anterior, sabemos que los plugins [Contact Form 7](https://wordpress.org/plugins/contact-form-7/) y [mail-masta](https://wordpress.org/plugins/mail-masta/) están instalados. El siguiente paso sería enumerar las versiones.
+
+Navegar a `http://blog.inlanefreight.local/wp-content/plugins/mail-masta/` nos muestra que la lista de directorios está habilitada y que hay un archivo `readme.txt` presente. Estos archivos son muy a menudo útiles para identificar números de versión. Del readme, parece que está instalada la versión 1.0.0 del plugin, que sufre de una vulnerabilidad de [Local File Inclusion](https://www.exploit-db.com/exploits/50226) que se publicó en agosto de 2021.
+
+Vamos a investigar un poco más. Revisando el código fuente de otra página, podemos ver que el plugin [wpDiscuz](https://wpdiscuz.com/) está instalado y parece ser la versión 7.0.4.
+
+```r
+curl -s http://blog.inlanefreight.local/?p=1 | grep plugins
+
+<link rel='stylesheet' id='contact-form-7-css'  href='http://blog.inlanefreight.local/wp-content/plugins/contact-form-7/includes/css/styles.css?ver=5.4.2' type='text/css' media='all' />
+<link rel='stylesheet' id='wpdiscuz-frontend-css-css'  href='http://blog.inlanefreight.local/wp-content/plugins/wpdiscuz/themes/default/style.css?ver=7.0.4' type='text/css' media='all' />
+```
+
+Una búsqueda rápida de esta versión del plugin muestra [esta](https://www.exploit-db.com/exploits/49967) vulnerabilidad de ejecución remota de
+
+ código no autenticada de junio de 2021. Anotaremos esto y seguiremos adelante. Es importante en esta etapa no adelantarnos y empezar a explotar la primera falla posible que veamos, ya que hay muchas otras posibles vulnerabilidades y configuraciones incorrectas en WordPress que no queremos pasar por alto.
+
+---
+
+## Enumerating Users
+
+También podemos hacer una enumeración manual de usuarios. Como se mencionó anteriormente, la página de inicio de sesión predeterminada de WordPress se puede encontrar en `/wp-login.php`.
+
+Un nombre de usuario válido y una contraseña inválida resultan en el siguiente mensaje:
+
+`http://blog.inlanefreight.local/wp-login.php`
+
+![](https://academy.hackthebox.com/storage/modules/113/valid_user.png)
+
+Sin embargo, un nombre de usuario inválido devuelve que el usuario no fue encontrado.
+
+`http://blog.inlanefreight.local/wp-login.php`
+
+![](https://academy.hackthebox.com/storage/modules/113/invalid_user.png)
+
+Esto hace que WordPress sea vulnerable a la enumeración de nombres de usuario, lo que puede usarse para obtener una lista de posibles nombres de usuario.
+
+Recapitulemos. En esta etapa, hemos recopilado los siguientes puntos de datos:
+
+- El sitio parece estar ejecutando la versión 5.8 del núcleo de WordPress.
+- El tema instalado es Business Gravity.
+- Los siguientes plugins están en uso: Contact Form 7, mail-masta, wpDiscuz.
+- La versión de wpDiscuz parece ser 7.0.4, que sufre de una vulnerabilidad de ejecución remota de código no autenticada.
+- La versión de mail-masta parece ser 1.0.0, que sufre de una vulnerabilidad de Local File Inclusion.
+- El sitio de WordPress es vulnerable a la enumeración de usuarios, y se confirma que el usuario `admin` es un usuario válido.
+
+Llevemos las cosas un paso más allá y validemos/agreguemos a algunos de nuestros puntos de datos con algunos escaneos automatizados de enumeración del sitio de WordPress. Una vez que completemos esto, deberíamos tener suficiente información en mano para comenzar a planificar y montar nuestros ataques.
+
+---
+
+## WPScan
+
+[WPScan](https://github.com/wpscanteam/wpscan) es un escáner automatizado de WordPress y herramienta de enumeración. Determina si los diversos temas y plugins utilizados por un blog están desactualizados o son vulnerables. Está instalado por defecto en Parrot OS, pero también se puede instalar manualmente con `gem`.
+
+```r
+sudo gem install wpscan
+```
+
+WPScan también es capaz de obtener información de vulnerabilidades de fuentes externas. Podemos obtener un token de API de [WPVulnDB](https://wpvulndb.com/), que es utilizado por WPScan para escanear en busca de PoC y reportes. El plan gratuito permite hasta 75 solicitudes por día. Para usar la base de datos WPVulnDB, simplemente crea una cuenta y copia el token de API desde la página de usuarios. Este token puede luego suministrarse a wpscan utilizando el parámetro `--api-token`.
+
+Escribir `wpscan -h` mostrará el menú de ayuda.
+
+```r
+wpscan -h
+
+_______________________________________________________________
+         __          _______   _____
+         \ \        / /  __ \ / ____|
+          \ \  /\  / /| |__) | (___   ___  __ _ _ __ ®
+           \ \/  \/ / |  ___/ \___ \ / __|/ _` | '_ \
+            \  /\  /  | |     ____) | (__| (_| | | | |
+             \/  \/   |_|    |_____/ \___|\__,_|_| |_|
+
+         WordPress Security Scanner by the WPScan Team
+                         Version 3.8.7
+       Sponsored by Automattic - https://automattic.com/
+       @_WPScan_, @ethicalhack3r, @erwan_lr, @firefart
+_______________________________________________________________
+
+Usage: wpscan [options]
+        --url URL                                 The URL of the blog to scan
+                                                  Allowed Protocols: http, https
+                                                  Default Protocol if none provided: http
+                                                  This option is mandatory unless update or help or hh or version is/are supplied
+    -h, --help                                    Display the simple help and exit
+        --hh                                      Display the full help and exit
+        --version                                 Display the version and exit
+    -v, --verbose                                 Verbose mode
+        --[no-]banner                             Whether or not to display the banner
+                                                  Default: true
+    -o, --output FILE                             Output to FILE
+    -f, --format FORMAT                           Output results in the format supplied
+                                                  Available choices: json, cli-no-colour, cli-no-color, cli
+        --detection-mode MODE                     Default: mixed
+                                                  Available choices: mixed, passive, aggressive
+
+<SNIP>
+```
+
+La flag `--enumerate` se usa para enumerar varios componentes de la aplicación WordPress, como plugins, temas y usuarios. Por defecto, WPScan enumera plugins, temas, usuarios, medios y copias de seguridad vulnerables. Sin embargo, se pueden suministrar argumentos específicos para restringir la enumeración a componentes específicos. Por ejemplo, todos los plugins pueden enumerarse utilizando los argumentos `--enumerate ap`. Invoquemos un escaneo de enumeración normal contra un sitio web de WordPress con la flag `--enumerate` y pasémosle un token de API de WPVulnDB con la flag `--api-token`.
+
+```r
+sudo wpscan --url http://blog.inlanefreight.local --enumerate --api-token dEOFB<SNIP>
+
+<SNIP>
+
+[+] URL: http://blog.inlanefreight.local/ [10.129.42.195]
+[+] Started: Thu Sep 16 23:11:43 2021
+
+Interesting Finding(s):
+
+[+] Headers
+ | Interesting Entry: Server: Apache/2.4.41 (Ubuntu)
+ | Found By: Headers (Passive Detection)
+ | Confidence: 100%
+
+[+] XML-RPC seems to be enabled: http://blog.inlanefreight.local/xmlrpc.php
+ | Found By: Direct Access (Aggressive Detection)
+ | Confidence: 100%
+ | References:
+ |  - http://codex.wordpress.org/XML-RPC_Pingback_API
+ |  - https://www.rapid7.com/db/modules/auxiliary/scanner/http/wordpress_ghost_scanner
+ |  - https://www.rapid7.com/db/modules/auxiliary/dos/http/wordpress_xmlrpc_dos
+ |  - https://www.rapid7.com/db/modules/auxiliary/scanner/http/wordpress_xmlrpc_login
+ |  - https://www.rapid7.com/db/modules/auxiliary/scanner/http/wordpress_pingback_access
+
+[+] WordPress readme found: http://blog.inlanefreight.local/readme.html
+ | Found By: Direct Access (Aggressive Detection)
+ | Confidence: 100%
+
+[+] Upload directory has listing enabled: http://blog.inlanefreight.local/wp-content/uploads/
+ | Found By: Direct Access (Aggressive Detection)
+ | Confidence: 100%
+
+[+] WordPress version 5.8 identified (Insecure, released on 2021-07-20).
+ | Found By: Rss Generator (Passive Detection)
+ |  - http://blog.inlanefreight.local/?feed=rss2, <generator>https://wordpress.org/?v=5.8</generator>
+ |  - http://blog.inlanefreight.local/?feed=comments-rss2, <generator>https://wordpress.org/?v=5.8</generator>
+ |
+ | [!] 3 vulnerabilities identified:
+ |
+ | [!] Title: WordPress 5.4 to 5.8 - Data Exposure via REST API
+ |     Fixed in: 5.8.1
+ |     References:
+ |      - https://wpvulndb.com/vulnerabilities/38dd7e87-9a22-48e2-bab1-dc79448ecdfb
+ |      - https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-39200
+ |      - https://wordpress.org/news/2021/09/wordpress-5-8-1-security-and-maintenance-release/
+ |      - https://github.com/WordPress/wordpress-develop/commit/ca4765c62c65acb732b574a6761bf5fd84595706
+ |      - https://github.com/WordPress/wordpress-develop/security/advisories/GHSA-m9hc-7v5q-x8q5
+ |
+ | [!] Title: WordPress 5.4 to 5.8 - Authenticated XSS in Block Editor
+ |     Fixed in: 5.8.1
+ |     References:
+ |      - https://wpvulndb.com/vulnerabilities/5b754676-20f5-4478-8fd3-6bc383145811
+ |      - https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-39201
+ |      - https://wordpress.org/news/2021/09/wordpress-5-8-1-security-and-maintenance-release/
+ |      - https://github.com/WordPress/wordpress-develop/security/advisories/GHSA-wh69-25hr-h94v
+ |
+ | [!] Title: WordPress 5.4 to 5.8 -  Lodash Library Update
+ |     Fixed in: 5.8
+
+.1
+ |     References:
+ |      - https://wpvulndb.com/vulnerabilities/5d6789db-e320-494b-81bb-e678674f4199
+ |      - https://wordpress.org/news/2021/09/wordpress-5-8-1-security-and-maintenance-release/
+ |      - https://github.com/lodash/lodash/wiki/Changelog
+ |      - https://github.com/WordPress/wordpress-develop/commit/fb7ecd92acef6c813c1fde6d9d24a21e02340689
+
+[+] WordPress theme in use: transport-gravity
+ | Location: http://blog.inlanefreight.local/wp-content/themes/transport-gravity/
+ | Latest Version: 1.0.1 (up to date)
+ | Last Updated: 2020-08-02T00:00:00.000Z
+ | Readme: http://blog.inlanefreight.local/wp-content/themes/transport-gravity/readme.txt
+ | [!] Directory listing is enabled
+ | Style URL: http://blog.inlanefreight.local/wp-content/themes/transport-gravity/style.css
+ | Style Name: Transport Gravity
+ | Style URI: https://keonthemes.com/downloads/transport-gravity/
+ | Description: Transport Gravity is an enhanced child theme of Business Gravity. Transport Gravity is made for tran...
+ | Author: Keon Themes
+ | Author URI: https://keonthemes.com/
+ |
+ | Found By: Css Style In Homepage (Passive Detection)
+ | Confirmed By: Urls In Homepage (Passive Detection)
+ |
+ | Version: 1.0.1 (80% confidence)
+ | Found By: Style (Passive Detection)
+ |  - http://blog.inlanefreight.local/wp-content/themes/transport-gravity/style.css, Match: 'Version: 1.0.1'
+
+[+] Enumerating Vulnerable Plugins (via Passive Methods)
+[+] Checking Plugin Versions (via Passive and Aggressive Methods)
+
+[i] Plugin(s) Identified:
+
+[+] mail-masta
+ | Location: http://blog.inlanefreight.local/wp-content/plugins/mail-masta/
+ | Latest Version: 1.0 (up to date)
+ | Last Updated: 2014-09-19T07:52:00.000Z
+ |
+ | Found By: Urls In Homepage (Passive Detection)
+ |
+ | [!] 2 vulnerabilities identified:
+ |
+ | [!] Title: Mail Masta <= 1.0 - Unauthenticated Local File Inclusion (LFI)
+
+<SNIP>
+
+| [!] Title: Mail Masta 1.0 - Multiple SQL Injection
+      
+ <SNIP
+ 
+ | Version: 1.0 (100% confidence)
+ | Found By: Readme - Stable Tag (Aggressive Detection)
+ |  - http://blog.inlanefreight.local/wp-content/plugins/mail-masta/readme.txt
+ | Confirmed By: Readme - ChangeLog Section (Aggressive Detection)
+ |  - http://blog.inlanefreight.local/wp-content/plugins/mail-masta/readme.txt
+
+<SNIP>
+
+[i] User(s) Identified:
+
+[+] by:
+									admin
+ | Found By: Author Posts - Display Name (Passive Detection)
+
+[+] admin
+ | Found By: Rss Generator (Passive Detection)
+ | Confirmed By:
+ |  Author Id Brute Forcing - Author Pattern (Aggressive Detection)
+ |  Login Error Messages (Aggressive Detection)
+
+[+] john
+ | Found By: Author Id Brute Forcing - Author Pattern (Aggressive Detection)
+ | Confirmed By: Login Error Messages (Aggressive Detection)
+```
+
+WPScan usa varios métodos pasivos y activos para determinar versiones y vulnerabilidades, como se muestra en el reporte anterior. El número predeterminado de hilos usados es `5`. Sin embargo, este valor puede cambiarse usando la flag `-t`.
+
+Este escaneo nos ayudó a confirmar algunas de las cosas que descubrimos en la enumeración manual (versión 5.8 del núcleo de WordPress y la lista de directorios habilitada), nos mostró que el tema que identificamos no era exactamente correcto (Transport Gravity está en uso, que es un tema hijo de Business Gravity), descubrió otro nombre de usuario (john), y mostró que la enumeración automatizada por sí sola a menudo no es suficiente (no detectó los plugins wpDiscuz y Contact Form 7). WPScan proporciona información sobre vulnerabilidades conocidas. El output del reporte también contiene URLs a PoCs, lo que nos permitiría explotar estas vulnerabilidades.
+
+El enfoque que tomamos en esta sección, combinando enumeración manual y automatizada, puede aplicarse a casi cualquier aplicación que descubramos. Los escáneres son geniales y son muy útiles, pero no pueden reemplazar el toque humano y una mente curiosa. Afilar nuestras habilidades de enumeración puede diferenciarnos del resto como excelentes penetration testers.
+
+---
+
+## Moving On
+
+De los datos que recopilamos manualmente y usando WPScan, ahora sabemos lo siguiente:
+
+- El sitio está ejecutando la versión 5.8 del núcleo de WordPress, que sí sufre de algunas vulnerabilidades que no parecen interesantes en este punto.
+- El tema instalado es Transport Gravity.
+- Los siguientes plugins están en uso: Contact Form 7, mail-masta, wpDiscuz.
+- La versión de wpDiscuz es 7.0.4, que sufre de una vulnerabilidad de ejecución remota de código no autenticada.
+- La versión de mail-masta es 1.0.0, que sufre de una vulnerabilidad de Local File Inclusion, así como de inyección SQL.
+- El sitio de WordPress es vulnerable a la enumeración de usuarios, y los usuarios `admin` y `john` se confirman como usuarios válidos.
+- La lista de directorios está habilitada en todo el sitio, lo que puede llevar a la exposición de datos sensibles.
+- XML-RPC está habilitado, lo que puede aprovecharse para realizar un ataque de fuerza bruta de contraseñas contra la página de inicio de sesión utilizando WPScan, [Metasploit](https://www.rapid7.com/db/modules/auxiliary/scanner/http/wordpress_xmlrpc_login), etc.
+
+Con esta información anotada, ¡pasemos a lo divertido: atacar WordPress!

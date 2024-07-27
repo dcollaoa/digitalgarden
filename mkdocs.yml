@@ -1,6 +1,11 @@
-site_name: My Docs
+site_name: Diego Collao
 theme:
   name: material
+  custom_dir: overrides
+  favicon: images/favicon.png
+  language: es
+  icon:
+    logo: simple/hackaday
   features:
     - content.code.annotate
     - content.code.copy
@@ -22,15 +27,15 @@ theme:
   #Palette toggle for DarkMode
   - scheme: default
     primary: black
-    accent: deep purple
+    accent: purple
     toggle:
       icon: material/weather-night
       name: Dark mode
 
   #Palette toggle for LightMode
   - scheme: slate
-    primary: purple
-    accent: deep purple
+    primary: black
+    accent: purple
     toggle:
       icon: material/weather-sunny
       name: Light mode
@@ -39,3 +44,100 @@ theme:
     - typeset
     - search
 
+  markdown_extensions:
+    - admonition
+    - pymdownx.details
+    - pymdownx.superfences
+    - attr_list
+    - pymdownx.emoji:
+        emoji_index: !!python/name:material.extensions.emoji.twemoji
+        emoji_generator: !!python/name:material.extensions.emoji.to_svg
+    - toc:
+      permalink: true
+
+copyright: Copyright &copy; 2024 Diego Collao
+extra_css:
+  - stylesheets/extra.css
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/dcollaoa/
+    - icon: fontawesome/brands/github
+      link: https://github.com/dcollaoa
+
+nav:
+  - Home: https://cpts.pages.dev/
+  - Knowledge Base:
+    - 'Start Here':
+        - 'Start Here': index.md
+    - 'CPTS Learning Path':
+      - 'Reconnaissance, Enumeration and Attack Planning':
+        - 'Network Enumeration with NMAP':
+          - 'Introduction': CPTS/A/1/1/1.md
+          - 'Host Enumeration': 
+            - 'Host Discovery': CPTS/A/1/2/1.md
+            - 'Host and Port Scanning': CPTS/A/1/2/2.md
+            - 'Saving the Results': CPTS/A/1/2/3.md
+            - 'Service Enumeration': CPTS/A/1/2/4.md
+            - 'Nmap Scripting Engine': CPTS/A/1/2/5.md
+            - 'Performance': CPTS/A/1/2/6.md
+          - 'Bypass Security Measures':
+            - 'Firewall and IDS/IPS Evasion': CPTS/A/1/3/1.md
+        - 'Footprinting':
+          - 'Introduction':
+            - 'Enumeration Principles': CPTS/A/2/1/1.md
+            - 'Enumeration Methodology': CPTS/A/2/1/2.md
+          - 'Host Based Enumeration':
+            - 'FTP': CPTS/A/2/2/1.md
+            - 'SMB': CPTS/A/2/2/2.md
+            - 'NFS': CPTS/A/2/2/3.md
+            - 'DNS': CPTS/A/2/2/4.md
+            - 'SMTP': CPTS/A/2/2/5.md
+            - 'IMAP - POP3': CPTS/A/2/2/6.md
+            - 'SNMP': CPTS/A/2/2/7.md
+            - 'MySQL': CPTS/A/2/2/8.md
+            - 'MSSQL': CPTS/A/2/2/9.md
+            - 'Oracle TNS': CPTS/A/2/2/10.md
+            - 'IPMI': CPTS/A/2/2/11.md
+          - 'Remote Management Protocols':
+            - 'Linux RMP': CPTS/A/2/3/1.md
+            - 'Windows RMP': CPTS/A/2/3/2.md
+        - 'Information Gathering':
+          - 'Introduction':
+            - 'Introduction': CPTS/A/3/1/1.md
+          - 'WHOIS':
+              - 'WHOIS': CPTS/A/3/2/1.md
+              - 'Utilising WHOIS': CPTS/A/3/2/2.md
+          - 'DNS and Subdomains':
+            - 'DNS': CPTS/A/3/3/1.md
+            - 'Digging DNS': CPTS/A/3/3/2.md
+            - 'Subdomains': CPTS/A/3/3/3.md
+            - 'Subdomain Bruteforcing': CPTS/A/3/3/4.md
+            - 'DNS Zone Transfers': CPTS/A/3/3/5.md
+            - 'Virtual Hosts': CPTS/A/3/3/6.md
+            - 'Certificate Transparency Logs': CPTS/A/3/3/7.md
+          - 'Fingerprinting':
+            - 'Fingerprinting': CPTS/A/3/4/1.md
+          - 'Crawling':
+            - 'Crawling': CPTS/A/3/5/1.md
+            - 'robots.txt': CPTS/A/3/5/2.md
+            - 'Well-Known URIs': CPTS/A/3/5/3.md
+            - 'Creepy Crawlies': CPTS/A/3/5/4.md
+          - 'Search Engine Discovery':
+            - 'Search Engine Discovery': CPTS/A/3/6/1.md
+          - 'Web Archives':
+            - ' Web Archives': CPTS/A/3/7/1.md
+          - 'Automating Recon':
+            - 'Automating Recon': CPTS/A/3/8/1.md
+
+
+
+
+
+
+
+
+  - HTB: https://app.hackthebox.com/profile/1199698
+  - Github: https://github.com/dcollaoa
+  - Linkedin: https://www.linkedin.com/in/dcollaoa/

@@ -1,0 +1,91 @@
+Ahora entendemos el uso básico de `ffuf` mediante la utilización de wordlists y keywords. A continuación, aprenderemos cómo localizar páginas.
+
+Nota: Podemos iniciar el mismo objetivo de la sección anterior para los ejemplos de esta sección.
+
+---
+
+## Extension Fuzzing
+
+En la sección anterior, descubrimos que teníamos acceso a `/blog`, pero el directorio devolvió una página vacía, y no podemos localizar manualmente ningún enlace o página. Así que, una vez más, utilizaremos web fuzzing para ver si el directorio contiene páginas ocultas. Sin embargo, antes de comenzar, debemos averiguar qué tipos de páginas utiliza el sitio web, como `.html`, `.aspx`, `.php` o algo más.
+
+Una forma común de identificar esto es encontrando el tipo de servidor a través de los encabezados de respuesta HTTP y adivinar la extensión. Por ejemplo, si el servidor es `apache`, entonces puede ser `.php`, o si es `IIS`, entonces podría ser `.asp` o `.aspx`, y así sucesivamente. Sin embargo, este método no es muy práctico. Así que, nuevamente utilizaremos `ffuf` para hacer fuzzing de la extensión, similar a cómo hicimos fuzzing de directorios. En lugar de colocar la keyword `FUZZ` donde estaría el nombre del directorio, la colocaríamos donde estaría la extensión `.FUZZ`, y usaremos una wordlist para extensiones comunes. Podemos utilizar la siguiente wordlist en `SecLists` para extensiones:
+
+```bash
+ffuf -w /opt/useful/SecLists/Discovery/Web-Content/web-extensions.txt:FUZZ <SNIP>
+```
+
+Antes de comenzar el fuzzing, debemos especificar en qué archivo estará esa extensión al final. Siempre podemos usar dos wordlists y tener una keyword única para cada una, y luego hacer `FUZZ_1.FUZZ_2` para hacer fuzzing de ambas. Sin embargo, hay un archivo que siempre podemos encontrar en la mayoría de los sitios web, que es `index.*`, así que lo usaremos como nuestro archivo y haremos fuzzing de las extensiones en él.
+
+Nota: La wordlist que elegimos ya contiene un punto (.), por lo que no tendremos que agregar el punto después de "index" en nuestro fuzzing.
+
+Ahora, podemos volver a ejecutar nuestro comando, colocando cuidadosamente nuestra keyword `FUZZ` donde estaría la extensión después de `index`:
+
+```bash
+ffuf -w /opt/useful/SecLists/Discovery/Web-Content/web-extensions.txt:FUZZ -u http://SERVER_IP:PORT/blog/indexFUZZ
+
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v1.1.0-git
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://SERVER_IP:PORT/blog/indexFUZZ
+ :: Wordlist         : FUZZ: /opt/useful/SecLists/Discovery/Web-Content/web-extensions.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 5
+ :: Matcher          : Response status: 200,204,301,302,307,401,403
+________________________________________________
+
+.php                    [Status: 200, Size: 0, Words: 1, Lines: 1]
+.phps                   [Status: 403, Size: 283, Words: 20, Lines: 10]
+:: Progress: [39/39] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errors: 0 ::
+```
+
+Obtenemos un par de resultados, pero solo `.php` nos da una respuesta con código `200`. ¡Genial! Ahora sabemos que este sitio web funciona con `PHP`, por lo que podemos comenzar a hacer fuzzing de archivos `PHP`.
+
+---
+
+## Page Fuzzing
+
+Ahora usaremos el mismo concepto de keywords que hemos estado usando con `ffuf`, utilizaremos `.php` como la extensión, colocaremos nuestra keyword `FUZZ` donde debería estar el nombre del archivo, y usaremos la misma wordlist que usamos para hacer fuzzing de directorios:
+
+```bash
+ffuf -w /opt/useful/SecLists/Discovery/Web-Content/directory-list-2.3-small.txt:FUZZ -u http://SERVER_IP:PORT/blog/FUZZ.php
+
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v1.1.0-git
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://SERVER_IP:PORT/blog/FUZZ.php
+ :: Wordlist         : FUZZ: /opt/useful/SecLists/Discovery/Web-Content/directory-list-2.3-small.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200,204,301,302,307,401,403
+________________________________________________
+
+index                   [Status: 200, Size: 0, Words: 1, Lines: 1]
+REDACTED                [Status: 200, Size: 465, Words: 42, Lines: 15]
+:: Progress: [87651/87651] :: Job [1/1] :: 5843 req/sec :: Duration: [0:00:15] :: Errors: 0 ::
+```
+
+Obtenemos un par de resultados; ambos tienen un código HTTP 200, lo que significa que podemos acceder a ellos. index.php tiene un tamaño de 0, lo que indica que es una página vacía, mientras que la otra no, lo que significa que tiene contenido. Podemos visitar cualquiera de estas páginas para verificar esto:
+
+![[Pasted image 20240716004712.png]]

