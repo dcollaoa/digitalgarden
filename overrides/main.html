@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+<!-- Custom front matter -->
+{% block extrahead %}
+
+  <!-- Extra style sheets (can't be set in mkdocs.yml due to content hash) -->
+  <link
+    rel="stylesheet"
+    href="{{ 'assets/stylesheets/custom.css' | url }}"
+  />
+{% endblock %}
+
+<!-- Announcement bar -->
+{% block announce %}
+  If you want talk with me here is my username <strong>@3ky_sec</strong> on
+  <a rel="me" href="#">
+    <span class="twemoji discord">
+      {% include ".icons/fontawesome/brands/discord.svg" %}
+    </span>
+    <strong>Discord</strong>
+  </a>
+  and here is my
+  <a href="https://www.linkedin.com/in/dcollaoa/">
+    <span class="twemoji linkedin">
+      {% include ".icons/fontawesome/brands/linkedin.svg" %}
+    </span>
+    <strong>LinkedIn</strong>
+  </a>
+{% endblock %}
+
+<!-- Theme-related JavaScript -->
+{% block scripts %}
+  {{ super() }}
+
+  <!-- Extra JavaScript (can't be set in mkdocs.yml due to content hash) -->
+  <script src="{{ 'assets/javascripts/custom.js' | url }}"></script>
+{% endblock %}
