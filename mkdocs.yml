@@ -1,0 +1,41 @@
+site_name: My Docs
+theme:
+  name: material
+  features:
+    - content.code.annotate
+    - content.code.copy
+    - content.tabs.link
+    - header.autohide
+    - announce.dismiss
+    - navigation.footer
+    - navigation.indexes
+    - navigation.footer
+    - navigation.sections
+    - navigation.tabs
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+
+  palette:
+  #Palette toggle for DarkMode
+  - scheme: default
+    primary: black
+    accent: deep purple
+    toggle:
+      icon: material/weather-night
+      name: Dark mode
+
+  #Palette toggle for LightMode
+  - scheme: slate
+    primary: purple
+    accent: deep purple
+    toggle:
+      icon: material/weather-sunny
+      name: Light mode
+  
+  plugins:
+    - typeset
+    - search
+
