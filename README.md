@@ -37,41 +37,15 @@ To set up on your local machine, follow these steps:
 
 2. **Install Mkdocs and the Material theme:**
    ```bash
-   pip install mkdocs
+   python3 -m venv venv
    pip install mkdocs-material
    pip install mkdocs-glightbox
    npm install highlight.js
-   ```
-
-3. **Serve the site locally:**
-   ```bash
+   cd venv
+   mkdocs new .
    mkdocs serve
    ```
-
    The site will be available at `http://127.0.0.1:8000`.
-
-## Customization
-
-### Changing the Logo
-- Update the `favicon.png` file in the `docs/images` directory to change the personal banner.
-
-### Modifying the Theme
-- Edit the `3ky.css` file in the `docs/stylesheets/` directory to customize the site's appearance. You can see another themes in the docs/assets
-
-### Adding Content
-- Add or edit markdown files in the `docs` directory. Use Obsidian to create and manage your notes, ensuring they're linked and tagged appropriately.
-
-## Deployment
-
-To deploy the site, build the static files and push them to your hosting provider:
-
-1. **Build the site:**
-   ```bash
-   mkdocs build
-   ```
-
-2. **Deploy the site:**
-   - Follow your hosting provider's instructions to deploy the contents of the `site` directory.
 
 ## Contributing
 
