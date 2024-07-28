@@ -71,11 +71,10 @@ body .hljs-operator{
 }
 
 :root {
-  --md-primary-fg-color: #111317;
-  --md-primary-bg-color: #7c4dff;   
+  --md-primary-fg-color: #7c4dff;
+  --md-primary-bg-color: #131313;   
   --md-primary-bg-color--light: #000000;
 }
-
 
 body {
   background: black;
