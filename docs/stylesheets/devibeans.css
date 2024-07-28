@@ -1,0 +1,97 @@
+/*!
+    Theme: devibeans (dark)
+    Author: @terminaldweller
+    Maintainer: @terminaldweller
+
+    Inspired by vim's jellybeans theme (https://github.com/nanotech/jellybeans.vim)
+*/
+
+body .hljs {
+  background: #000000;
+  color: #a39e9b;
+}
+
+body .hljs-attr,
+body .hljs-template-tag {
+  color: #8787d7;
+}
+
+body .hljs-comment,
+body .hljs-doctag,
+body .hljs-quote {
+  color: #339966;
+}
+
+body .hljs-params {
+  color: #a39e9b;
+}
+
+body .hljs-regexp {
+  color: #d700ff;
+}
+
+body .hljs-tag,
+body .hljs-selector-id,
+body .hljs-number,
+body .hljs-literal {
+  color: #ef5350;
+}
+
+body .hljs-meta,
+body .hljs-meta .hljs-keyword {
+
+  color: #0087ff;
+}
+
+/* opt-out */
+body .hljs-operator,
+body .hljs-punctuation{
+}
+
+body .hljs-selector-class,
+body .hljs-code,
+body .hljs-formula,
+body .hljs-variable,
+body .hljs-template-variable,
+body .hljs-selector-attr,
+body .hljs-selector-pseudo,
+body .hljs-link,
+body .hljs-keyword {
+  color: #64b5f6;
+}
+
+body .hljs-built_in,
+body .hljs-title,
+body .hljs-deletion {
+  color: #ff8700;
+}
+
+body .hljs-type,
+body .hljs-section,
+body .hljs-function,
+body .hljs-name,
+body .hljs-property,
+body .hljs-attribute {
+  color: #ffd75f;
+}
+
+body .hljs-meta .hljs-string,
+body .hljs-string,
+body .hljs-subst,
+body .hljs-symbol,
+body .hljs-bullet,
+body .hljs-addition {
+  color: #558b2f;
+}
+
+body .hljs-selector-tag {
+  color: #9966ff;
+}
+
+body .hljs-emphasis {
+  font-style: italic;
+}
+
+body .hljs-strong {
+  font-weight: bold;
+}

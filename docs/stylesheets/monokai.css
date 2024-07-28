@@ -1,0 +1,68 @@
+/*
+Monokai style - ported by Luigi Maselli - http://grigio.org
+*/
+
+body .hljs {
+  background: #272822;
+  color: #ddd;
+}
+
+body .hljs-tag,
+body .hljs-keyword,
+body .hljs-selector-tag,
+body .hljs-literal,
+body .hljs-strong,
+body .hljs-name {
+  color: #f92672;
+}
+
+body .hljs-code {
+  color: #66d9ef;
+}
+
+body .hljs-attribute,
+body .hljs-symbol,
+body .hljs-regexp,
+body .hljs-link {
+  color: #bf79db;
+}
+
+body .hljs-string,
+body .hljs-bullet,
+body .hljs-subst,
+body .hljs-title,
+body .hljs-section,
+body .hljs-emphasis,
+body .hljs-type,
+body .hljs-built_in,
+body .hljs-selector-attr,
+body .hljs-selector-pseudo,
+body .hljs-addition,
+body .hljs-variable,
+body .hljs-template-tag,
+body .hljs-template-variable {
+  color: #a6e22e;
+}
+
+body .hljs-title.class_,
+body .hljs-class .hljs-title {
+  color: white;
+}
+
+body .hljs-comment,
+body .hljs-quote,
+body .hljs-deletion,
+body .hljs-meta {
+  color: #75715e;
+}
+
+body .hljs-keyword,
+body .hljs-selector-tag,
+body .hljs-literal,
+body .hljs-doctag,
+body .hljs-title,
+body .hljs-section,
+body .hljs-type,
+body .hljs-selector-id {
+  font-weight: bold;
+}

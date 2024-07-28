@@ -1,0 +1,76 @@
+/*
+
+GML Theme - Meseta <meseta@gmail.com>
+
+*/
+
+body .hljs {
+  background: #222222;
+  color: #C0C0C0;
+}
+
+body .hljs-keyword {
+  color: #FFB871;
+  font-weight: bold;
+}
+
+body .hljs-built_in {
+  color: #FFB871;
+}
+
+body .hljs-literal {
+  color: #FF8080;
+}
+
+body .hljs-symbol {
+  color: #58E55A;
+}
+
+body .hljs-comment {
+  color: #5B995B;
+}
+
+body .hljs-string {
+  color: #FFFF00;
+}
+
+body .hljs-number {
+  color: #FF8080;
+}
+
+body .hljs-attribute,
+body .hljs-selector-tag,
+body .hljs-doctag,
+body .hljs-name,
+body .hljs-bullet,
+body .hljs-code,
+body .hljs-addition,
+body .hljs-regexp,
+body .hljs-variable,
+body .hljs-template-variable,
+body .hljs-link,
+body .hljs-selector-attr,
+body .hljs-selector-pseudo,
+body .hljs-type,
+body .hljs-selector-id,
+body .hljs-selector-class,
+body .hljs-quote,
+body .hljs-template-tag,
+body .hljs-deletion,
+body .hljs-title,
+body .hljs-section,
+body .hljs-function,
+body .hljs-meta .hljs-keyword,
+
+body .hljs-meta,
+body .hljs-subst {
+  color: #C0C0C0;
+}
+
+body .hljs-emphasis {
+  font-style: italic;
+}
+
+body .hljs-strong {
+  font-weight: bold;
+}

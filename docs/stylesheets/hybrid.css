@@ -1,0 +1,93 @@
+/*
+
+vim-hybrid theme by w0ng (https://github.com/w0ng/vim-hybrid)
+
+*/
+
+body .hljs {
+  background: #1d1f21;
+  color: #c5c8c6;
+}
+
+/*selection color*/
+body .hljs::selection,
+body .hljs span::selection {
+  background: #373b41;
+}
+
+body .hljs::-moz-selection,
+body .hljs span::-moz-selection {
+  background: #373b41;
+}
+
+/*color: fg_yellow*/
+body .hljs-title,
+body .hljs-name {
+  color: #f0c674;
+}
+
+/*color: fg_comment*/
+body .hljs-comment,
+body .hljs-meta,
+body .hljs-meta .hljs-keyword {
+  color: #707880;
+}
+
+/*color: fg_red*/
+body .hljs-number,
+body .hljs-symbol,
+body .hljs-literal,
+body .hljs-deletion,
+body .hljs-link {
+ color: #cc6666
+}
+
+/*color: fg_green*/
+body .hljs-string,
+body .hljs-doctag,
+body .hljs-addition,
+body .hljs-regexp,
+body .hljs-selector-attr,
+body .hljs-selector-pseudo {
+  color: #b5bd68;
+}
+
+/*color: fg_purple*/
+body .hljs-attribute,
+body .hljs-code,
+body .hljs-selector-id {
+ color: #b294bb;
+}
+
+/*color: fg_blue*/
+body .hljs-keyword,
+body .hljs-selector-tag,
+body .hljs-bullet,
+body .hljs-tag {
+ color: #81a2be;
+}
+
+/*color: fg_aqua*/
+body .hljs-subst,
+body .hljs-variable,
+body .hljs-template-tag,
+body .hljs-template-variable {
+  color: #8abeb7;
+}
+
+/*color: fg_orange*/
+body .hljs-type,
+body .hljs-built_in,
+body .hljs-quote,
+body .hljs-section,
+body .hljs-selector-class {
+  color: #de935f;
+}
+
+body .hljs-emphasis {
+  font-style: italic;
+}
+
+body .hljs-strong {
+  font-weight: bold;
+}

@@ -1,0 +1,69 @@
+/* 3KY Theme */
+
+body .hljs {
+  background: #282a36; /* Fondo oscuro */
+  color: #eeeeee; /* Texto claro */
+}
+
+body .hljs-comment,
+body .hljs-quote,
+body .hljs-meta {
+  color: #56638d; /* Azul oscuro */
+  font-style: italic;
+}
+
+body .hljs-keyword,
+body .hljs-selector-tag,
+body .hljs-tag,
+body .hljs-name {
+  color: #8be9fd; /* Azul claro */
+}
+
+body .hljs-attribute,
+body .hljs-selector-id {
+  color: #ff79c6; /* Rosa */
+}
+
+body .hljs-string,
+body .hljs-selector-attr,
+body .hljs-selector-pseudo,
+body .hljs-addition {
+  color: #41c363; /* Verde */
+}
+
+body .hljs-subst {
+  color: #d9e27f; /* Amarillo claro */
+}
+
+body .hljs-regexp,
+body .hljs-link {
+  color: #f15151; /* Rojo */
+}
+
+body .hljs-title,
+body .hljs-section,
+body .hljs-type,
+body .hljs-doctag {
+  color: #ba91f5; /* Púrpura */
+}
+
+body .hljs-symbol,
+body .hljs-bullet,
+body .hljs-variable,
+body .hljs-template-variable,
+body .hljs-literal {
+  color: #8be9fd; /* Azul claro */
+}
+
+body .hljs-number,
+body .hljs-deletion {
+  color: #f15151; /* Rojo */
+}
+
+body .hljs-emphasis {
+  font-style: italic;
+}
+
+body .hljs-strong {
+  font-weight: bold;
+}

@@ -1,0 +1,92 @@
+/*
+3KY theme
+*/
+
+body .hljs {
+  background: #000000;
+  color: #8be9fd;
+}
+
+body .hljs-comment,
+body .hljs-quote {
+  color: #777;
+}
+
+body .hljs-variable,
+body .hljs-template-variable,
+body .hljs-tag,
+body .hljs-regexp,
+body .hljs-meta,
+body .hljs-built_in,
+body .hljs-params,
+body .hljs-symbol,
+body .hljs-bullet,
+body .hljs-link,
+body .hljs-deletion {
+  color: #d9e17f;
+}
+
+body .hljs-literal{
+  color: #fff;
+}
+
+body .hljs-number{
+  color: #bd93f9;
+}
+
+body .hljs-section,
+body .hljs-title,
+body .hljs-name,
+body .hljs-selector-id,
+body .hljs-selector-class,
+body .hljs-type,
+body .hljs-attribute {
+  color: #9b869b;
+}
+
+body .hljs-keyword{
+  color: #e970b6;
+}
+
+body .hljs-string,
+body .hljs-selector-tag,
+body .hljs-addition {
+  color: #50fa7b;
+}
+
+body .hljs-emphasis {
+  font-style: italic;
+}
+
+body .hljs-strong {
+  font-weight: bold;
+}
+
+body .hljs-punctuation {
+  color: #f7f7f1;
+}
+
+body .hljs-operator{
+  color: #fd5454;
+}
+
+:root {
+  --md-primary-fg-color: #111317;
+  --md-primary-bg-color: #7c4dff;   
+  --md-primary-bg-color--light: #000000;
+}
+
+
+body {
+  background: black;
+}
+
+.md-header__button.md-logo {
+  margin: 0;
+  padding: 0;
+}
+
+.md-header__button.md-logo img, .md-header__button.md-logo svg {
+  height: 2.4rem;
+  width: 2.4rem;
+}

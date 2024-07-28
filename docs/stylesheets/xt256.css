@@ -1,0 +1,88 @@
+
+/*
+  xt256.css
+
+  Contact: initbar [at] protonmail [dot] ch
+         : github.com/initbar
+*/
+
+body .hljs {
+  color: #eaeaea;
+  background: #000;
+}
+
+body .hljs-subst {
+  color: #eaeaea;
+}
+
+body .hljs-emphasis {
+  font-style: italic;
+}
+
+body .hljs-strong {
+  font-weight: bold;
+}
+
+body .hljs-type {
+  color: #eaeaea;
+}
+
+body .hljs-params {
+  color: #da0000;
+}
+
+body .hljs-literal,
+body .hljs-number,
+body .hljs-name {
+  color: #ff0000;
+  font-weight: bolder;
+}
+
+body .hljs-comment {
+  color: #969896;
+}
+
+body .hljs-selector-id,
+body .hljs-quote {
+  color: #00ffff;
+}
+
+body .hljs-template-variable,
+body .hljs-variable,
+body .hljs-title {
+  color: #00ffff;
+  font-weight: bold;
+}
+
+body .hljs-selector-class,
+body .hljs-keyword,
+body .hljs-symbol {
+  color: #fff000;
+}
+
+body .hljs-string,
+body .hljs-bullet {
+  color: #00ff00;
+}
+
+body .hljs-tag,
+body .hljs-section {
+  color: #000fff;
+}
+
+body .hljs-selector-tag {
+  color: #000fff;
+  font-weight: bold;
+}
+
+body .hljs-attribute,
+body .hljs-built_in,
+body .hljs-regexp,
+body .hljs-link {
+  color: #ff00ff;
+}
+
+body .hljs-meta {
+  color: #fff;
+  font-weight: bolder;
+}
