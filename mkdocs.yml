@@ -76,8 +76,8 @@ extra:
 nav:
   - Home: https://dcollao.pages.dev/
   - Knowledge Base:
-    - 'Start Here':
-        - 'Start Here': index.md
+    - 'Index':
+        - 'Welcome to My Digital Garden': index.md
     - 'Learning Paths':
       - 'CPTS ':
         - 'Reconnaissance, Enumeration and Attack Planning':
@@ -717,5 +717,6 @@ extra_javascript:
 extra_css:
   - https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css
   - stylesheets/3ky.css
+
 
 
