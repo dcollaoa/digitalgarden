@@ -72,9 +72,10 @@ nav:
   - Knowledge Base:
     - 'Index':
         - 'Welcome to My Digital Garden': index.md
+        - 'About' : about.md
    #- 'Join to PWNNET': pwnnet.md
-    - 'Learning Paths':
-      - 'CPTS ':
+    - 'Learning Paths (ESP)':
+      - '(HTB) Pentetration Tester':
         - 'Reconnaissance, Enumeration and Attack Planning':
           - 'Network Enumeration with NMAP':
             - 'Introduction': CPTS/A/1/1/1.md
@@ -697,10 +698,15 @@ nav:
         - 'Conducting Phishing Attacks in Core Impact':
           - 'LinkedIn Phishing Campaign': CI/F/1/1.md
           - 'Phishing Attacks Using SMTP': CI/F/2/1.md
-    - 'Writeups':
-    
-      - 'HTB':
-        - 'Blazorized': WU/blazorized.md 
+      - 'Core Impact Cloud':
+        - 'Introduction': CIC/A/1.md
+        - 'Network IG RPT, Network AP RPT, Remote Exploits & Privilege Escalation': CIC/A/2.md
+        - 'Pivoting, Identity Verifiers & Network SQL AgentSin títuloSin título': CIC/A/3.md
+        - 'Active Directory Attacks': CIC/A/4.md
+        - 'Client Side Attack Vector - How to Conduct a Successful Phishing Attack': CIC/A/5.md
+        - 'Web Applications - How to Conduct a Successful Web Application Test': CIC/A/6.md
+    #- 'Writeups':
+    #  - 'HTB': 
   - HTB: https://app.hackthebox.com/profile/1199698
   - Github: https://github.com/dcollaoa
   - Linkedin: https://www.linkedin.com/in/dcollaoa/

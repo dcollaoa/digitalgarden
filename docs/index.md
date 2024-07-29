@@ -3,6 +3,8 @@ icon:octicons/book-16
 
 Este espacio está diseñado para la comunidad de ciberseguridad, con un enfoque específico en **Red Team**. Aquí encontrarás una amplia gama de recursos y materiales que te ayudarán a enriquecer tus conocimientos y habilidades en este campo.
 
+
+## Releases
 ### Proyecto CPTS en Español
 He lanzado recientemente un proyecto personal significativo en paralelo con este espacio: la traducción completa del learning path de **CPTS** (Certified Penetration Testing Specialist) de Hack The Box. Esta no es una traducción convencional; en lugar de depender de herramientas automáticas como Google Translate, me tomé el tiempo de utilizar la API de ChatGPT, entrenando el modelo para mantener términos técnicos y específicos sin traducir. Este esfuerzo resultó en la traducción de 409 documentos hasta la fecha. Agradeceré cualquier reporte de errores para mejorar y perfeccionar este recurso que, sin duda, será de gran utilidad para la comunidad.
 
