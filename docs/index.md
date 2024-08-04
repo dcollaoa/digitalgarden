@@ -8,14 +8,12 @@ Este espacio está diseñado para la comunidad de ciberseguridad, con un enfoque
 ### Proyecto tienda online | 04/08/2024
 🚀 **¡Nuevo lanzamiento!** 🚀
 
-He abierto una tienda online [dcollao.mysellix.io](https://dcollao.mysellix.io/), diseñada para los apasionados de la ciberseguridad. En ella encontrarás productos seleccionados específicamente para la comunidad de hacking, incluyendo **Flipper Zero** y sus accesorios, además de otros recursos útiles para fortalecer tus habilidades en **Red Team**. Por el momento acepto método de pago PayPal y transferencia.
+He abierto una tienda online, diseñada para los apasionados de la ciberseguridad. En ella encontrarás productos seleccionados específicamente para la comunidad de hacking, incluyendo **Flipper Zero** y sus accesorios, además de otros recursos útiles para fortalecer tus habilidades en **Red Team**. Por el momento acepto método de pago PayPal y transferencia.
 
 **Invitación especial**
 Si estás en Chile, te invito a visitar la tienda y explorar lo que tengo disponible. Seguro encontrarás algo que te llame la atención.
 
 [Visita la tienda aquí](https://dcollao.mysellix.io/)
-
-¡Gracias por tu apoyo!
 
 ---
 
