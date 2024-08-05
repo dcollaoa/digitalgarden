@@ -52,6 +52,8 @@ theme:
     - search.suggest
 
   markdown_extensions:
+    - admonition
+    - pymdownx.details;
     - pymdownx.highlight:
         anchor_linenums: true
         use_pygments: false
@@ -60,6 +62,9 @@ theme:
     - pymdownx.inlinehilite
     - pymdownx.snippets
     - pymdownx.superfences
+    - toc:
+      permalink:  ⚓︎
+      permalink_title: Anchor link to this section for reference
 
   palette:
   - scheme: slate
@@ -76,7 +81,6 @@ theme:
     #- blog:
     #  blog_dir: .
     #- tags
-
 
 copyright: Copyright &copy; 2024 Diego Collao (3KY)
 
