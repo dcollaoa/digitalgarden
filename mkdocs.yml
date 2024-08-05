@@ -1,4 +1,9 @@
 site_name: Diego Collao (3KY)
+site_url: https://dcollao.pages.dev
+repo_url: https://github.com/dcollaoa/digitalgarden
+edit_uri: edit/main/docs/
+
+
 theme:
   name: material
   custom_dir: overrides
@@ -24,13 +29,22 @@ theme:
     - content.code.annotate
     - content.code.copy
     - content.code.select
+    #- content.action.view
     - content.tabs.link
     - announce.dismiss
     - navigation.footer
     - navigation.indexes
     - navigation.footer
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.tracking
     - navigation.sections
     - navigation.tabs
+    #- toc.integrate 
+    #- navigation.path
+    #- navigation.expand
+    #- navigation.tabs.sticky
     - navigation.top
     - navigation.tracking
     - search.highlight
@@ -53,9 +67,16 @@ theme:
     accent: deep purple
 
   plugins:
+    - git-revision-date-localized:
+        enable_creation_date: true
+        type: date
     - typeset
     - search
     - glightbox
+    #- blog:
+    #  blog_dir: .
+    #- tags
+
 
 copyright: Copyright &copy; 2024 Diego Collao (3KY)
 
@@ -69,13 +90,14 @@ extra:
 
 nav:
   - Home: https://dcollao.pages.dev/
+  
   - Knowledge Base:
     - 'Index':
         - 'Welcome to My Digital Garden': index.md
         - 'About' : about.md
    #- 'Join to PWNNET': pwnnet.md
     - 'Learning Paths (ESP)':
-      - '(HTB) Pentetration Tester':
+      - '(HTB) Penetration Tester':
         - 'Reconnaissance, Enumeration and Attack Planning':
           - 'Network Enumeration with NMAP':
             - 'Introduction': CPTS/A/1/1/1.md

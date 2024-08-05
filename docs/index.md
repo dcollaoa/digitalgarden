@@ -1,10 +1,11 @@
 icon:octicons/book-16
+
 # Welcome to My Digital Garden
 Este espacio está diseñado para la comunidad de ciberseguridad, con un enfoque específico en **Red Team**. Aquí encontrarás una amplia gama de recursos y materiales que te ayudarán a enriquecer tus conocimientos y habilidades en este campo.
 
 ---
 
-## Releases
+## Historial
 ### Proyecto tienda online | 04/08/2024
 🚀 **¡Nuevo lanzamiento!** 🚀
 
