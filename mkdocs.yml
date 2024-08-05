@@ -67,9 +67,25 @@ theme:
       permalink_title: Anchor link to this section for reference
 
   palette:
-  - scheme: slate
-    primary: custom
-    accent: deep purple
+  
+    # Palette toggle for light mode
+    - scheme: default
+      primary: custom
+      accent: white
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: custom
+      accent: deep purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+
+
 
   plugins:
     - git-revision-date-localized:
