@@ -63,7 +63,7 @@ theme:
     - pymdownx.snippets
     - pymdownx.superfences
     - toc:
-      permalink:  ⚓︎
+      permalink: ⚓︎
       permalink_title: Anchor link to this section for reference
 
   palette:
@@ -83,9 +83,6 @@ theme:
       toggle:
         icon: material/toggle-switch
         name: Switch to light mode
-
-
-
 
   plugins:
     - git-revision-date-localized:
