@@ -19,7 +19,7 @@ Si estás en Chile, te invito a visitar la tienda y explorar lo que tengo dispon
 ---
 
 ### Proyecto Core Impact en Español
-Además, debido a mi trabajo, he tenido la necesidad de familiarizarme con **Core Impact**, una herramienta C2C con un enfoque en **Rapid Penetration Testing**. Dado que la documentación en línea estaba en inglés y sin subtítulos, utilicé un transcriptor y un considerable esfuerzo para traducir todos los **E-COURSES** ofrecidos por **FORTRA**.
+Además he tenido la necesidad de familiarizarme con **Core Impact**, una herramienta C2C con un enfoque en **Rapid Penetration Testing**. Dado que la documentación en línea estaba en inglés y sin subtítulos, utilicé un transcriptor y un considerable esfuerzo para traducir todos los **E-COURSES** ofrecidos por **FORTRA**.
 
 ---
 

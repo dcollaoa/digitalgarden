@@ -95,6 +95,7 @@ theme:
     #  blog_dir: .
     #- tags
 
+
 copyright: Copyright &copy; 2024 Diego Collao (3KY)
 
 extra:
@@ -761,3 +762,4 @@ extra_javascript:
 extra_css:
   - https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css
   - stylesheets/3ky.css
+  
