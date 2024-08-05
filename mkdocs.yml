@@ -743,7 +743,7 @@ nav:
       - 'Core Impact Cloud':
         - 'Introduction': CIC/A/1.md
         - 'Network IG RPT, Network AP RPT, Remote Exploits & Privilege Escalation': CIC/A/2.md
-        - 'Pivoting, Identity Verifiers & Network SQL AgentSin títuloSin título': CIC/A/3.md
+        - 'Pivoting, Identity Verifiers & Network SQL Agent': CIC/A/3.md
         - 'Active Directory Attacks': CIC/A/4.md
         - 'Client Side Attack Vector - How to Conduct a Successful Phishing Attack': CIC/A/5.md
         - 'Web Applications - How to Conduct a Successful Web Application Test': CIC/A/6.md
