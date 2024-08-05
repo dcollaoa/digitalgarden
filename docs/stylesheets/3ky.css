@@ -76,39 +76,9 @@ body .hljs-operator{
   --md-primary-bg-color--light: #000000;
 }
 
-/* Fondo del cuerpo para el modo claro */
-body.mode-light {
-  background: white;
-}
-
-/* Fondo del cuerpo para el modo oscuro */
-body.mode-dark {
-  background: black; /* Asegúrate de que este es el color que deseas */
-}
-
-/* Otros estilos de fondo para el modo oscuro */
-body.mode-dark .md-content {
-  background-color: black; /* Esto asegurará que el contenido también esté en negro */
-}
-
-/* Asegúrate de que también se aplica a otros elementos */
-body.mode-dark .md-main__inner {
-  background-color: black;
-}
-
 html body.mode-dark {
   background: black !important;
 }
-
-body.mode-dark, 
-body.mode-dark .md-main, 
-body.mode-dark .md-main__inner, 
-body.mode-dark .md-content, 
-body.mode-dark .md-sidebar {
-  background-color: black !important;
-  background: black !important;
-}
-
 
 .md-header__button.md-logo {
   margin: 0;
