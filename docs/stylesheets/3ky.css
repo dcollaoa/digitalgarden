@@ -100,6 +100,15 @@ html body.mode-dark {
   background: black !important;
 }
 
+body.mode-dark, 
+body.mode-dark .md-main, 
+body.mode-dark .md-main__inner, 
+body.mode-dark .md-content, 
+body.mode-dark .md-sidebar {
+  background-color: black !important;
+  background: black !important;
+}
+
 
 .md-header__button.md-logo {
   margin: 0;

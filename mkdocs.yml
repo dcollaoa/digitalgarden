@@ -73,7 +73,7 @@ theme:
       primary: custom
       accent: white
       toggle:
-        icon: material/brightness-7 
+        icon: material/toggle-switch-off-outline
         name: Switch to dark mode
 
     # Palette toggle for dark mode
@@ -81,7 +81,7 @@ theme:
       primary: custom
       accent: deep purple
       toggle:
-        icon: material/brightness-4
+        icon: material/toggle-switch
         name: Switch to light mode
 
 
