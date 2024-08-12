@@ -745,8 +745,49 @@ nav:
         - 'Active Directory Attacks': CIC/A/4.md
         - 'Client Side Attack Vector - How to Conduct a Successful Phishing Attack': CIC/A/5.md
         - 'Web Applications - How to Conduct a Successful Web Application Test': CIC/A/6.md
-    #- 'Writeups':
-    #  - 'HTB': 
+      - 'Core Impact 101':
+        - 'Getting Started':
+          - 'Index': CI101/A/1.md
+          - 'Penetration Testing': CI101/A/2.md
+          - 'Core Impact': CI101/A/3.md
+        - 'LAB Environment Setup': 
+          - 'Introduction': CI101/B/1.md
+          - 'Virtualbox setup': CI101/B/2.md
+          - 'Core Impact Virtual Machine setup': CI101/B/3.md
+          - 'Vulnerable Virtual Machines': CI101/B/4.md
+        - 'The Basics':
+          - 'Starting Core Impact': CI101/C/1.md
+          - 'Quick Tour': CI101/C/2.md
+          - 'Network Information Gathering': CI101/C/3.md
+          - 'Exploitation and Post-Exploitation': CI101/C/4.md
+          - 'Maintaining Access and Escalating Privileges': CI101/C/5.md
+          - 'Cleanup post-penetration test': CI101/C/6.md
+          - 'Reporting': CI101/C/7.md
+        - 'Active Directory':
+          - 'Introduction to Active Directory': CI101/D/1.md
+          - 'Active Directory Domain Reconnaissance': CI101/D/2.md
+          - 'Active Directory Attack Paths Discovery': CI101/D/3.md
+          - 'Kerberoast': CI101/D/4.md
+          - 'AS-REP Roast': CI101/D/5.md
+          - 'DCSync': CI101/D/6.md
+          - 'Golden Ticket': CI101/D/7.md
+          - 'Silver Ticket': CI101/D/8.md
+          - 'Lateral Movement': CI101/D/9.md
+          - 'Man-In-The-Middle-Attacks: NTLMrelayx': CI101/D/10.md
+        - 'Social Engineering & Client-Side Attacks': 
+          - 'Information Gathering': CI101/E/1.md
+          - 'Phishing Campaign Deployment': CI101/E/2.md
+          - 'Role Playing - You are the target now': CI101/E/3.md
+          - 'Reporting': CI101/E/4.md
+        - 'Web Applications Testing':
+          - 'Introduction': CI101/F/1.md
+          - 'Information Gathering': CI101/F/2.md
+          - 'Attack and Penetration': CI101/F/3.md
+          - 'Post-Exploitation': CI101/F/4.md
+          - 'Reporting': CI101/F/5.md
+        - 'Next Steps':
+          - 'Further Resources': CI101/G/1.md
+          - 'Before you go...':  CI101/G/2.md
   - Shop: https://dcollao.mysellix.io/
   - HTB: https://app.hackthebox.com/profile/1199698
   - Github: https://github.com/dcollaoa
