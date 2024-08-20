@@ -47,4 +47,3 @@ tinycss2==1.2.1
 urllib3==2.2.1
 watchdog==4.0.0
 webencodings==0.5.1
-GLightbox==3.2.0
