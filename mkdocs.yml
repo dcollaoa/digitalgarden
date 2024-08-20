@@ -3,7 +3,6 @@ site_url: https://dcollao.pages.dev
 repo_url: https://github.com/dcollaoa/digitalgarden
 edit_uri: edit/main/docs/
 
-
 theme:
   name: material
   custom_dir: overrides
@@ -25,49 +24,24 @@ theme:
       example: octicons/beaker-16
       quote: octicons/quote-16
   features:
-    #- header.autohide
     - content.code.annotate
     - content.code.copy
     - content.code.select
-    #- content.action.view
     - content.tabs.link
     - announce.dismiss
     - navigation.footer
     - navigation.indexes
-    - navigation.footer
     - navigation.instant
     - navigation.instant.prefetch
     - navigation.instant.progress
     - navigation.tracking
     - navigation.sections
     - navigation.tabs
-    #- toc.integrate 
-    #- navigation.path
-    #- navigation.expand
-    #- navigation.tabs.sticky
     - navigation.top
-    - navigation.tracking
     - search.highlight
     - search.share
     - search.suggest
-
-  markdown_extensions:
-    - admonition
-    - pymdownx.details;
-    - pymdownx.highlight:
-        anchor_linenums: true
-        use_pygments: false
-        line_spans: __span
-        pygments_lang_class: false
-    - pymdownx.inlinehilite
-    - pymdownx.snippets
-    - pymdownx.superfences
-    - toc:
-      permalink: ⚓︎
-      permalink_title: Anchor link to this section for reference
-
   palette:
-  
     # Palette toggle for light mode
     - scheme: default
       primary: custom
@@ -75,7 +49,6 @@ theme:
       toggle:
         icon: material/toggle-switch-off-outline
         name: Switch to dark mode
-
     # Palette toggle for dark mode
     - scheme: slate
       primary: custom
@@ -83,18 +56,20 @@ theme:
       toggle:
         icon: material/toggle-switch
         name: Switch to light mode
+  markdown_extensions:
+    - admonition
+    - pymdownx.details
+    - pymdownx.inlinehilite
+    - pymdownx.snippets
+    - pymdownx.superfences
 
-  plugins:
-    - git-revision-date-localized:
-        enable_creation_date: true
-        type: date
-    - typeset
-    - search
-    - glightbox
-    #- blog:
-    #  blog_dir: .
-    #- tags
 
+plugins:
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: date
+  - search
+  - glightbox
 
 copyright: Copyright &copy; 2024 Diego Collao (3KY)
 
@@ -108,18 +83,17 @@ extra:
 
 nav:
   - Home: https://dcollao.pages.dev/
-  
   - Knowledge Base:
     - 'Index':
         - 'Welcome to My Digital Garden': index.md
-        - 'About' : about.md
-   #- 'Join to PWNNET': pwnnet.md
+        - 'About': about.md
+        - 'Join to PWNNET': pwnnet.md
     - 'Learning Paths (ESP)':
       - '(HTB) Penetration Tester':
         - 'Reconnaissance, Enumeration and Attack Planning':
           - 'Network Enumeration with NMAP':
             - 'Introduction': CPTS/A/1/1/1.md
-            - 'Host Enumeration': 
+            - 'Host Enumeration':
               - 'Host Discovery': CPTS/A/1/2/1.md
               - 'Host and Port Scanning': CPTS/A/1/2/2.md
               - 'Saving the Results': CPTS/A/1/2/3.md
@@ -151,8 +125,8 @@ nav:
             - 'Introduction':
               - 'Introduction': CPTS/A/3/1/1.md
             - 'WHOIS':
-                - 'WHOIS': CPTS/A/3/2/1.md
-                - 'Utilising WHOIS': CPTS/A/3/2/2.md
+              - 'WHOIS': CPTS/A/3/2/1.md
+              - 'Utilising WHOIS': CPTS/A/3/2/2.md
             - 'DNS and Subdomains':
               - 'DNS': CPTS/A/3/3/1.md
               - 'Digging DNS': CPTS/A/3/3/2.md
@@ -171,7 +145,7 @@ nav:
             - 'Search Engine Discovery':
               - 'Search Engine Discovery': CPTS/A/3/6/1.md
             - 'Web Archives':
-              - ' Web Archives': CPTS/A/3/7/1.md
+              - 'Web Archives': CPTS/A/3/7/1.md
             - 'Automating Recon':
               - 'Automating Recon': CPTS/A/3/8/1.md
           - 'Vulnerability Assessment':
@@ -231,9 +205,9 @@ nav:
               - 'Laudanum, One Webshell to Rule Them All': CPTS/A/6/6/2.md
               - 'Antak Webshell': CPTS/A/6/6/3.md
               - 'PHP Web Shells': CPTS/A/6/6/4.md
-            - 'Additional considerations':
+            - 'Additional Considerations':
               - 'Detection and Prevention': CPTS/A/6/7/1.md
-          - 'Metasploit Framwork':
+          - 'Metasploit Framework':
             - 'Introduction':
               - 'Preface': CPTS/A/7/1/1.md
               - 'Introduction to Metasploit': CPTS/A/7/1/2.md
@@ -251,7 +225,7 @@ nav:
             - 'Additional Features':
               - 'Writing and Importing Modules': CPTS/A/7/4/1.md
               - 'Introduction to MSFVenom': CPTS/A/7/4/2.md
-              - 'Firewall and IDS-IPS evasion': CPTS/A/7/4/3.md
+              - 'Firewall and IDS/IPS Evasion': CPTS/A/7/4/3.md
         - 'Exploitation and Lateral Movement':
           - 'Password Attacks':
             - 'Introduction':
@@ -368,7 +342,7 @@ nav:
               - 'Miscellaneous Misconfigurations': CPTS/B/4/9/4.md
             - 'Why So Trusting':
               - 'Domain Trusts Primer': CPTS/B/4/10/1.md
-              - 'Attacking Domain Trusts - Child - Parent Trusts from Windows': CPTS/B/4/10/2.md
+              - 'Attacking Domain Trusts - Child - Parent Trusts - from Windows': CPTS/B/4/10/2.md
               - 'Attacking Domain Trusts - Child - Parent Trusts - from Linux': CPTS/B/4/10/3.md
             - 'Breaking Down Boundaries':
               - 'Attacking Domain Trusts - Cross-Forest Trust Abuse - from Windows': CPTS/B/4/11/1.md
@@ -636,7 +610,7 @@ nav:
               - 'Communication with Processes': CPTS/D/2/2/3.md
             - 'Windows Users Privileges':
               - 'Windows Privileges Overview': CPTS/D/2/3/1.md
-              - 'Selmpersonate and SeAssignPrimaryToken': CPTS/D/2/3/2.md
+              - 'SeImpersonate and SeAssignPrimaryToken': CPTS/D/2/3/2.md
               - 'SeDebugPrivilege': CPTS/D/2/3/3.md
               - 'SeTakeOwnershipPrivilege': CPTS/D/2/3/4.md
             - 'Windows Group Privileges':
@@ -701,6 +675,31 @@ nav:
             - 'Wrapping Up':
               - 'Engagement Closeout': CPTS/E/2/5/1.md
               - 'Beyond this Module': CPTS/E/2/5/2.md
+      - '(HTB) Other Modules':
+        - 'Introduction to Active Directory':
+          - 'Active Directory Overview':
+            - 'Why Active Directory?': HTB/A/1/1.md
+            - 'Active Directory Research Over the Years': HTB/A/1/2.md
+          - 'Active Directory Fundamentals': 
+            - 'Active Directory Structure': HTB/A/2/1.md
+            - 'Active Directory Terminology': HTB/A/2/2.md
+            - 'Active Directory Objects': HTB/A/2/3.md
+            - 'Active Directory Functionality': HTB/A/2/4.md
+          - 'Active Directory Protocols': 
+            - 'Kerberos, DNS, LDAP, MSRPC': HTB/A/3/1.md
+            - 'NTLM Authentication': HTB/A/3/2.md
+          - 'All About Users': 
+            - 'User and Machine Accounts': HTB/A/4/1.md
+            - 'Active Directory Groups': HTB/A/4/2.md
+            - 'Active Directory Rights and Privileges': HTB/A/4/3.md
+          - 'Digging in Deeper': 
+            - 'Security in Active Directory': HTB/A/5/1.md
+            - 'Examining Group Policy': HTB/A/5/2.md
+          - 'Getting Our Hands Dirty': 
+            - 'AD Administration: Guided Lab Part I': HTB/A/6/1.md
+            - 'AD Administration: Guided Lab Part II': HTB/A/6/2.md
+          - 'Module Summary':
+            - 'Wrapping It Up': HTB/A/7/1.md
       - 'Core Impact':
         - 'Getting Started with Core Impact':
           - 'User Interface': CI/A/1/1.md
@@ -787,7 +786,7 @@ nav:
           - 'Reporting': CI101/F/5.md
         - 'Next Steps':
           - 'Further Resources': CI101/G/1.md
-          - 'Before you go...':  CI101/G/2.md
+          - 'Before you go...': CI101/G/2.md
   - Shop: https://dcollao.mysellix.io/
   - HTB: https://app.hackthebox.com/profile/1199698
   - Github: https://github.com/dcollaoa
@@ -799,8 +798,6 @@ extra_javascript:
   - https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js
   - https://www.googletagmanager.com/gtag/js?id=G-0F47J154E5
 
-
 extra_css:
   - https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css
   - stylesheets/3ky.css
-  
