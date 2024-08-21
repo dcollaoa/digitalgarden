@@ -56,7 +56,7 @@ theme:
       toggle:
         icon: material/toggle-switch
         name: Switch to light mode
-  markdown_extensions:
+markdown_extensions:
     - admonition
     - pymdownx.details
     - pymdownx.inlinehilite
