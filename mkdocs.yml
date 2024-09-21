@@ -64,9 +64,9 @@ markdown_extensions:
     - pymdownx.superfences
 
 plugins:
-  - git-revision-date-localized:
-      enable_creation_date: true
-      type: date
+  #- git-revision-date-localized:
+  #    enable_creation_date: true
+  #    type: date
   - search
   - glightbox
 
@@ -786,6 +786,8 @@ nav:
         - 'Next Steps':
           - 'Further Resources': CI101/G/1.md
           - 'Before you go...': CI101/G/2.md
+    - 'Laboratories':
+      - 'My first LAB': LABS/lab1.md
   - Shop: https://dcollao.mysellix.io/
   - HTB: https://app.hackthebox.com/profile/1199698
   - Github: https://github.com/dcollaoa
