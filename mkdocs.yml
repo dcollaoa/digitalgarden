@@ -787,7 +787,7 @@ nav:
           - 'Further Resources': CI101/G/1.md
           - 'Before you go...': CI101/G/2.md
     - 'Laboratories':
-      - 'My first LAB': LABS/lab1.md
+      - 'LAB 1': LABS/1.md
   - Shop: https://dcollao.mysellix.io/
   - HTB: https://app.hackthebox.com/profile/1199698
   - Github: https://github.com/dcollaoa
