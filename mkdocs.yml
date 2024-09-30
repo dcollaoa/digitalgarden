@@ -699,7 +699,7 @@ nav:
             - 'AD Administration: Guided Lab Part II': HTB/A/6/2.md
           - 'Module Summary':
             - 'Wrapping It Up': HTB/A/7/1.md
-      - 'Core Impact':
+      #- 'Core Impact':
         - 'Getting Started with Core Impact':
           - 'User Interface': CI/A/1/1.md
           - 'Cleanup': CI/A/11/1.md
@@ -736,14 +736,14 @@ nav:
         - 'Conducting Phishing Attacks in Core Impact':
           - 'LinkedIn Phishing Campaign': CI/F/1/1.md
           - 'Phishing Attacks Using SMTP': CI/F/2/1.md
-      - 'Core Impact Cloud':
+      #- 'Core Impact Cloud':
         - 'Introduction': CIC/A/1.md
         - 'Network IG RPT, Network AP RPT, Remote Exploits & Privilege Escalation': CIC/A/2.md
         - 'Pivoting, Identity Verifiers & Network SQL Agent': CIC/A/3.md
         - 'Active Directory Attacks': CIC/A/4.md
         - 'Client Side Attack Vector - How to Conduct a Successful Phishing Attack': CIC/A/5.md
         - 'Web Applications - How to Conduct a Successful Web Application Test': CIC/A/6.md
-      - 'Core Impact 101':
+      #- 'Core Impact 101':
         - 'Getting Started':
           - 'Index': CI101/A/1.md
           - 'Penetration Testing': CI101/A/2.md

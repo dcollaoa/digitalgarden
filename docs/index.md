@@ -18,11 +18,6 @@ Si estás en Chile, te invito a visitar la tienda y explorar lo que tengo dispon
 
 ---
 
-### Proyecto Core Impact en Español
-Además he tenido la necesidad de familiarizarme con **Core Impact**, una herramienta C2C con un enfoque en **Rapid Penetration Testing**. Dado que la documentación en línea estaba en inglés y sin subtítulos, utilicé un transcriptor y un considerable esfuerzo para traducir todos los **E-COURSES** ofrecidos por **FORTRA**.
-
----
-
 ### Proyecto CPTS en Español
 He lanzado recientemente un proyecto personal significativo en paralelo con este espacio: la traducción completa del learning path de **CPTS** (Certified Penetration Testing Specialist) de Hack The Box. Esta no es una traducción convencional; en lugar de depender de herramientas automáticas como Google Translate, me tomé el tiempo de utilizar la API de ChatGPT, entrenando el modelo para mantener términos técnicos y específicos sin traducir. Este esfuerzo resultó en la traducción de 409 documentos hasta la fecha. Agradeceré cualquier reporte de errores para mejorar y perfeccionar este recurso que, sin duda, será de gran utilidad para la comunidad.
 
