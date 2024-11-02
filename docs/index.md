@@ -6,17 +6,6 @@ Este espacio está diseñado para la comunidad de ciberseguridad, con un enfoque
 ---
 
 ## Historial
-### Proyecto tienda online
-🚀 **¡Nuevo lanzamiento!** 🚀
-
-He abierto una tienda online, diseñada para los apasionados de la ciberseguridad. En ella encontrarás productos seleccionados específicamente para la comunidad de hacking, incluyendo **Flipper Zero** y sus accesorios, además de otros recursos útiles para fortalecer tus habilidades en **Red Team**. Por el momento acepto método de pago PayPal y transferencia.
-
-**Invitación especial**
-Si estás en Chile, te invito a visitar la tienda y explorar lo que tengo disponible. Seguro encontrarás algo que te llame la atención.
-
-[Visita la tienda aquí](https://dcollao.mysellix.io/)
-
----
 
 ### Proyecto CPTS en Español
 He lanzado recientemente un proyecto personal significativo en paralelo con este espacio: la traducción completa del learning path de **CPTS** (Certified Penetration Testing Specialist) de Hack The Box. Esta no es una traducción convencional; en lugar de depender de herramientas automáticas como Google Translate, me tomé el tiempo de utilizar la API de ChatGPT, entrenando el modelo para mantener términos técnicos y específicos sin traducir. Este esfuerzo resultó en la traducción de 409 documentos hasta la fecha. Agradeceré cualquier reporte de errores para mejorar y perfeccionar este recurso que, sin duda, será de gran utilidad para la comunidad.
