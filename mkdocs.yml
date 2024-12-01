@@ -390,18 +390,21 @@ nav:
               - 'Value Fuzzing': CPTS/C/2/4/3.md
           - 'Login Brute Forcing':
             - 'Introduction':
-              - 'Introduction to Brute Forcing': CPTS/C/3/1/1.md
-            - 'Basic HTTP Auth Brute Forcing':
-              - 'Password Attacks': CPTS/C/3/2/1.md
-              - 'Default Passwords': CPTS/C/3/2/2.md
-              - 'Username Brute Force': CPTS/C/3/2/3.md
-            - 'Web Forms Brute Forcing':
-              - 'Hydra Modules': CPTS/C/3/3/1.md
-              - 'Determine Login Parameters': CPTS/C/3/3/2.md
-              - 'Login Form Attacks': CPTS/C/3/3/3.md
-            - 'Service Authentication Attacks':
-              - 'Personalized Wordlists': CPTS/C/3/4/1.md
-              - 'Service Authentication Brute Forcing': CPTS/C/3/4/2.md
+              - 'Introduction': CPTS/C/3/1/1.md
+              - 'Password Security Fundamentals': CPTS/C/3/1/2.md
+            - 'Brute Force Attacks':
+              - 'Brute Force Attacks': CPTS/C/3/2/1.md
+              - 'Dictionary Attacks': CPTS/C/3/2/2.md
+              - 'Hybrid Attacks': CPTS/C/3/2/3.md
+            - 'Hydra':
+              - 'Hydra': CPTS/C/3/3/1.md
+              - 'Basic HTTP Authentication': CPTS/C/3/3/2.md
+              - 'Login Forms': CPTS/C/3/3/3.md
+            - 'Medusa':
+              - 'Medusa': CPTS/C/3/4/1.md
+              - 'Web Services': CPTS/C/3/4/2.md
+            - 'Custom Wordlists':
+              - 'Custom Wordlists': CPTS/C/3/5/1.md
           - 'SQLi Fundamentals':
             - 'Introduction':
               - 'Introduction': CPTS/C/4/1/1.md
