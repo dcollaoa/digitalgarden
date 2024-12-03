@@ -428,37 +428,11 @@ nav:
               - 'Writing Files': CPTS/C/4/5/3.md
             - 'Mitigations':
               - 'Mitigating SQL Injection': CPTS/C/4/6/1.md
-          - 'Command Injections':
-            - 'Introduction':
-              - 'Intro to Command Injections': CPTS/C/9/1/1.md
-            - 'Exploitation':
-              - 'Detection': CPTS/C/9/2/1.md
-              - 'Injecting Commands': CPTS/C/9/2/2.md
-              - 'Other Injection Operators': CPTS/C/9/2/3.md
-            - 'Filter Evasion':
-              - 'Identifying Filters': CPTS/C/9/3/1.md
-              - 'Bypassing Space Filters': CPTS/C/9/3/2.md
-              - 'Bypassing Other Blacklisted Characters': CPTS/C/9/3/3.md
-              - 'Bypassing Blacklisted Commands': CPTS/C/9/3/4.md
-              - 'Advanced Command Obfuscation': CPTS/C/9/3/5.md
-              - 'Evasion Tools': CPTS/C/9/3/6.md
-            - 'Prevention':
-              - 'Command Injection Prevention': CPTS/C/9/4/1.md
           - 'SQLMap Essentials':
             - 'Getting Started':
               - 'SQLMap Overview': CPTS/C/5/1/1.md
               - 'Getting Started with SQLMap': CPTS/C/5/1/2.md
               - 'SQLMap Output Description': CPTS/C/5/1/3.md
-            - 'Building Attacks':
-              - 'Running SQLMap on an HTTP Request': CPTS/C/5/2/1.md
-              - 'Handling SQLMap Errors': CPTS/C/5/2/2.md
-              - 'Attack Tuning': CPTS/C/5/2/3.md
-            - 'Database Enumeration':
-              - 'Database Enumeration': CPTS/C/5/3/1.md
-              - 'Advanced Database Enumeration': CPTS/C/5/3/2.md
-            - 'Advanced SQLMap Usage':
-              - 'Bypassing Web Application Protections': CPTS/C/5/4/1.md
-              - 'OS Exploitation': CPTS/C/5/4/2.md
           - 'Cross-Site Scripting (XSS)':
             - 'XSS Basics':
               - 'Intro to XSS': CPTS/C/6/1/1.md
@@ -503,6 +477,32 @@ nav:
               - 'Other Upload Attacks': CPTS/C/8/4/2.md
             - 'Prevention':
               - 'Preventing File Upload Vulnerabilities': CPTS/C/8/5/1.md
+          - 'Command Injections':
+            - 'Introduction':
+              - 'Intro to Command Injections': CPTS/C/9/1/1.md
+            - 'Exploitation':
+              - 'Detection': CPTS/C/9/2/1.md
+              - 'Injecting Commands': CPTS/C/9/2/2.md
+              - 'Other Injection Operators': CPTS/C/9/2/3.md
+            - 'Filter Evasion':
+              - 'Identifying Filters': CPTS/C/9/3/1.md
+              - 'Bypassing Space Filters': CPTS/C/9/3/2.md
+              - 'Bypassing Other Blacklisted Characters': CPTS/C/9/3/3.md
+              - 'Bypassing Blacklisted Commands': CPTS/C/9/3/4.md
+              - 'Advanced Command Obfuscation': CPTS/C/9/3/5.md
+              - 'Evasion Tools': CPTS/C/9/3/6.md
+            - 'Prevention':
+              - 'Command Injection Prevention': CPTS/C/9/4/1.md
+            - 'Building Attacks':
+              - 'Running SQLMap on an HTTP Request': CPTS/C/5/2/1.md
+              - 'Handling SQLMap Errors': CPTS/C/5/2/2.md
+              - 'Attack Tuning': CPTS/C/5/2/3.md
+            - 'Database Enumeration':
+              - 'Database Enumeration': CPTS/C/5/3/1.md
+              - 'Advanced Database Enumeration': CPTS/C/5/3/2.md
+            - 'Advanced SQLMap Usage':
+              - 'Bypassing Web Application Protections': CPTS/C/5/4/1.md
+              - 'OS Exploitation': CPTS/C/5/4/2.md
           - 'Web Attacks':
             - 'Introduction':
               - 'Introduction to Web Attacks': CPTS/C/10/1/1.md
