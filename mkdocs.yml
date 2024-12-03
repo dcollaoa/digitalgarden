@@ -353,218 +353,218 @@ nav:
               - 'Beyond this Module': CPTS/B/4/13/1.md
         - 'Web Exploitation':
           - 'Using Web Proxies':
-            - 'Getting Started':
-              - 'Intro to Web Proxies': CPTS/C/1/1/1.md
-              - 'Setting Up': CPTS/C/1/1/2.md
-            - 'Web Proxy':
-              - 'Proxy Setup': CPTS/C/1/2/1.md
-              - 'Intercepting Web Requests': CPTS/C/1/2/2.md
-              - 'Intercepting Responses': CPTS/C/1/2/3.md
-              - 'Automatic Modification': CPTS/C/1/2/4.md
-              - 'Repeating Requests': CPTS/C/1/2/5.md
-              - 'Encoding and Decoding': CPTS/C/1/2/6.md
-              - 'Proxying Tools': CPTS/C/1/2/7.md
-            - 'Web Fuzzer':
-              - 'Burp Intruder': CPTS/C/1/3/1.md
-              - 'ZAP Fuzzer': CPTS/C/1/3/2.md
-            - 'Web Scanner':
-              - 'Burp Scanner': CPTS/C/1/4/1.md
-              - 'ZAP Scanner': CPTS/C/1/4/2.md
-              - 'Extensions': CPTS/C/1/4/3.md
+              - 'Getting Started':
+                  - 'Intro to Web Proxies': CPTS/C/1/1/1.md
+                  - 'Setting Up': CPTS/C/1/1/2.md
+              - 'Web Proxy':
+                  - 'Proxy Setup': CPTS/C/1/2/1.md
+                  - 'Intercepting Web Requests': CPTS/C/1/2/2.md
+                  - 'Intercepting Responses': CPTS/C/1/2/3.md
+                  - 'Automatic Modification': CPTS/C/1/2/4.md
+                  - 'Repeating Requests': CPTS/C/1/2/5.md
+                  - 'Encoding and Decoding': CPTS/C/1/2/6.md
+                  - 'Proxying Tools': CPTS/C/1/2/7.md
+              - 'Web Fuzzer':
+                  - 'Burp Intruder': CPTS/C/1/3/1.md
+                  - 'ZAP Fuzzer': CPTS/C/1/3/2.md
+              - 'Web Scanner':
+                  - 'Burp Scanner': CPTS/C/1/4/1.md
+                  - 'ZAP Scanner': CPTS/C/1/4/2.md
+                  - 'Extensions': CPTS/C/1/4/3.md
           - 'Attacking Web Applications with Ffuf':
-            - 'Introduction':
-              - 'Introduction': CPTS/C/2/1/1.md
-              - 'Web Fuzzing': CPTS/C/2/1/2.md
-            - 'Basic Fuzzing':
-              - 'Directory Fuzzing': CPTS/C/2/2/1.md
-              - 'Page Fuzzing': CPTS/C/2/2/2.md
-              - 'Recursive Fuzzing': CPTS/C/2/2/3.md
-            - 'Domain Fuzzing':
-              - 'DNS Records': CPTS/C/2/3/1.md
-              - 'Sub-domain Fuzzing': CPTS/C/2/3/2.md
-              - 'Vhost Fuzzing': CPTS/C/2/3/3.md
-              - 'Filtering Results': CPTS/C/2/3/4.md
-            - 'Parameter Fuzzing':
-              - 'Parameter Fuzzing - GET': CPTS/C/2/4/1.md
-              - 'Parameter Fuzzing - POST': CPTS/C/2/4/2.md
-              - 'Value Fuzzing': CPTS/C/2/4/3.md
+              - 'Introduction':
+                  - 'Introduction': CPTS/C/2/1/1.md
+                  - 'Web Fuzzing': CPTS/C/2/1/2.md
+              - 'Basic Fuzzing':
+                  - 'Directory Fuzzing': CPTS/C/2/2/1.md
+                  - 'Page Fuzzing': CPTS/C/2/2/2.md
+                  - 'Recursive Fuzzing': CPTS/C/2/2/3.md
+              - 'Domain Fuzzing':
+                  - 'DNS Records': CPTS/C/2/3/1.md
+                  - 'Sub-domain Fuzzing': CPTS/C/2/3/2.md
+                  - 'Vhost Fuzzing': CPTS/C/2/3/3.md
+                  - 'Filtering Results': CPTS/C/2/3/4.md
+              - 'Parameter Fuzzing':
+                  - 'Parameter Fuzzing - GET': CPTS/C/2/4/1.md
+                  - 'Parameter Fuzzing - POST': CPTS/C/2/4/2.md
+                  - 'Value Fuzzing': CPTS/C/2/4/3.md
           - 'Login Brute Forcing':
-            - 'Introduction':
-              - 'Introduction': CPTS/C/3/1/1.md
-              - 'Password Security Fundamentals': CPTS/C/3/1/2.md
-            - 'Brute Force Attacks':
-              - 'Brute Force Attacks': CPTS/C/3/2/1.md
-              - 'Dictionary Attacks': CPTS/C/3/2/2.md
-              - 'Hybrid Attacks': CPTS/C/3/2/3.md
-            - 'Hydra':
-              - 'Hydra': CPTS/C/3/3/1.md
-              - 'Basic HTTP Authentication': CPTS/C/3/3/2.md
-              - 'Login Forms': CPTS/C/3/3/3.md
-            - 'Medusa':
-              - 'Medusa': CPTS/C/3/4/1.md
-              - 'Web Services': CPTS/C/3/4/2.md
-            - 'Custom Wordlists':
-              - 'Custom Wordlists': CPTS/C/3/5/1.md
-          - 'SQLi Fundamentals':
-            - 'Introduction':
-              - 'Introduction': CPTS/C/4/1/1.md
-            - 'Databases':
-              - 'Intro to Databases': CPTS/C/4/2/1.md
-              - 'Types of Databases': CPTS/C/4/2/2.md
-            - 'MySQL':
-              - 'Intro to MySQL': CPTS/C/4/3/1.md
-              - 'SQL Statements': CPTS/C/4/3/2.md
-              - 'Query Results': CPTS/C/4/3/3.md
-              - 'SQL Operators': CPTS/C/4/3/4.md
-            - 'SQL Injections':
-              - 'Intro to SQL Injections': CPTS/C/4/4/1.md
-              - 'Subverting Query Logic': CPTS/C/4/4/2.md
-              - 'Using Comments': CPTS/C/4/4/3.md
-              - 'Union Clause': CPTS/C/4/4/4.md
-              - 'Union Injection': CPTS/C/4/4/5.md
-            - 'Exploitation':
-              - 'Database Enumeration': CPTS/C/4/5/1.md
-              - 'Reading Files': CPTS/C/4/5/2.md
-              - 'Writing Files': CPTS/C/4/5/3.md
-            - 'Mitigations':
-              - 'Mitigating SQL Injection': CPTS/C/4/6/1.md
+              - 'Introduction':
+                  - 'Introduction': CPTS/C/3/1/1.md
+                  - 'Password Security Fundamentals': CPTS/C/3/1/2.md
+              - 'Brute Force Attacks':
+                  - 'Brute Force Attacks': CPTS/C/3/2/1.md
+                  - 'Dictionary Attacks': CPTS/C/3/2/2.md
+                  - 'Hybrid Attacks': CPTS/C/3/2/3.md
+              - 'Hydra':
+                  - 'Hydra': CPTS/C/3/3/1.md
+                  - 'Basic HTTP Authentication': CPTS/C/3/3/2.md
+                  - 'Login Forms': CPTS/C/3/3/3.md
+              - 'Medusa':
+                  - 'Medusa': CPTS/C/3/4/1.md
+                  - 'Web Services': CPTS/C/3/4/2.md
+              - 'Custom Wordlists':
+                  - 'Custom Wordlists': CPTS/C/3/5/1.md
+          - 'SQL Injection Fundamentals':
+              - 'Introduction':
+                  - 'Introduction': CPTS/C/4/1/1.md
+              - 'Databases':
+                  - 'Intro to Databases': CPTS/C/4/2/1.md
+                  - 'Types of Databases': CPTS/C/4/2/2.md
+              - 'MySQL':
+                  - 'Intro to MySQL': CPTS/C/4/3/1.md
+                  - 'SQL Statements': CPTS/C/4/3/2.md
+                  - 'Query Results': CPTS/C/4/3/3.md
+                  - 'SQL Operators': CPTS/C/4/3/4.md
+              - 'SQL Injections':
+                  - 'Intro to SQL Injections': CPTS/C/4/4/1.md
+                  - 'Subverting Query Logic': CPTS/C/4/4/2.md
+                  - 'Using Comments': CPTS/C/4/4/3.md
+                  - 'Union Clause': CPTS/C/4/4/4.md
+                  - 'Union Injection': CPTS/C/4/4/5.md
+              - 'Exploitation':
+                  - 'Database Enumeration': CPTS/C/4/5/1.md
+                  - 'Reading Files': CPTS/C/4/5/2.md
+                  - 'Writing Files': CPTS/C/4/5/3.md
+              - 'Mitigations':
+                  - 'Mitigating SQL Injection': CPTS/C/4/6/1.md
           - 'SQLMap Essentials':
-            - 'Getting Started':
-              - 'SQLMap Overview': CPTS/C/5/1/1.md
-              - 'Getting Started with SQLMap': CPTS/C/5/1/2.md
-              - 'SQLMap Output Description': CPTS/C/5/1/3.md
+              - 'Getting Started':
+                  - 'SQLMap Overview': CPTS/C/5/1/1.md
+                  - 'Getting Started with SQLMap': CPTS/C/5/1/2.md
+                  - 'SQLMap Output Description': CPTS/C/5/1/3.md
+              - 'Building Attacks':
+                  - 'Running SQLMap on an HTTP Request': CPTS/C/5/2/1.md
+                  - 'Handling SQLMap Errors': CPTS/C/5/2/2.md
+                  - 'Attack Tuning': CPTS/C/5/2/3.md
+              - 'Database Enumeration':
+                  - 'Database Enumeration': CPTS/C/5/3/1.md
+                  - 'Advanced Database Enumeration': CPTS/C/5/3/2.md
+              - 'Advanced SQLMap Usage':
+                  - 'Bypassing Web Application Protections': CPTS/C/5/4/1.md
+                  - 'OS Exploitation': CPTS/C/5/4/2.md
           - 'Cross-Site Scripting (XSS)':
-            - 'XSS Basics':
-              - 'Intro to XSS': CPTS/C/6/1/1.md
-              - 'Stored XSS': CPTS/C/6/1/2.md
-              - 'Reflected XSS': CPTS/C/6/1/3.md
-              - 'DOM XSS': CPTS/C/6/1/4.md
-              - 'XSS Discovery': CPTS/C/6/1/5.md
-            - 'XSS Attacks':
-              - 'Defacing': CPTS/C/6/2/1.md
-              - 'Phishing': CPTS/C/6/2/2.md
-              - 'Session Hijacking': CPTS/C/6/2/3.md
-            - 'XSS Prevention':
-              - 'XSS Prevention': CPTS/C/6/3/1.md
+              - 'XSS Basics':
+                  - 'Intro to XSS': CPTS/C/6/1/1.md
+                  - 'Stored XSS': CPTS/C/6/1/2.md
+                  - 'Reflected XSS': CPTS/C/6/1/3.md
+                  - 'DOM XSS': CPTS/C/6/1/4.md
+                  - 'XSS Discovery': CPTS/C/6/1/5.md
+              - 'XSS Attacks':
+                  - 'Defacing': CPTS/C/6/2/1.md
+                  - 'Phishing': CPTS/C/6/2/2.md
+                  - 'Session Hijacking': CPTS/C/6/2/3.md
+              - 'XSS Prevention':
+                  - 'XSS Prevention': CPTS/C/6/3/1.md
           - 'File Inclusion':
-            - 'Introduction':
-              - 'Intro to File Inclusions': CPTS/C/7/1/1.md
-            - 'File Disclosure':
-              - 'Local File Inclusion (LFI)': CPTS/C/7/2/1.md
-              - 'Basic Bypasses': CPTS/C/7/2/2.md
-              - 'PHP Filters': CPTS/C/7/2/3.md
-            - 'Remote Code Execution':
-              - 'PHP Wrappers': CPTS/C/7/3/1.md
-              - 'Remote File Inclusion (RFI)': CPTS/C/7/3/2.md
-              - 'LFI and File Uploads': CPTS/C/7/3/3.md
-              - 'Log Poisoning': CPTS/C/7/3/4.md
-            - 'Automation and Prevention':
-              - 'Automated Scanning': CPTS/C/7/4/1.md
-              - 'File Inclusion Prevention': CPTS/C/7/4/2.md
+              - 'Introduction':
+                  - 'Intro to File Inclusions': CPTS/C/7/1/1.md
+              - 'File Disclosure':
+                  - 'Local File Inclusion (LFI)': CPTS/C/7/2/1.md
+                  - 'Basic Bypasses': CPTS/C/7/2/2.md
+                  - 'PHP Filters': CPTS/C/7/2/3.md
+              - 'Remote Code Execution':
+                  - 'PHP Wrappers': CPTS/C/7/3/1.md
+                  - 'Remote File Inclusion (RFI)': CPTS/C/7/3/2.md
+                  - 'LFI and File Uploads': CPTS/C/7/3/3.md
+                  - 'Log Poisoning': CPTS/C/7/3/4.md
+              - 'Automation and Prevention':
+                  - 'Automated Scanning': CPTS/C/7/4/1.md
+                  - 'File Inclusion Prevention': CPTS/C/7/4/2.md
           - 'File Upload Attacks':
-            - 'Introduction':
-              - 'Intro to File Upload Attacks': CPTS/C/8/1/1.md
-            - 'Basic Exploitation':
-              - 'Absent Validation': CPTS/C/8/2/1.md
-              - 'Upload Exploitation': CPTS/C/8/2/2.md
-            - 'Bypassing Filters':
-              - 'Client-Side Validation': CPTS/C/8/3/1.md
-              - 'Blacklist Filters': CPTS/C/8/3/2.md
-              - 'Whitelist Filters': CPTS/C/8/3/3.md
-              - 'Type Filters': CPTS/C/8/3/4.md
-            - 'Other Upload Attacks':
-              - 'Limited File Uploads': CPTS/C/8/4/1.md
-              - 'Other Upload Attacks': CPTS/C/8/4/2.md
-            - 'Prevention':
-              - 'Preventing File Upload Vulnerabilities': CPTS/C/8/5/1.md
+              - 'Introduction':
+                  - 'Intro to File Upload Attacks': CPTS/C/8/1/1.md
+              - 'Basic Exploitation':
+                  - 'Absent Validation': CPTS/C/8/2/1.md
+                  - 'Upload Exploitation': CPTS/C/8/2/2.md
+              - 'Bypassing Filters':
+                  - 'Client-Side Validation': CPTS/C/8/3/1.md
+                  - 'Blacklist Filters': CPTS/C/8/3/2.md
+                  - 'Whitelist Filters': CPTS/C/8/3/3.md
+                  - 'Type Filters': CPTS/C/8/3/4.md
+              - 'Other Upload Attacks':
+                  - 'Limited File Uploads': CPTS/C/8/4/1.md
+                  - 'Other Upload Attacks': CPTS/C/8/4/2.md
+              - 'Prevention':
+                  - 'Preventing File Upload Vulnerabilities': CPTS/C/8/5/1.md
           - 'Command Injections':
-            - 'Introduction':
-              - 'Intro to Command Injections': CPTS/C/9/1/1.md
-            - 'Exploitation':
-              - 'Detection': CPTS/C/9/2/1.md
-              - 'Injecting Commands': CPTS/C/9/2/2.md
-              - 'Other Injection Operators': CPTS/C/9/2/3.md
-            - 'Filter Evasion':
-              - 'Identifying Filters': CPTS/C/9/3/1.md
-              - 'Bypassing Space Filters': CPTS/C/9/3/2.md
-              - 'Bypassing Other Blacklisted Characters': CPTS/C/9/3/3.md
-              - 'Bypassing Blacklisted Commands': CPTS/C/9/3/4.md
-              - 'Advanced Command Obfuscation': CPTS/C/9/3/5.md
-              - 'Evasion Tools': CPTS/C/9/3/6.md
-            - 'Prevention':
-              - 'Command Injection Prevention': CPTS/C/9/4/1.md
-            - 'Building Attacks':
-              - 'Running SQLMap on an HTTP Request': CPTS/C/5/2/1.md
-              - 'Handling SQLMap Errors': CPTS/C/5/2/2.md
-              - 'Attack Tuning': CPTS/C/5/2/3.md
-            - 'Database Enumeration':
-              - 'Database Enumeration': CPTS/C/5/3/1.md
-              - 'Advanced Database Enumeration': CPTS/C/5/3/2.md
-            - 'Advanced SQLMap Usage':
-              - 'Bypassing Web Application Protections': CPTS/C/5/4/1.md
-              - 'OS Exploitation': CPTS/C/5/4/2.md
+              - 'Introduction':
+                  - 'Intro to Command Injections': CPTS/C/9/1/1.md
+              - 'Exploitation':
+                  - 'Detection': CPTS/C/9/2/1.md
+                  - 'Injecting Commands': CPTS/C/9/2/2.md
+                  - 'Other Injection Operators': CPTS/C/9/2/3.md
+              - 'Filter Evasion':
+                  - 'Identifying Filters': CPTS/C/9/3/1.md
+                  - 'Bypassing Space Filters': CPTS/C/9/3/2.md
+                  - 'Bypassing Other Blacklisted Characters': CPTS/C/9/3/3.md
+                  - 'Bypassing Blacklisted Commands': CPTS/C/9/3/4.md
+                  - 'Advanced Command Obfuscation': CPTS/C/9/3/5.md
+                  - 'Evasion Tools': CPTS/C/9/3/6.md
+              - 'Prevention':
+                  - 'Command Injection Prevention': CPTS/C/9/4/1.md
           - 'Web Attacks':
-            - 'Introduction':
-              - 'Introduction to Web Attacks': CPTS/C/10/1/1.md
-            - 'HTTP Verb Tampering':
-              - 'Intro to HTTP Verb Tampering': CPTS/C/10/2/1.md
-              - 'Bypassing Basic Authentication': CPTS/C/10/2/2.md
-              - 'Bypassing Security Filters': CPTS/C/10/2/3.md
-              - 'Verb Tampering Prevention': CPTS/C/10/2/4.md
-            - 'Insecure Direct Object References (IDOR)':
-              - 'Intro to IDOR': CPTS/C/10/3/1.md
-              - 'Identifying IDORs': CPTS/C/10/3/2.md
-              - 'Mass IDOR Enumeration': CPTS/C/10/3/3.md
-              - 'Bypassing Encoded References': CPTS/C/10/3/4.md
-              - 'IDOR in Insecure APIs': CPTS/C/10/3/5.md
-              - 'Chaining IDOR Vulnerabilities': CPTS/C/10/3/6.md
-              - 'IDOR Prevention': CPTS/C/10/3/7.md
-            - 'XXE Injection':
-              - 'Intro to XXE': CPTS/C/10/4/1.md
-              - 'Local File Disclosure': CPTS/C/10/4/2.md
-              - 'Advanced File Disclosure': CPTS/C/10/4/3.md
-              - 'Blind Data Exfiltration': CPTS/C/10/4/4.md
-              - 'XXE Prevention': CPTS/C/10/4/5.md
+              - 'Introduction':
+                  - 'Introduction to Web Attacks': CPTS/C/10/1/1.md
+              - 'HTTP Verb Tampering':
+                  - 'Intro to HTTP Verb Tampering': CPTS/C/10/2/1.md
+                  - 'Bypassing Basic Authentication': CPTS/C/10/2/2.md
+                  - 'Bypassing Security Filters': CPTS/C/10/2/3.md
+                  - 'Verb Tampering Prevention': CPTS/C/10/2/4.md
+              - 'Insecure Direct Object References (IDOR)':
+                  - 'Intro to IDOR': CPTS/C/10/3/1.md
+                  - 'Identifying IDORs': CPTS/C/10/3/2.md
+                  - 'Mass IDOR Enumeration': CPTS/C/10/3/3.md
+                  - 'Bypassing Encoded References': CPTS/C/10/3/4.md
+                  - 'IDOR in Insecure APIs': CPTS/C/10/3/5.md
+                  - 'Chaining IDOR Vulnerabilities': CPTS/C/10/3/6.md
+                  - 'IDOR Prevention': CPTS/C/10/3/7.md
+              - 'XXE Injection':
+                  - 'Intro to XXE': CPTS/C/10/4/1.md
+                  - 'Local File Disclosure': CPTS/C/10/4/2.md
+                  - 'Advanced File Disclosure': CPTS/C/10/4/3.md
+                  - 'Blind Data Exfiltration': CPTS/C/10/4/4.md
+                  - 'XXE Prevention': CPTS/C/10/4/5.md
           - 'Attacking Common Applications':
-            - 'Setting the Stage':
-              - 'Introduction to Attacking Common Applications': CPTS/C/11/1/1.md
-              - 'Application Discovery and Enumeration': CPTS/C/11/1/2.md
-            - 'Content Management Systems (CMS)':
-              - 'WordPress - Discovery and Enumeration': CPTS/C/11/2/1.md
-              - 'Attacking WordPress': CPTS/C/11/2/2.md
-              - 'Joomla - Discovery and Enumeration': CPTS/C/11/2/3.md
-              - 'Attacking Joomla': CPTS/C/11/2/4.md
-              - 'Drupal - Discovery and Enumeration': CPTS/C/11/2/5.md
-              - 'Attacking Drupal': CPTS/C/11/2/6.md
-            - 'Servlet Containers and Software Development':
-              - 'Tomcat - Discovery and Enumeration': CPTS/C/11/3/1.md
-              - 'Attacking Tomcat': CPTS/C/11/3/2.md
-              - 'Jenkins - Discovery and Enumeration': CPTS/C/11/3/3.md
-              - 'Attacking Jenkins': CPTS/C/11/3/4.md
-            - 'Infrastructure and Network Monitoring Tools':
-              - 'Splunk - Discovery and Enumeration': CPTS/C/11/4/1.md
-              - 'Attacking Splunk': CPTS/C/11/4/2.md
-              - 'PRTG Network Monitor': CPTS/C/11/4/3.md
-            - 'Customer Service Mgmt and Configuration Management':
-              - 'osTicket': CPTS/C/11/5/1.md
-              - 'Gitlab - Discovery and Enumeration': CPTS/C/11/5/2.md
-              - 'Attacking GitLab': CPTS/C/11/5/3.md
-            - 'Common Gateway Interfaces':
-              - 'Attacking Tomcat CGI': CPTS/C/11/6/1.md
-              - 'Attacking CGI Applications - Shellshock': CPTS/C/11/6/2.md
-            - 'Thick Client Applications':
-              - 'Attacking Thick Client Applications': CPTS/C/11/7/1.md
-              - 'Exploiting Web Vulnerabilities in Thick-Client Applications': CPTS/C/11/7/2.md
-            - 'Miscellaneous Applications':
-              - 'ColdFusion - Discovery and Enumeration': CPTS/C/11/8/1.md
-              - 'Attacking ColdFusion': CPTS/C/11/8/2.md
-              - 'IIS Tilde Enumeration': CPTS/C/11/8/3.md
-              - 'Attacking LDAP': CPTS/C/11/8/4.md
-              - 'Web Mass Assignment Vulnerabilities': CPTS/C/11/8/5.md
-              - 'Attacking Applications Connecting to Services': CPTS/C/11/8/6.md
-              - 'Other Notable Applications': CPTS/C/11/8/7.md
-            - 'Closing Out':
-              - 'Application Hardening': CPTS/C/11/9/1.md
+              - 'Setting the Stage':
+                  - 'Introduction to Attacking Common Applications': CPTS/C/11/1/1.md
+                  - 'Application Discovery and Enumeration': CPTS/C/11/1/2.md
+              - 'Content Management Systems (CMS)':
+                  - 'WordPress - Discovery and Enumeration': CPTS/C/11/2/1.md
+                  - 'Attacking WordPress': CPTS/C/11/2/2.md
+                  - 'Joomla - Discovery and Enumeration': CPTS/C/11/2/3.md
+                  - 'Attacking Joomla': CPTS/C/11/2/4.md
+                  - 'Drupal - Discovery and Enumeration': CPTS/C/11/2/5.md
+                  - 'Attacking Drupal': CPTS/C/11/2/6.md
+              - 'Servlet Containers and Software Development':
+                  - 'Tomcat - Discovery and Enumeration': CPTS/C/11/3/1.md
+                  - 'Attacking Tomcat': CPTS/C/11/3/2.md
+                  - 'Jenkins - Discovery and Enumeration': CPTS/C/11/3/3.md
+                  - 'Attacking Jenkins': CPTS/C/11/3/4.md
+              - 'Infrastructure and Network Monitoring Tools':
+                  - 'Splunk - Discovery and Enumeration': CPTS/C/11/4/1.md
+                  - 'Attacking Splunk': CPTS/C/11/4/2.md
+                  - 'PRTG Network Monitor': CPTS/C/11/4/3.md
+              - 'Customer Service Mgmt and Configuration Management':
+                  - 'osTicket': CPTS/C/11/5/1.md
+                  - 'GitLab - Discovery and Enumeration': CPTS/C/11/5/2.md
+                  - 'Attacking GitLab': CPTS/C/11/5/3.md
+              - 'Common Gateway Interfaces':
+                  - 'Attacking Tomcat CGI': CPTS/C/11/6/1.md
+                  - 'Attacking CGI Applications - Shellshock': CPTS/C/11/6/2.md
+              - 'Thick Client Applications':
+                  - 'Attacking Thick Client Applications': CPTS/C/11/7/1.md
+                  - 'Exploiting Web Vulnerabilities in Thick-Client Applications': CPTS/C/11/7/2.md
+              - 'Miscellaneous Applications':
+                  - 'ColdFusion - Discovery and Enumeration': CPTS/C/11/8/1.md
+                  - 'Attacking ColdFusion': CPTS/C/11/8/2.md
+                  - 'IIS Tilde Enumeration': CPTS/C/11/8/3.md
+                  - 'Attacking LDAP': CPTS/C/11/8/4.md
+                  - 'Web Mass Assignment Vulnerabilities': CPTS/C/11/8/5.md
+                  - 'Attacking Applications Connecting to Services': CPTS/C/11/8/6.md
+                  - 'Other Notable Applications': CPTS/C/11/8/7.md
+              - 'Closing Out':
+                  - 'Application Hardening': CPTS/C/11/9/1.md
         - 'Post-Exploitation':
           - 'Linux Privilege Escalation':
             - 'Introduction':
